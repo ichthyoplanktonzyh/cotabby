@@ -192,6 +192,16 @@ struct AppearancePaneView: View {
                 }
                 .settingsItem(.ghostTextOpacity)
 
+                Toggle(isOn: matchesHostTextSizeBinding) {
+                    SettingsRowLabel(
+                        title: "Match Original Text Size",
+                        description: "Draw suggestions at exactly the size of the text you are typing. " +
+                            "The size settings below are set aside while this is on.",
+                        systemImage: "equal.square"
+                    )
+                }
+                .settingsItem(.matchHostTextSize)
+
                 LabeledContent {
                     HStack(spacing: 10) {
                         TickMarkSlider(
@@ -216,6 +226,7 @@ struct AppearancePaneView: View {
                     )
                 }
                 .settingsItem(.ghostTextSize)
+                .disabled(suggestionSettings.matchesHostTextSize)
 
                 LabeledContent {
                     HStack(spacing: 10) {
@@ -241,6 +252,7 @@ struct AppearancePaneView: View {
                     )
                 }
                 .settingsItem(.ghostTextSizeFloor)
+                .disabled(suggestionSettings.matchesHostTextSize)
 
                 LabeledContent {
                     HStack(spacing: 10) {
@@ -268,6 +280,7 @@ struct AppearancePaneView: View {
                     )
                 }
                 .settingsItem(.ghostTextSizeCeiling)
+                .disabled(suggestionSettings.matchesHostTextSize)
             }
         }
     }
@@ -345,6 +358,13 @@ struct AppearancePaneView: View {
         Binding(
             get: { suggestionSettings.ghostTextOpacity },
             set: { suggestionSettings.setGhostTextOpacity($0) }
+        )
+    }
+
+    private var matchesHostTextSizeBinding: Binding<Bool> {
+        Binding(
+            get: { suggestionSettings.matchesHostTextSize },
+            set: { suggestionSettings.setMatchesHostTextSize($0) }
         )
     }
 
