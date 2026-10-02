@@ -159,6 +159,23 @@ extension SuggestionCoordinator {
             for: raw.precedingText, suggestWithinWords: settingsSnapshot.suggestWithinWords) {
             return "Waiting for a word boundary before offering a new suggestion."
         }
+        if interactionState.activeSession == nil {
+            guard SuggestionRequestFactory.shouldGenerateSuggestion(
+                for: raw.precedingText, trailingText: raw.trailingText,
+                suggestWithinWords: settingsSnapshot.suggestWithinWords,
+                allowsMidLine: PerAppSettingsResolver.allowsMidLineCompletions(
+                    bundleIdentifier: raw.bundleIdentifier, settings: settingsSnapshot
+                )
+            ) else { return "The app's completion policy requires a fresh request." }
+            let typo = PerAppSettingsResolver.typoSettings(bundleIdentifier: raw.bundleIdentifier, settings: settingsSnapshot)
+            if TypoGate.resolve(
+                precedingText: raw.precedingText, settings: typo,
+                isTypo: { spellChecker.isTypo($0) },
+                bestCorrection: { bestCorrection(for: $0, precedingText: raw.precedingText) }
+            ) != .proceed {
+                return "The committed word needs the app's typo gate before a new offer."
+            }
+        }
         return nil
     }
 

@@ -35,7 +35,7 @@ struct TypingHistorySectionView: View {
                     systemImage: "record.circle"
                 )
             }
-            .disabled(store.status != .ready)
+            .disabled(store.status != .ready || store.isDeletingRecords)
 
             if !store.preferences.excludedBundleIdentifiers.isEmpty {
                 ForEach(store.preferences.excludedBundleIdentifiers, id: \.self) { identifier in
@@ -51,7 +51,7 @@ struct TypingHistorySectionView: View {
                 HStack(spacing: 8) {
                     Button("Exclude an App…") { chooseAppToExclude() }
                     Button("Import Cotypist Export…") { chooseExportToImport() }
-                        .disabled(store.status != .ready || store.isImporting)
+                        .disabled(store.status != .ready || store.isImporting || store.isDeletingRecords)
                     Button("Delete All…", role: .destructive) { isConfirmingDeleteAll = true }
                         .disabled(!canDeleteAll)
                 }
@@ -81,7 +81,7 @@ struct TypingHistorySectionView: View {
     /// counted, so the count reads zero) and stays available after a failed deletion so it can be
     /// retried. Never during an import, which would add entries back.
     private var canDeleteAll: Bool {
-        guard !store.isImporting else { return false }
+        guard !store.isImporting, !store.isDeletingRecords else { return false }
         if case .unavailable = store.status { return true }
         return store.recordCount > 0 || store.deletionError != nil
     }

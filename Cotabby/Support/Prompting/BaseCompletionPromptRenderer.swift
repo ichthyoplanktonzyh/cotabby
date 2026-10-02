@@ -26,6 +26,7 @@ enum BaseCompletionPromptRenderer {
         maxSuffixCharacters: Int = 192,
         customRules: [String] = [],
         extendedContext: String? = nil,
+        applicationInstructions: String? = nil,
         languageInstruction: String? = nil,
         clipboardContext: String? = nil,
         visualContextSummary: String? = nil,
@@ -63,6 +64,7 @@ enum BaseCompletionPromptRenderer {
             // the whole blob lands.
             sections.append(Self.contextSection("notes", "Notes the writer keeps in mind: \(notes)", priority: 40, maxChars: 1300))
         }
+        sections.append(contentsOf: Self.applicationInstructionSections(applicationInstructions))
         if let history = Self.historySection(historyExamples) {
             sections.append(history)
         }
@@ -129,6 +131,18 @@ enum BaseCompletionPromptRenderer {
             return PromptSectionBudget.allocate(sections, totalChars: contextBudget)
         }
         return PromptSectionBudget.allocate(sections, totalTokens: tokenBudget, estimate: TokenCountEstimator.estimate)
+    }
+
+    /// Independent app notes precede optional screen context, while the caret retains first claim
+    /// on the prompt window. A whole section is omitted under exceptional pressure; a partial
+    /// directive could mean something different from the note the user saved.
+    private static func applicationInstructionSections(_ notes: String?) -> [PromptSection] {
+        guard let notes = nonEmpty(notes) else { return [] }
+        let content = "Notes for this writing app: \(notes)"
+        return [PromptSection(
+            name: "app-notes", content: content, priority: 55,
+            minChars: content.count, maxChars: content.count, truncation: .preserveStart
+        )]
     }
 
     /// Surface metadata is one optional section; its representation does not affect budgeting.

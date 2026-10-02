@@ -195,6 +195,9 @@ struct SuggestionSettingsSnapshot: Equatable, Sendable {
     /// double tap lives in the global Accept Entire Suggestion slot, and an app's own binding
     /// replaces that slot there, so these apps never treat a double tap as accept-all.
     let fullAcceptanceOverrideBundleIdentifiers: Set<String>
+    /// Optional overrides resolved once per focused app, alongside the existing shortcut record.
+    /// Unconfigured apps inherit the global behavior; the snapshot keeps async work deterministic.
+    let perAppBehaviors: [String: PerAppBehavior]
 
     /// Single chokepoint that picks between the preset's range and the user's custom range.
     /// Every downstream consumer (token-budget math, prompt-instruction text, UI labels in the

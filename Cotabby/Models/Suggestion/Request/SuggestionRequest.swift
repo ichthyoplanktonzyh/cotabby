@@ -58,6 +58,9 @@ struct SuggestionRequest: Equatable, Sendable {
     /// string. `nil` when the user has not set it, distinguishing it from an empty-but-set value so
     /// renderers can skip the heading entirely.
     let extendedContext: String?
+    /// Notes scoped to the focused app, kept apart from global reference notes so their independent
+    /// limits survive rendering on every backend. Nil for apps without an override.
+    let applicationInstructions: String?
     /// Pre-rendered language hint built from the user's declared languages (e.g. "The user usually
     /// writes in German and English…"). `nil` when none are declared. Deliberately a hint, not an
     /// override: it tells the model to match the surrounding text and only fall back to the declared
@@ -104,6 +107,7 @@ struct SuggestionRequest: Equatable, Sendable {
         userName: String?,
         customRules: [String],
         extendedContext: String? = nil,
+        applicationInstructions: String? = nil,
         languageInstruction: String?,
         clipboardContext: String?,
         visualContextSummary: String?,
@@ -129,6 +133,7 @@ struct SuggestionRequest: Equatable, Sendable {
         self.userName = userName
         self.customRules = customRules
         self.extendedContext = extendedContext
+        self.applicationInstructions = applicationInstructions
         self.languageInstruction = languageInstruction
         self.clipboardContext = clipboardContext
         self.visualContextSummary = visualContextSummary

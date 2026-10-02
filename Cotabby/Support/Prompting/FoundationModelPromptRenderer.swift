@@ -79,6 +79,12 @@ enum FoundationModelPromptRenderer {
             lines.append("Use these notes only when they fit the continuation naturally; never break the rules above.")
         }
 
+        if let appNotes = request.applicationInstructions, !appNotes.isEmpty {
+            lines.append("Reference notes for this writing app:")
+            lines.append(appNotes)
+            lines.append("Apply these only when they fit the continuation naturally; never break the rules above.")
+        }
+
         return lines.joined(separator: "\n")
     }
 

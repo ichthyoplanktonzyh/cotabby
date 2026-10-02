@@ -70,3 +70,10 @@ nonisolated struct TypingHistoryPreferences: Equatable, Sendable {
         excludedBundleIdentifiers: []
     )
 }
+
+/// A failed filtered-archive commit belongs to one app. Keeping its identity with the message lets
+/// another app's detail page avoid presenting an unrelated failure; the store owns its lifetime.
+nonisolated struct AppHistoryDeletionFailure: Equatable, Sendable {
+    let bundleIdentifier: String
+    let message: String
+}

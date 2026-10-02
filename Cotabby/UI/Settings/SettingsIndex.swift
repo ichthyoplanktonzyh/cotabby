@@ -187,7 +187,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .acceptWord: return String(localized: "Accept Word")
         case .acceptEntireSuggestion: return String(localized: "Accept Entire Suggestion")
         case .toggleTabby: return String(localized: "Toggle Lingrove", table: "Learning")
-        case .disabledApps: return String(localized: "Disabled Apps")
+        case .disabledApps: return String(localized: "App Settings", table: "Learning")
         case .suggestInIntegratedTerminals: return String(localized: "Suggest in Integrated Terminals")
         case .accessibility: return String(localized: "Accessibility")
         case .inputMonitoring: return String(localized: "Input Monitoring")
@@ -428,7 +428,9 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         The key, or the Accept Word key pressed twice, that inserts the whole suggestion.
         """)
         case .toggleTabby: return String(localized: "A global hotkey that turns Lingrove on or off.", table: "Learning")
-        case .disabledApps: return String(localized: "Apps where Lingrove never autocompletes.", table: "Learning")
+        case .disabledApps: return String(
+            localized: "Choose an app to customize its completions, shortcuts, and typing history.", table: "Learning"
+        )
         case .suggestInIntegratedTerminals: return String(localized: "Ghost text in VS Code and Cursor terminals.")
         case .accessibility: return String(localized: "Required to read the focused field and caret.")
         case .inputMonitoring: return String(localized: "Required to see keystrokes and the accept key.")
@@ -661,7 +663,10 @@ enum SettingsItem: String, CaseIterable, Identifiable {
                     "enable", "disable", "keybind", "binding", "tabby"]
         case .disabledApps:
             return ["apps", "disable", "exclude", "block", "ignore", "blacklist",
-                    "deny list", "exception", "app exclusion", "skip", "off in"]
+                    "deny list", "exception", "app exclusion", "skip", "off in", "per app",
+                    "app settings", "mid-line", "midline", "autocorrect", "tab key", "instructions",
+                    "collected inputs", "typing history", String(localized: "Disabled Apps"),
+                    String(localized: "Per-App Shortcuts")]
         case .suggestInIntegratedTerminals:
             return ["terminal", "terminals", "integrated terminal", "vscode", "vs code",
                     "cursor", "shell", "xterm", "command line", "cli", "console",

@@ -32,6 +32,18 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test(arguments: translatedLanguages)
+    func perAppSettingsResourcesResolve(language: String) throws {
+        let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"))
+        let bundle = try #require(Bundle(path: path))
+        for key in ["App Settings", "Search apps", "Enable Completions", "Mid-Line Completions",
+                    "Instructions for This App", "Collect Inputs", "Reset App Settings"] {
+            let rendered = bundle.localizedString(forKey: key, value: nil, table: "Learning")
+            #expect(!rendered.isEmpty)
+            #expect(rendered != key)
+        }
+    }
+
     @Test(arguments: ["en"] + translatedLanguages)
     func productBrandingResolvesFromTheForkTable(language: String) throws {
         let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"))

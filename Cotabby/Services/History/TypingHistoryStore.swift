@@ -28,6 +28,11 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
 
     @Published private(set) var preferences: TypingHistoryPreferences
     @Published private(set) var recordCount = 0
+    /// Derived from the same records as the global count; views never maintain their own totals.
+    @Published private(set) var recordCountsByApp: [String: Int] = [:]
+    /// Serializes archive mutation while a filtered archive is encrypted off the main actor.
+    @Published private(set) var isDeletingRecords = false
+    @Published private(set) var appDeletionFailure: AppHistoryDeletionFailure?
     @Published private(set) var status: Status = .loading
     @Published private(set) var isImporting = false
     @Published private(set) var lastImportMessage: String?
@@ -45,7 +50,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     /// Every write and delete goes through this so a deletion can never be undone by a save that
     /// was already running (see `TypingHistoryWriter`).
     private let writer: TypingHistoryWriter
-    /// Bumped by Delete All. Work that started before a deletion (a load, an import, a save)
+    /// Bumped by either deletion scope. Work that started before a deletion (a load, an import, a save)
     /// compares its captured value and discards its result instead of restoring deleted history.
     private var persistenceGeneration = 0
     /// Numbers each captured save so an older snapshot can never overwrite a newer one.
@@ -60,6 +65,9 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     private let userDefaults: UserDefaults
     /// How long typing must pause before a background save; injectable so tests need not wait.
     private let saveDelayNanoseconds: UInt64
+    private let importRecords: @Sendable (URL) throws -> [TypingHistoryRecord]
+    /// A quit must persist this filtered snapshot, not flush the still-visible pre-commit records.
+    private var pendingAppDeletion: PendingSave?
     private var records: [TypingHistoryRecord] = []
     private var index: TypingHistoryIndex?
     private var phrases: TypingHistoryPhrasePredictor?
@@ -101,12 +109,16 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
         vault: TypingHistoryVault = .standard(),
         userDefaults: UserDefaults = .standard,
         loadsArchive: Bool = true,
-        saveDelayNanoseconds: UInt64 = 5_000_000_000
+        saveDelayNanoseconds: UInt64 = 5_000_000_000,
+        importRecords: @escaping @Sendable (URL) throws -> [TypingHistoryRecord] = {
+            try CotypistExportImporter.records(fromExport: Data(contentsOf: $0))
+        }
     ) {
         self.vault = vault
         self.writer = TypingHistoryWriter(vault: vault)
         self.userDefaults = userDefaults
         self.saveDelayNanoseconds = saveDelayNanoseconds
+        self.importRecords = importRecords
         preferences = TypingHistoryPreferences(
             isUsingHistory: userDefaults.object(forKey: DefaultsKey.isUsingHistory) as? Bool
                 ?? TypingHistoryPreferences.defaults.isUsingHistory,
@@ -131,6 +143,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     }
 
     func setRecording(_ enabled: Bool) {
+        guard !isDeletingRecords else { return }
         guard preferences.isRecording != enabled else { return }
         preferences.isRecording = enabled
         userDefaults.set(enabled, forKey: DefaultsKey.isRecording)
@@ -138,6 +151,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     }
 
     func setExcluded(_ bundleIdentifier: String, excluded: Bool) {
+        guard !isDeletingRecords else { return }
         var identifiers = preferences.excludedBundleIdentifiers.filter { $0 != bundleIdentifier }
         if excluded { identifiers.append(bundleIdentifier) }
         identifiers.sort()
@@ -152,7 +166,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
         activeRecording = nil
         if let index = records.firstIndex(where: { $0.id == active.recordID }) {
             records.remove(at: index)
-            recordCount = records.count
+            refreshCounts()
             changeCount += 1
             scheduleSave()
             rebuildSearchStructures()
@@ -162,6 +176,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     // MARK: - Loading, saving, rebuilding
 
     func loadArchive() async {
+        guard !isDeletingRecords else { return }
         let vault = vault
         let generation = persistenceGeneration
         do {
@@ -169,7 +184,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
             // Delete All ran while the archive was decrypting: the loaded records are gone now.
             guard generation == persistenceGeneration else { return }
             records = loaded
-            recordCount = loaded.count
+            refreshCounts()
             savedChangeCount = changeCount
             status = .ready
             rebuildSearchStructures()
@@ -182,6 +197,14 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     /// Writes immediately, on the calling (main) thread. Used at termination, when there is no time
     /// left for a debounced background save. Writes nothing when nothing changed.
     func flush() {
+        if let pending = pendingAppDeletion, pending.generation == persistenceGeneration {
+            // Termination is the one synchronous fallback: the process may exit before the Task
+            // resumes. Writer ordering makes a concurrent duplicate of this snapshot harmless.
+            do {
+                try writer.save(pending.records, generation: pending.generation, sequence: pending.sequence)
+            } catch { CotabbyLogger.app.error("Pending app history deletion could not be flushed: \(error)") }
+            return
+        }
         guard status == .ready else { return }
         saveTask?.cancel()
         materializeActiveRecording()
@@ -195,7 +218,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     }
 
     private func scheduleSave() {
-        guard status == .ready else { return }
+        guard status == .ready, !isDeletingRecords else { return }
         saveTask?.cancel()
         let delay = saveDelayNanoseconds
         saveTask = Task { [weak self] in
@@ -264,6 +287,9 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     /// focus change: it is only evaluated once recording is on and the field's text changed. Secure
     /// fields never reach here as supported, and are checked again below.
     func observe(_ snapshot: FocusSnapshot, isAllowed: () -> Bool) {
+        // Capture resumes from the next live snapshot after the atomic archive commit. Do not
+        // finish/materialize the old active field while its deletion snapshot is being written.
+        guard !isDeletingRecords else { return }
         guard status == .ready, preferences.isRecording,
               case .supported = snapshot.capability,
               let input = snapshot.context, !input.isSecure,
@@ -432,7 +458,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
             // The user deleted the field's text down to nothing worth keeping.
             if let existingIndex {
                 records.remove(at: existingIndex)
-                recordCount = records.count
+                refreshCounts()
                 changeCount += 1
                 return true
             }
@@ -453,7 +479,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
             ))
             trimToCapacity()
         }
-        recordCount = records.count
+        refreshCounts()
         changeCount += 1
         return true
     }
@@ -469,15 +495,14 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     /// Imports a Cotypist `user_inputs.json` export. Entries whose text is already in history are
     /// skipped, so importing the same file twice adds nothing.
     func importCotypistExport(from url: URL) async {
-        guard status == .ready, !isImporting else { return }
+        guard status == .ready, !isImporting, !isDeletingRecords else { return }
         isImporting = true
         defer { isImporting = false }
         let generation = persistenceGeneration
         do {
-            let imported = try await Task.detached(priority: .userInitiated) {
-                try CotypistExportImporter.records(fromExport: Data(contentsOf: url))
-            }.value
-            // Delete All ran while the file was being read; adding the import now would partly undo it.
+            let importRecords = importRecords
+            let imported = try await Task.detached(priority: .userInitiated) { try importRecords(url) }.value
+            // A history deletion ran while the file was being read; importing now could undo it.
             guard generation == persistenceGeneration else {
                 lastImportMessage = String(localized: "Import cancelled because typing history was deleted.")
                 return
@@ -493,7 +518,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
             guard !fresh.isEmpty else { return }
             records.append(contentsOf: fresh)
             trimToCapacity()
-            recordCount = records.count
+            refreshCounts()
             changeCount += 1
             scheduleSave()
             rebuildSearchStructures()
@@ -504,9 +529,78 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
         }
     }
 
+    /// Deletes only one app while preserving the archive's other records and encryption key.
+    /// The store owns the filtering policy; its existing writer orders the whole-archive replacement.
+    /// Counts commit only after persistence succeeds, so a failed deletion remains visible/retryable.
+    func deleteRecords(forBundleIdentifier bundleIdentifier: String) async {
+        guard status == .ready, !isDeletingRecords else { return }
+        saveTask?.cancel()
+        persistenceGeneration += 1 // Retires a load/import captured before this deletion.
+        let generation = persistenceGeneration
+        if activeRecording?.bundleIdentifier != bundleIdentifier { materializeActiveRecording() }
+        let remaining = records.filter { $0.bundleIdentifier != bundleIdentifier }
+        invalidateSearchStructures()
+        guard remaining.count != records.count else {
+            if activeRecording?.bundleIdentifier == bundleIdentifier { activeRecording = nil }
+            recentRecordings = recentRecordings.filter { $0.value.bundleIdentifier != bundleIdentifier }
+            rebuildSearchStructures()
+            return
+        }
+        isDeletingRecords = true
+        changeCount += 1
+        saveSequence += 1
+        let save = PendingSave(
+            records: remaining, generation: generation, sequence: saveSequence, changeCount: changeCount
+        )
+        pendingAppDeletion = save
+        defer {
+            pendingAppDeletion = nil
+            isDeletingRecords = false
+        }
+        let writer = writer
+        do {
+            try await Task.detached(priority: .utility) {
+                try writer.save(save.records, generation: save.generation, sequence: save.sequence)
+            }.value
+            // A result belongs only to the archive generation that prepared its filtered snapshot.
+            guard generation == persistenceGeneration else { return }
+            records = remaining
+            if activeRecording?.bundleIdentifier == bundleIdentifier { activeRecording = nil }
+            recentRecordings = recentRecordings.filter { $0.value.bundleIdentifier != bundleIdentifier }
+            refreshCounts()
+            savedChangeCount = max(savedChangeCount, save.changeCount)
+            if appDeletionFailure?.bundleIdentifier == bundleIdentifier { appDeletionFailure = nil }
+            rebuildSearchStructures()
+        } catch {
+            guard generation == persistenceGeneration else { return }
+            appDeletionFailure = AppHistoryDeletionFailure(
+                bundleIdentifier: bundleIdentifier,
+                message: String(localized: "Typing history couldn't be deleted: \(error.localizedDescription)")
+            )
+            CotabbyLogger.app.error("App history could not be deleted: \(error)")
+            rebuildSearchStructures()
+        }
+    }
+
+    private func refreshCounts() {
+        recordCount = records.count
+        recordCountsByApp = Dictionary(grouping: records, by: \.bundleIdentifier).mapValues(\.count)
+    }
+
+    /// Immediately removes deleted text from synchronous readers and retires pending index builds.
+    private func invalidateSearchStructures() {
+        index = nil
+        phrases = nil
+        exampleCache = nil
+        rebuildGeneration += 1
+    }
+
     /// Removes every record, the encrypted file, and its Keychain key. Also the way out of an
     /// archive that can no longer be opened: deleting it lets recording start over.
     func deleteAll() {
+        // Both entry points serialize archive mutations. Settings disables this action while an app
+        // deletion is committing; the guard also protects programmatic callers and termination tests.
+        guard !isDeletingRecords else { return }
         saveTask?.cancel()
         persistenceGeneration += 1
         do {
@@ -525,7 +619,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
         activeRecording = nil
         recentRecordings = [:]
         records = []
-        recordCount = 0
+        refreshCounts()
         savedChangeCount = changeCount
         index = nil
         phrases = nil
@@ -533,13 +627,14 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
         rebuildGeneration += 1
         lastImportMessage = nil
         deletionError = nil
+        appDeletionFailure = nil
         status = .ready
     }
 
     // MARK: - SuggestionHistoryProviding
 
     func historyExamples(for context: FocusedInputContext, engine: SuggestionEngineKind) -> [String] {
-        guard preferences.isUsingHistory, engine != .openAICompatible, let index else { return [] }
+        guard !isDeletingRecords, preferences.isUsingHistory, engine != .openAICompatible, let index else { return [] }
         let stableText = TypingHistoryQuery.stableText(from: context.precedingText)
         // The window title (an email subject, a document name) is the most stable topical signal a
         // field has, so it joins the query even before the first full block of words is typed.
@@ -563,7 +658,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     }
 
     func phraseContinuation(for request: SuggestionRequest, engine: SuggestionEngineKind) -> String? {
-        guard preferences.isUsingHistory, engine != .openAICompatible, let phrases else { return nil }
+        guard !isDeletingRecords, preferences.isUsingHistory, engine != .openAICompatible, let phrases else { return nil }
         // Text after the caret on the same line would be pushed along by an inserted phrase; leave
         // those mid-line positions to the model, which sees the trailing text.
         let restOfLine = request.context.trailingText.prefix { !$0.isNewline }

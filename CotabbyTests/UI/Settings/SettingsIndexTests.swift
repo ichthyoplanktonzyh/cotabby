@@ -19,6 +19,12 @@ final class SettingsIndexTests: XCTestCase {
         XCTAssertTrue(SettingsItem.results(for: "ghost").contains(.matchHostTextSize))
     }
 
+    func test_perAppPolicyQueriesLandOnTheUnifiedAppsPane() {
+        for query in ["app settings", "per app", "mid-line", "collected inputs"] {
+            XCTAssertTrue(SettingsItem.results(for: query).contains(.disabledApps), query)
+        }
+    }
+
     func test_sidebarGroupsCoverEveryCategoryExactlyOnce() {
         // The sidebar renders from `sidebarGroups`, not `allCases`, so a category missing from the
         // groups would silently disappear from the window. Order is pinned too: the flattened
