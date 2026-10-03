@@ -38,6 +38,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
     case showMenuBarIcon
     case showKeyHint
     case ghostTextColor
+    case ghostTextStyle
     case ghostTextOpacity
     case matchHostTextSize
     case ghostTextSize
@@ -141,6 +142,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .showMenuBarIcon: return String(localized: "Show Lingrove in Menu Bar", table: "Learning")
         case .showKeyHint: return String(localized: "Show Accept-Key Hint")
         case .ghostTextColor: return String(localized: "Ghost Text Color")
+        case .ghostTextStyle: return String(localized: "Ghost Text Style", table: "Learning")
         case .ghostTextOpacity: return String(localized: "Ghost Text Opacity")
         case .matchHostTextSize: return String(localized: "Match Original Text Size", table: "Learning")
         case .ghostTextSize: return String(localized: "Ghost Text Size")
@@ -231,6 +233,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .showMenuBarIcon: return "menubar.rectangle"
         case .showKeyHint: return "keyboard"
         case .ghostTextColor: return "paintpalette"
+        case .ghostTextStyle: return "bold.italic.underline"
         case .ghostTextOpacity: return "circle.lefthalf.filled"
         case .matchHostTextSize: return "equal.square"
         case .ghostTextSize: return "textformat.size"
@@ -303,7 +306,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
              .inlineMacros, .onboarding, .interfaceLanguage, .resetAllSettings:
             return .general
         case .suggestionDisplay, .streamWhileGenerating, .fadeInSuggestions, .showFieldIndicator,
-             .showWordCount, .showMenuBarIcon, .showKeyHint, .ghostTextColor,
+             .showWordCount, .showMenuBarIcon, .showKeyHint, .ghostTextColor, .ghostTextStyle,
              .ghostTextOpacity, .matchHostTextSize, .ghostTextSize, .ghostTextSizeFloor, .ghostTextSizeCeiling:
             return .appearance
         case .emojiPicker, .emojiSkinTone, .emojiPeopleStyle, .emojiHistory:
@@ -370,6 +373,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .showMenuBarIcon: return String(localized: "Hide menu bar clutter while Lingrove keeps running.", table: "Learning")
         case .showKeyHint: return String(localized: "Show the accept-key badge beside the ghost text.")
         case .ghostTextColor: return String(localized: "Pick the color of the inline suggestion.")
+        case .ghostTextStyle: return String(localized: "Draw suggestions bold, italic, or both.", table: "Learning")
         case .ghostTextOpacity: return String(localized: "How faint the suggestion looks before you accept it.")
         case .matchHostTextSize:
             return String(localized: "Draw suggestions at exactly the size of the text you are typing.", table: "Learning")
@@ -516,7 +520,10 @@ enum SettingsItem: String, CaseIterable, Identifiable {
                     "show key"]
         case .ghostTextColor:
             return ["color", "ghost", "theme", "dark", "light", "tint", "appearance",
-                    "highlight", "shade"]
+                    "highlight", "shade", "white"]
+        case .ghostTextStyle:
+            return ["bold", "italic", "style", "font", "weight", "slant", "emphasis",
+                    "ghost", "appearance"]
         case .ghostTextOpacity:
             return ["opacity", "transparency", "fade", "alpha", "translucent", "dim",
                     "brightness", "visibility"]
