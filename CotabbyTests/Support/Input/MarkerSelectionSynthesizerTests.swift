@@ -42,6 +42,36 @@ final class MarkerSelectionSynthesizerTests: XCTestCase {
         XCTAssertEqual((result.text as NSString).substring(with: result.selection), "X")
     }
 
+    func testLongDocumentCarriesSeparateWindowAndDocumentSelectionCoordinates() {
+        let beforeCaret = String(repeating: "x", count: 5_000) + "😀"
+        let selected = "猫"
+        let afterCaret = " tail"
+        let result = MarkerSelectionSynthesizer.make(
+            beforeCaret: beforeCaret,
+            selected: selected,
+            afterCaret: afterCaret
+        )
+
+        XCTAssertEqual(result.selection.location, MarkerSelectionSynthesizer.defaultWindow)
+        XCTAssertEqual(result.selection.length, (selected as NSString).length)
+        XCTAssertEqual(result.documentSelection, NSRange(location: beforeCaret.utf16.count, length: 1))
+        XCTAssertEqual(result.documentLength, beforeCaret.utf16.count + selected.utf16.count + afterCaret.utf16.count)
+        XCTAssertEqual((result.text as NSString).substring(with: result.selection), selected)
+        XCTAssertNotEqual(result.selection.location, result.documentSelection?.location ?? -1)
+    }
+
+    func testUnknownAfterCaretCannotClaimTheCaretIsAtDocumentEnd() {
+        let result = MarkerSelectionSynthesizer.make(
+            beforeCaret: "prefix",
+            selected: "word",
+            afterCaret: "",
+            afterCaretIsKnown: false
+        )
+
+        XCTAssertEqual(result.documentSelection, NSRange(location: 6, length: 4))
+        XCTAssertNil(result.documentLength)
+    }
+
     func testWindowDoesNotSplitSurrogatePairs() {
         // Each emoji is 2 UTF-16 units. A window of 3 lands mid-emoji on both sides; the slice is
         // widened outward to whole composed characters (so it can exceed the window by one unit)

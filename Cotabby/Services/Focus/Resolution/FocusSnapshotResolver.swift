@@ -351,7 +351,9 @@ struct FocusSnapshotResolver {
             fieldPlaceholder: fieldPlaceholder,
             hostTextMetrics: Self.mergingRunLinePitch(hostTextMetrics, edges: observedContentEdges),
             elementFrameRect: resolvedCandidate.elementFrameRect,
-            hostMarkedTextRange: resolvedCandidate.markedTextRange ?? chromiumCompletionRange ?? smartComposeRange
+            hostMarkedTextRange: resolvedCandidate.markedTextRange ?? chromiumCompletionRange ?? smartComposeRange,
+            documentSelection: resolvedCandidate.documentSelection,
+            documentLength: resolvedCandidate.documentLength
         )
 
         if let reason = blockedReason(
@@ -430,7 +432,7 @@ struct FocusSnapshotResolver {
                 ]
             )
         }
-        return "Text is currently selected."
+        return FocusCapability.selectedTextReason
     }
 
     /// Reads the host's font/color at the caret through the style cache: one attributed-string read
@@ -1179,6 +1181,8 @@ struct FocusSnapshotResolver {
             isSecure: isSecure,
             vendsDOMAttributes: vendsDOMAttributes,
             usesMarkerSelection: markerSelection != nil,
+            documentSelection: nativeSelection ?? markerSelection?.documentSelection,
+            documentLength: markerSelection?.documentLength ?? nativeTextSelection?.documentLength,
             documentCaretLocation: nativeSelection?.location,
             supportedParameterizedAttributes: supportedParameterizedAttributes,
             resolverCandidate: resolverCandidate
@@ -1421,7 +1425,7 @@ struct FocusSnapshotResolver {
                 return nil
             }
 
-            return AXTextSelection(text: value, selection: selection)
+            return AXTextSelection(text: value, selection: selection, documentLength: value.utf16.count)
         }
 
         guard supportedParameterizedAttributes.contains(kAXStringForRangeParameterizedAttribute as String),
@@ -1486,7 +1490,8 @@ struct FocusSnapshotResolver {
             selection: NSRange(
                 location: (beforeText as NSString).length,
                 length: (selectedText as NSString).length
-            )
+            ),
+            documentLength: documentLength
         )
     }
 
@@ -1663,6 +1668,7 @@ private struct FocusedElementReading {
 private struct AXTextSelection {
     let text: String
     let selection: NSRange
+    var documentLength: Int?
 }
 
 /// AX data read from one candidate element near the current focus.
@@ -1692,6 +1698,8 @@ private struct AXFocusCandidate {
     /// True when the selection was synthesized from text markers, so `selection` is window-relative
     /// and the NSRange geometry APIs cannot be used against it.
     let usesMarkerSelection: Bool
+    let documentSelection: NSRange?
+    let documentLength: Int?
     /// The caret offset in the host's document coordinates when a native selection range exists.
     let documentCaretLocation: Int?
     let supportedParameterizedAttributes: Set<String>

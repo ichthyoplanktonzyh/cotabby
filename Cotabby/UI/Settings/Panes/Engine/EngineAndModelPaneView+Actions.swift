@@ -216,7 +216,10 @@ extension EngineAndModelPaneView {
                     configuration: configuration,
                     apiKey: endpointAPIKeyDraft
                 )
-                if let preferredModel = OpenAICompatibleModelSelectionResolver.preferredSelection(
+                // Discovery is also useful for learning while a local completion engine is active.
+                // Only the active endpoint engine may adopt a discovered ordinary completion model.
+                if suggestionSettings.selectedEngine == .openAICompatible,
+                   let preferredModel = OpenAICompatibleModelSelectionResolver.preferredSelection(
                     currentSelection: suggestionSettings.openAICompatibleModelName,
                     discoveredModels: openAICompatibleConnectionModel.models
                 ), preferredModel != suggestionSettings.openAICompatibleModelName {

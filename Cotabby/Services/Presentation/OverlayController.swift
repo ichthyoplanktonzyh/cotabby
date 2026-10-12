@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Foundation
 import Logging
 import QuartzCore
@@ -16,6 +17,11 @@ import SwiftUI
 @MainActor
 final class OverlayController: SuggestionOverlayControlling {
     var onStateChange: ((OverlayState) -> Void)?
+
+    /// Read-only geometry shared with neighboring panels. This publishes after the real window
+    /// frame is set, including calibration and acceptance moves, without changing ghost layout or
+    /// taking over the suggestion coordinator's single onStateChange callback.
+    @Published private(set) var visiblePanelFrame: CGRect?
 
     private let suggestionSettings: SuggestionSettingsModel
 
@@ -297,6 +303,7 @@ final class OverlayController: SuggestionOverlayControlling {
         heldPresentationText = nil
         CotabbyLogger.suggestion.debug("Overlay hidden", metadata: ["stage": .string("overlay-hide"), "reason": .string(reason)])
         panel.orderOut(nil)
+        visiblePanelFrame = nil
         inlineSession = nil
         state = .hidden(reason: reason)
     }
@@ -1461,6 +1468,7 @@ final class OverlayController: SuggestionOverlayControlling {
         )
         panel.setFrame(frame, display: true)
         panel.orderFrontRegardless()
+        visiblePanelFrame = panel.frame
         logInlinePresentation(session, panelFrame: frame)
     }
 
@@ -1537,6 +1545,7 @@ final class OverlayController: SuggestionOverlayControlling {
         }
         panel.setFrame(panelFrame, display: true)
         panel.orderFrontRegardless()
+        visiblePanelFrame = panel.frame
         logMirrorPresentation(geometry: geometry, reason: reason, panelFrame: panelFrame)
     }
 

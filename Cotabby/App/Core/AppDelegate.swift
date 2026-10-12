@@ -174,44 +174,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         didStartServices = true
         CotabbyLogger.app.info("All services started")
 
-        // A manual cold launch must remain recoverable after the user hides the only status item.
-        // Login-item launches stay silent so hiding the icon does not make Settings appear after
-        // every sign-in. The development argument deliberately overrides both policies.
+        // A direct launch needs a user-facing entry point even when the status item is enabled.
+        // Login-item launches stay in the background, while the development argument explicitly
+        // requests Settings regardless of how the process was launched.
         let wasSettingsExplicitlyRequested =
             ProcessInfo.processInfo.arguments.contains("-cotabby-open-settings")
+        let wasLaunchedAtLogin = LaunchAtLogin.wasLaunchedAtLogin
         let shouldShowSettings = MenuBarRecoveryPolicy.shouldShowSettingsOnColdLaunch(
-            isMenuBarIconVisible: suggestionSettings.isMenuBarIconVisible,
-            wasLaunchedAtLogin: LaunchAtLogin.wasLaunchedAtLogin,
+            wasLaunchedAtLogin: wasLaunchedAtLogin,
             wasSettingsExplicitlyRequested: wasSettingsExplicitlyRequested
         )
         if shouldShowSettings {
-            if !suggestionSettings.isMenuBarIconVisible && !wasSettingsExplicitlyRequested {
-                CotabbyLogger.app.info(
-                    "Opening Settings because Cotabby launched with its menu bar icon hidden"
-                )
+            if wasSettingsExplicitlyRequested {
+                CotabbyLogger.app.info("Opening Settings because the launch explicitly requested it")
+            } else if !wasLaunchedAtLogin {
+                CotabbyLogger.app.info("Opening Settings after a manual launch")
             }
             settingsCoordinator.showSettings()
         }
     }
 
-    /// Launch Services sends a reopen event when the user opens Cotabby while this accessory app is
-    /// already running. When the status item is hidden, Settings is the app's only visible recovery
-    /// surface, so reopening must reveal it instead of leaving the user with no apparent response.
+    /// Launch Services sends a reopen event when the user explicitly opens Cotabby while it is
+    /// already running. Route every such request through the existing Settings owner so the app
+    /// responds whether its status item is visible, Settings is closed, or Settings is minimized.
     func applicationShouldHandleReopen(
         _ sender: NSApplication,
-        hasVisibleWindows flag: Bool
+        hasVisibleWindows _: Bool
     ) -> Bool {
-        if MenuBarRecoveryPolicy.shouldLetAppKitHandleReopen(
-            isMenuBarIconVisible: suggestionSettings.isMenuBarIconVisible,
-            hasVisibleWindows: flag,
-            isSettingsWindowOpen: settingsCoordinator.isSettingsWindowOpen
-        ) {
-            // Let AppKit activate the app and bring the existing Settings window forward.
-            return true
-        }
-
-        CotabbyLogger.app.info("Opening Settings because Cotabby was reopened with its menu bar icon hidden")
+        CotabbyLogger.app.info("Opening Settings because Cotabby was explicitly reopened")
         settingsCoordinator.showSettings()
+        // The coordinator has already activated or presented the Settings window; returning false
+        // prevents AppKit from applying a second, potentially windowless reopen behavior.
         return false
     }
 

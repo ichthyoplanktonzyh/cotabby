@@ -91,6 +91,8 @@ enum FocusCapabilityRequirement: String, CaseIterable, Equatable {
 /// Unsupported means the host does not expose enough AX data.
 /// Blocked means Cotabby intentionally refuses to operate, for example in secure fields.
 enum FocusCapability: Equatable {
+    /// Selection blocks continuation, but an explicit selected-text task may accept this one reason.
+    static let selectedTextReason = "Text is currently selected."
     case supported
     case blocked(String)
     case unsupported(String)
@@ -359,6 +361,13 @@ nonisolated struct FocusedInputSnapshot: Equatable {
     let precedingText: String
     let trailingText: String
     let selection: NSRange
+    /// `selection` belongs to the bounded prompt window. Editor transactions and committed-text
+    /// deltas need the original full-document coordinates, which must never be inferred from a
+    /// window-relative caret (usually capped at 4096). Neither this range nor full values are sent.
+    let documentSelection: NSRange
+    /// Present only when the resolver read the real document length. An empty trailing excerpt
+    /// can mean a failed range query; it must not be mistaken for a caret at the document end.
+    let documentLength: Int?
     let isSecure: Bool
 
     /// True when the resolved field is an xterm.js integrated-terminal surface (VS Code / Cursor /
@@ -446,7 +455,9 @@ nonisolated struct FocusedInputSnapshot: Equatable {
         fieldPlaceholder: String? = nil,
         hostTextMetrics: HostTextMetrics? = nil,
         elementFrameRect: CGRect? = nil,
-        hostMarkedTextRange: NSRange? = nil
+        hostMarkedTextRange: NSRange? = nil,
+        documentSelection: NSRange? = nil,
+        documentLength: Int? = nil
     ) {
         self.applicationName = applicationName
         self.bundleIdentifier = bundleIdentifier
@@ -463,6 +474,8 @@ nonisolated struct FocusedInputSnapshot: Equatable {
         self.precedingText = precedingText
         self.trailingText = trailingText
         self.selection = selection
+        self.documentSelection = documentSelection ?? selection
+        self.documentLength = documentLength
         self.isSecure = isSecure
         self.isIntegratedTerminal = isIntegratedTerminal
         self.isWebContentField = isWebContentField

@@ -9,6 +9,7 @@ struct WritingPaneView: View {
 
     var body: some View {
         SettingsPaneScaffold {
+            LanguageLearningSection(settings: suggestionSettings.languageLearning, suggestionSettings: suggestionSettings)
             Section("Length") {
                 Picker(selection: lengthChoiceBinding) {
                     ForEach(SuggestionWordCountPreset.allCases) { preset in

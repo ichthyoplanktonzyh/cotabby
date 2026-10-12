@@ -46,10 +46,12 @@ enum InputMonitorAcceptTapDecision: Equatable {
 ///   event delivery on the callback's return, so a slow main actor cannot stall input in unrelated
 ///   apps (DaVinci Resolve's Spacebar play/pause is the canonical victim of an active tap here — see
 ///   issue #328). It handles ordinary typing, navigation, dismissal, and pointer observation.
-/// - A narrow `.defaultTap` accept tap at the tail, installed only while a suggestion is visible.
-///   This is the only path that consumes events, so it also owns acceptance side effects. Keeping
-///   insertion and consumption in the same callback prevents the coordinator from hiding the overlay
-///   before the tap has decided what to do with the original key.
+/// - A narrow `.defaultTap` at the tail, installed after startup while any owner needs synchronous
+///   key routing: a visible suggestion, an emoji/macro capture session, or a language-learning
+///   shortcut. The startup latch prevents graph construction and settings restoration from installing
+///   a global tap before monitoring actually starts. This is the only path that consumes events, so
+///   it also owns acceptance side effects. Keeping insertion and consumption in the same callback
+///   prevents the coordinator from hiding the overlay before the tap decides what to do with the key.
 @MainActor
 final class InputMonitor {
     var onEvent: ((CapturedInputEvent) -> Bool)?
@@ -59,6 +61,11 @@ final class InputMonitor {
     /// compatibility guard uses this to pause focus-tree reads before Calendar handles its fragile
     /// date/time disclosure click. No pointer event is consumed or modified.
     var onPointerDown: (@MainActor (CGPoint) -> Void)?
+
+    /// Independent module hook; it cannot overwrite emoji/macro interception ownership.
+    var learningKeyDecider: (@MainActor (InputMonitorKeyEvent) -> InputMonitorAcceptTapDecision)?
+    private var learningInterceptionActive = false
+    private var hasStarted = false
 
     /// While an emoji capture session is active, the picker controller decides per key whether the
     /// active tap should swallow it (navigation, Return/Tab, Escape) or let it reach the field
@@ -142,12 +149,14 @@ final class InputMonitor {
 
     /// Installs the observer tap and begins listening for global keyboard activity.
     func start() {
+        hasStarted = true
         CotabbyLogger.app.info("Input monitor starting")
         refresh()
     }
 
     /// Removes both taps and stops observing keyboard events.
     func stop() {
+        hasStarted = false
         CotabbyLogger.app.info("Input monitor stopping")
         destroyAcceptTap()
         destroyToggleTap()
@@ -161,6 +170,7 @@ final class InputMonitor {
         if permissionProvider() {
             installObserverTapIfNeeded()
             refreshToggleTap()
+            if hasStarted && learningInterceptionActive { updateAcceptTapState() }
         } else {
             destroyAcceptTap()
             destroyToggleTap()
@@ -211,12 +221,19 @@ final class InputMonitor {
         updateAcceptTapState()
     }
 
-    /// Installs the active tap when either reason wants it and tears it down otherwise. Recomputes
-    /// accept-key ownership: only a visible suggestion claims the accept key at the observer layer.
-    /// When the tap exists solely for emoji capture, the observer must keep routing the accept key
-    /// (Tab) to the coordinator so the emoji controller — not the suggestion accept path — acts on it.
+    /// Translation shortcuts need a tap even without a visible suggestion. Recording the reason
+    /// before start is safe: hasStarted gates installation so graph construction (including the
+    /// XCTest host) can restore durable settings without starting global keyboard monitoring.
+    func setLearningInterceptionActive(_ active: Bool) {
+        learningInterceptionActive = active
+        updateAcceptTapState()
+    }
+
+    /// Recomputes the independent interception reasons. Only visible suggestions own accept-key
+    /// observer semantics; a translation shortcut must not turn ordinary Tab into acceptance.
     private func updateAcceptTapState() {
-        let wantsTap = permissionProvider() && (suggestionInterceptionActive || captureInterceptionActive)
+        let wantsLearningTap = hasStarted && learningInterceptionActive
+        let wantsTap = permissionProvider() && (suggestionInterceptionActive || captureInterceptionActive || wantsLearningTap)
         // Only a visible suggestion claims the accept key at the observer layer. When the tap exists
         // solely for emoji capture, the observer must keep routing the accept key (Tab) to the
         // coordinator so the emoji controller — not the suggestion accept path — acts on it. Setting
@@ -233,7 +250,8 @@ final class InputMonitor {
             DispatchQueue.main.asyncAfter(deadline: .now() + Self.acceptTapTeardownDelaySeconds) { [weak self] in
                 guard let self else { return }
                 let stillWanted = self.permissionProvider()
-                    && (self.suggestionInterceptionActive || self.captureInterceptionActive)
+                    && (self.suggestionInterceptionActive || self.captureInterceptionActive
+                        || (self.hasStarted && self.learningInterceptionActive))
                 guard !stillWanted else { return }
                 self.destroyAcceptTap()
             }
@@ -590,6 +608,9 @@ final class InputMonitor {
     /// means no capture is active, so the accept-key path takes over. Mirrors `handleAcceptTap`'s
     /// keydown branch without CoreGraphics event allocation.
     func resolveAcceptKeyDown(_ keyEvent: InputMonitorKeyEvent) -> InputMonitorAcceptTapDecision {
+        if shouldProcessEventsProvider(), let decision = learningKeyDecider?(keyEvent), decision != .notHandled {
+            return decision
+        }
         if let emojiCaptureKeyDecider {
             let decision = emojiCaptureKeyDecider(keyEvent)
             if decision != .notHandled {

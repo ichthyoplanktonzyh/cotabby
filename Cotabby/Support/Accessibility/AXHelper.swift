@@ -809,14 +809,16 @@ enum AXHelper {
 
         // After-caret context is nice-to-have, not required for offset correctness.
         var afterText = ""
+        var afterCaretIsKnown = false
         if let postRange = markerRange(from: endpoints.end, to: documentEnd, on: element),
             let trailing = stringForMarkerRange(postRange, on: element) {
             afterText = trailing
+            afterCaretIsKnown = true
         }
 
         return MarkerSelectionSynthesizer.make(
             beforeCaret: beforeText, selected: selectedText, afterCaret: afterText,
-            normalizeNonBreakingSpaces: normalizeNonBreakingSpaces
+            normalizeNonBreakingSpaces: normalizeNonBreakingSpaces, afterCaretIsKnown: afterCaretIsKnown
         )
     }
 
@@ -831,6 +833,30 @@ enum AXHelper {
         guard CFGetTypeID(value) == AXTextMarkerRangeGetTypeID() else { return nil }
         let range = unsafeBitCast(value, to: AXTextMarkerRange.self)
         return (AXTextMarkerRangeCopyStartMarker(range), AXTextMarkerRangeCopyEndMarker(range))
+    }
+
+    /// Exact editing evidence, separate from the best-effort prompt window above. Marker objects
+    /// are borrowed only within this synchronous read and released before any model await. Every
+    /// fragment must resolve and agree with the full field; missing selected/after text is failure,
+    /// not an empty fragment. No marker bytes or guessed offset-to-marker mapping are used.
+    static func exactEditableTextSelection(on element: AXUIElement) -> AXEditableTextSelection? {
+        if let value = stringValue(for: kAXValueAttribute as CFString, on: element),
+           let range = rangeValue(for: kAXSelectedTextRangeAttribute as CFString, on: element) {
+            return AXEditableTextSelection.validated(value: value, range: range, usesTextMarkers: false)
+        }
+        guard let selection = copyOpaqueAttribute(selectedTextMarkerRangeAttribute, on: element),
+              let start = copyOpaqueAttribute(startTextMarkerAttribute, on: element),
+              let end = copyOpaqueAttribute(endTextMarkerAttribute, on: element),
+              let endpoints = textMarkerEndpoints(from: selection),
+              let beforeRange = markerRange(from: start, to: endpoints.start, on: element),
+              let afterRange = markerRange(from: endpoints.end, to: end, on: element),
+              let fullRange = markerRange(from: start, to: end, on: element),
+              let before = stringForMarkerRange(beforeRange, on: element),
+              let selected = stringForMarkerRange(selection, on: element),
+              let after = stringForMarkerRange(afterRange, on: element),
+              let full = stringForMarkerRange(fullRange, on: element) else { return nil }
+        return AXEditableTextSelection.markerReceipt(before: before, selected: selected, after: after, full: full,
+            fieldValue: stringValue(for: kAXValueAttribute as CFString, on: element))
     }
 
     /// Builds an `AXTextMarkerRange` spanning two markers via `AXTextMarkerRangeForUnorderedTextMarkers`.

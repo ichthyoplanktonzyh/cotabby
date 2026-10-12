@@ -6,11 +6,10 @@ import SwiftUI
 extension EngineAndModelPaneView {
 // MARK: - OpenAI-compatible endpoint
 
-    /// Endpoint controls stay inside the unified engine pane. The connection model owns network
-    /// state, the settings model owns durable non-secret values, and the API key draft only lives
-    /// for this view's lifetime before an explicit Connect saves it to Keychain.
-    @ViewBuilder
-    var openAICompatibleSections: some View {
+    /// This shared connection stays available for learning features even when ordinary completion
+    /// uses a local engine. The connection model owns discovery, the settings model owns durable
+    /// values, and the key draft lives in this view until an explicit Connect saves it to Keychain.
+    var endpointConnectionSection: some View {
         Section("Connection") {
             VStack(alignment: .leading, spacing: 10) {
                 SettingsRowLabel(
@@ -92,6 +91,11 @@ extension EngineAndModelPaneView {
             }
         }
 
+    }
+
+    /// These controls configure the ordinary endpoint completion engine only. Learning requests
+    /// use their separately selected instruction model and always use Chat Completions.
+    var endpointModelSection: some View {
         Section("Model") {
             LabeledContent {
                 HStack(spacing: 6) {

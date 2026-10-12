@@ -32,7 +32,7 @@ struct LanguageOption: Identifiable, Equatable, Sendable {
     var id: String { code }
 }
 
-enum LanguageCatalog {
+nonisolated enum LanguageCatalog {
     /// Caps protect the prompt's context budget; few people actively write across more than a handful.
     static let maxLanguages = 6
     static let maxLanguageLength = 30
@@ -67,6 +67,7 @@ enum LanguageCatalog {
             nativeLabel: "简体中文 (Simplified Chinese)",
             tokensPerWord: 1.2
         ),
+        LanguageOption(code: "zh-Hant", name: "Traditional Chinese", nativeLabel: "繁體中文 (Traditional Chinese)", tokensPerWord: 1.2),
         LanguageOption(code: "ja", name: "Japanese", nativeLabel: "日本語 (Japanese)", tokensPerWord: 1.8),
         LanguageOption(code: "ko", name: "Korean", nativeLabel: "한국어 (Korean)", tokensPerWord: 1.8),
         LanguageOption(code: "hi", name: "Hindi", nativeLabel: "हिन्दी (Hindi)", tokensPerWord: 2.0),

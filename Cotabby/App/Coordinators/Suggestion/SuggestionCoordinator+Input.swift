@@ -246,19 +246,34 @@ extension SuggestionCoordinator {
         }
     }
 
+    /// Transfers the interaction to an inline panel as one synchronous teardown. Keeping the
+    /// hidden-work and presentation cleanup together prevents a late endpoint response from
+    /// restoring a ghost even when no suggestion had reached the screen before the shortcut.
+    private func standDownForInlineFeature() {
+        suggestionPresentationTiming.clear()
+        // Cancellation clears hidden buffers too; retain their presence before cancelling so
+        // the presentation receives the same teardown signal as an already visible ghost.
+        let hadSuggestionArtifacts = overlayState.isVisible || interactionState.activeSession != nil ||
+            preparedContinuation != nil || typingPrediction != nil
+        cancelPredictionWork()
+        clearSuggestion(clearDiagnostics: true)
+        switch state {
+        case .debouncing, .generating, .ready: state = .idle
+        default: break
+        }
+        if hadSuggestionArtifacts {
+            hideOverlay(reason: "Overlay hidden because an inline feature is active.")
+        }
+    }
+
     func handleInputEvent(_ event: CapturedInputEvent) -> Bool {
         recordInputPresentationTiming(event)
-        // Give the emoji picker first look at every keystroke so it can drive its trigger state
-        // machine. When a capture is involved, the picker owns the interaction: the suggestion
-        // pipeline stands down and any lingering ghost text is cleared so it does not show behind the
-        // panel. Consumption still happens through the active tap's `emojiCaptureKeyDecider`.
+        // Inline features get first look at input. A claimed event transfers the interaction to
+        // their panel, so even work that has not painted a ghost yet must stop. Otherwise a pending
+        // host-publish poll or endpoint response can display a late completion behind that panel.
+        // Key consumption remains the active tap's `emojiCaptureKeyDecider` responsibility.
         if emojiInputObserver?(event) == true {
-            suggestionPresentationTiming.clear()
-            if overlayState.isVisible || interactionState.activeSession != nil || preparedContinuation != nil || typingPrediction != nil {
-                cancelPredictionWork()
-                clearSuggestion(clearDiagnostics: true)
-                hideOverlay(reason: "Overlay hidden because the emoji picker is active.")
-            }
+            standDownForInlineFeature()
             return false
         }
 

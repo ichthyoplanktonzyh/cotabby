@@ -191,7 +191,26 @@ final class SuggestionInserter {
     /// synthetic event could not be created, so the caller falls back to keystroke insertion. The
     /// Cmd-V is tagged synthetic the same way `insert(_:)` tags its keydown so the consuming tap
     /// ignores it.
-    private func insertViaPaste(_ text: String) -> Bool {
+    /// AX can time out after dispatch. Scoped replacement keeps an uncertain attempt distinct
+    /// from no dispatch so it never retries or restores unrelated clipboard data immediately.
+    private enum PasteMenuDispatch {
+        case notDispatched
+        case dispatched
+        case uncertain
+    }
+
+    /// Explicit selected-text transactions use the host's Paste command only. The caller must
+    /// verify the selection immediately before the menu action and verify the resulting value
+    /// afterward; this method's Bool means dispatched, never "replacement succeeded".
+    func pasteSelectedText(
+        _ text: String, inApplicationPID pid: pid_t, validateSelection: @escaping () -> Bool
+    ) -> Bool {
+        insertViaPaste(text, requiredApplicationPID: pid, validateSelection: validateSelection)
+    }
+
+    private func insertViaPaste(
+        _ text: String, requiredApplicationPID: pid_t? = nil, validateSelection: (() -> Bool)? = nil
+    ) -> Bool {
         let pasteboard = NSPasteboard.general
         // Snapshot the user's clipboard only when no restore is already pending. If one is (an
         // overlapping paste), the pasteboard currently holds our previous completion, so re-snapshotting
@@ -217,9 +236,19 @@ final class SuggestionInserter {
         // physically down during an accept), and re-posting at the annotated session tap with a
         // session source still never pasted in Chrome. The menu press drives the same paste command
         // those key events would have reached, one IPC hop earlier.
-        if pressPasteMenuItem() {
-            CotabbyLogger.suggestion.debug("Paste committed via Edit > Paste menu press")
+        let menuDispatch = pressPasteMenuItem(
+            requiredApplicationPID: requiredApplicationPID, validateSelection: validateSelection
+        )
+        if menuDispatch != .notDispatched {
+            CotabbyLogger.suggestion.debug("Paste menu action dispatched; editor verification belongs to the caller")
         } else {
+            // Explicit selection replacement never falls through to delayed global keystrokes.
+            if requiredApplicationPID != nil {
+                pendingPasteboardRestore?.cancel()
+                Self.restorePasteboard(saved, to: pasteboard)
+                clearPendingPasteboardRestore()
+                return false
+            }
             // Fallback synthetic Cmd-V: session source + annotated session tap so the event's own
             // `.maskCommand` flag survives (the HID tap merges flags with live hardware state). The
             // suppression filter keeps the physically held accept key from interleaving during the post.
@@ -264,25 +293,35 @@ final class SuggestionInserter {
     /// Presses the focused app's Edit > Paste menu item via Accessibility. The owning app is resolved
     /// from the focused element (not the frontmost app) so accessory panels that hold focus without
     /// frontmost status still target the right process. The located item is cached per pid; a cached
-    /// press that fails (menu rebuilt, app relaunched into the same pid) evicts and re-walks once.
-    private func pressPasteMenuItem() -> Bool {
+    /// press that fails (menu rebuilt, app relaunched into the same pid) evicts and re-walks once
+    /// only for legacy autocomplete. Scoped replacement never retries an uncertain action.
+    private func pressPasteMenuItem(
+        requiredApplicationPID: pid_t? = nil, validateSelection: (() -> Bool)? = nil
+    ) -> PasteMenuDispatch {
         guard let focusedElement = AXHelper.focusedElement(),
               let application = AXHelper.owningApplication(of: focusedElement) else {
-            return false
+            return .notDispatched
         }
         let pid = application.processIdentifier
+        guard requiredApplicationPID == nil || requiredApplicationPID == pid else { return .notDispatched }
         if let cached = cachedPasteMenuItems[pid] {
+            guard validateSelection?() ?? true else { return .notDispatched }
             if AXUIElementPerformAction(cached, kAXPressAction as CFString) == .success {
-                return true
+                return .dispatched
             }
             cachedPasteMenuItems[pid] = nil
+            // A failed scoped action may have been queued by the host. Do not re-walk and
+            // press again; retain our pasteboard briefly and let the caller verify the edit.
+            if requiredApplicationPID != nil { return .uncertain }
         }
         guard let item = AXHelper.pasteMenuItem(forApplicationPID: pid),
-              AXUIElementPerformAction(item, kAXPressAction as CFString) == .success else {
-            return false
+              validateSelection?() ?? true else { return .notDispatched }
+        let result = AXUIElementPerformAction(item, kAXPressAction as CFString)
+        guard result == .success else {
+            return requiredApplicationPID == nil ? .notDispatched : .uncertain
         }
         cachedPasteMenuItems[pid] = item
-        return true
+        return .dispatched
     }
 
     /// Clears the in-flight paste-restore bookkeeping once a restore has run (or been abandoned on a

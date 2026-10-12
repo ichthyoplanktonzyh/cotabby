@@ -37,6 +37,7 @@ Cotabby/
 │   ├── Focus/                        focus snapshots and tracking state
 │   ├── History/                      typing-history records, archive, and preferences
 │   ├── Input/                        keyboard event values
+│   ├── LanguageLearning/             durable options, languages, streamed sentence/chunk and task/hint contracts
 │   ├── Onboarding/                   onboarding templates
 │   ├── Permissions/                  TCC permission values
 │   ├── Runtime/
@@ -55,6 +56,7 @@ Cotabby/
 │   │   └── Resolution/               focus snapshots, geometry, bounded AX walks
 │   ├── History/                      typing-history store, recording, and encrypted vault
 │   ├── Input/                        event taps and input-source monitoring
+│   ├── LanguageLearning/             streaming instruction tasks, local dictionaries and verified editor captures
 │   ├── ModelManagement/              model discovery, download, and validation
 │   ├── Permission/
 │   │   └── Guidance/                 permission overlay and System Settings guidance
@@ -81,6 +83,7 @@ Cotabby/
 │   │   └── Capability/               supported-field capability resolution
 │   ├── History/                      history retrieval, phrase prediction, scrubbing, import
 │   ├── Input/                        composition, key-label, and selection helpers
+│   ├── LanguageLearning/             sentence/chunk stream decoding, prompts, scopes and preview/write policies
 │   ├── Logging/                      debug options, request IDs, and JSONL handlers
 │   ├── Macros/
 │   │   └── Evaluators/               deterministic arithmetic/date/unit evaluators

@@ -64,7 +64,79 @@ final class SuggestionCoordinatorInputTests: SuggestionCoordinatorRigTestCase {
         XCTAssertFalse(consumed, "Consumption is the tap's job; the coordinator only stands down")
         XCTAssertNil(rig.interactionState.activeSession)
         XCTAssertFalse(rig.coordinator.overlayState.isVisible)
-        XCTAssertEqual(rig.overlayController.hideReasons.last, "Overlay hidden because the emoji picker is active.")
+        XCTAssertEqual(rig.overlayController.hideReasons.last, "Overlay hidden because an inline feature is active.")
+    }
+
+    func test_inlineLearningShortcutCancelsPendingHostPublishPollWithoutVisibleGhost() async {
+        let rig = retained(makeCoordinatorRig())
+        XCTAssertFalse(rig.coordinator.overlayState.isVisible)
+        XCTAssertNil(rig.interactionState.activeSession)
+
+        _ = rig.coordinator.handleInputEvent(
+            CotabbyTestFixtures.inputEvent(kind: .textMutation, keyCode: 0, characters: "a")
+        )
+        let pendingPollGeneration = rig.coordinator.hostPublishPollGeneration
+        XCTAssertGreaterThan(pendingPollGeneration, 0, "Typing should be waiting for the host's AX publication")
+
+        // The composition-root observer returns true when InlineCommandCoordinator claims the
+        // manual learning chord; the active input tap remains responsible for consuming it.
+        rig.coordinator.emojiInputObserver = { $0.kind == .shortcutMutation && $0.keyCode == 17 }
+        let observerResult = rig.coordinator.handleInputEvent(
+            CotabbyTestFixtures.inputEvent(
+                kind: .shortcutMutation, keyCode: 17, characters: "t", flags: [.maskCommand, .maskControl]
+            )
+        )
+        XCTAssertFalse(observerResult)
+
+        XCTAssertGreaterThan(rig.coordinator.hostPublishPollGeneration, pendingPollGeneration,
+                             "An inline feature claiming the event retires even hidden prediction work")
+        XCTAssertEqual(rig.coordinator.state, .idle)
+        XCTAssertNil(rig.coordinator.latestRequestID)
+        XCTAssertNil(rig.coordinator.latestGenerationNumber)
+        try? await Task.sleep(nanoseconds: 650_000_000)
+
+        XCTAssertTrue(rig.engine.requests.isEmpty, "The stale poll must not fall back to a model request")
+        XCTAssertFalse(rig.coordinator.overlayState.isVisible)
+        XCTAssertNil(rig.interactionState.activeSession)
+    }
+
+    func test_inlineLearningShortcutRejectsLateEndpointLikeGenerationResult() async {
+        let rig = retained(makeCoordinatorRig())
+        let suspendedResponse = SuspendedSuggestionResult()
+        defer { suspendedResponse.resume(text: " world") }
+        rig.engine.resultProvider = { request in
+            await suspendedResponse.wait(for: request)
+        }
+        rig.coordinator.schedulePrediction()
+        await waitUntil("The generation request did not reach the suspended engine") {
+            rig.engine.requests.count == 1
+        }
+        XCTAssertFalse(rig.coordinator.overlayState.isVisible)
+
+        let retiredWorkID = rig.coordinator.currentWorkID
+        rig.coordinator.emojiInputObserver = { $0.kind == .shortcutMutation && $0.keyCode == 17 }
+        _ = rig.coordinator.handleInputEvent(
+            CotabbyTestFixtures.inputEvent(
+                kind: .shortcutMutation, keyCode: 17, characters: "t", flags: [.maskCommand, .maskControl]
+            )
+        )
+        XCTAssertNotEqual(rig.coordinator.currentWorkID, retiredWorkID,
+                          "The claimed shortcut invalidates the suspended endpoint response")
+        XCTAssertEqual(rig.coordinator.state, .idle)
+        XCTAssertNil(rig.coordinator.latestRequestID)
+        XCTAssertNil(rig.coordinator.latestGenerationNumber)
+
+        guard let request = rig.engine.requests.first else {
+            XCTFail("The suspended engine request disappeared before its stale response was released")
+            return
+        }
+        suspendedResponse.resume(text: " world", generation: request.generation)
+        try? await Task.sleep(nanoseconds: 50_000_000)
+
+        XCTAssertFalse(rig.coordinator.overlayState.isVisible)
+        XCTAssertTrue(rig.overlayController.shownTexts.isEmpty,
+                      "A late response cannot paint behind the learning panel")
+        XCTAssertNil(rig.interactionState.activeSession)
     }
 
     // MARK: - Typing against a live session
@@ -484,5 +556,32 @@ final class SuggestionCoordinatorInputTests: SuggestionCoordinatorRigTestCase {
         XCTAssertTrue(rig.coordinator.isHoldingForHostMarkedText)
         XCTAssertEqual(rig.coordinator.state, .idle)
         XCTAssertNil(rig.interactionState.activeSession)
+    }
+}
+
+/// A single-shot engine gate that intentionally ignores task cancellation. That models an endpoint
+/// already waiting on a response and proves the coordinator's work identity rejects its late reply.
+@MainActor
+private final class SuspendedSuggestionResult {
+    private var continuation: CheckedContinuation<SuggestionResult, Never>?
+    private var request: SuggestionRequest?
+
+    func wait(for request: SuggestionRequest) async -> SuggestionResult {
+        await withCheckedContinuation { continuation in
+            self.continuation = continuation
+            self.request = request
+        }
+    }
+
+    func resume(text: String, generation: UInt64? = nil) {
+        guard let continuation, let request else { return }
+        continuation.resume(returning: SuggestionResult(
+            generation: generation ?? request.generation,
+            rawText: text,
+            text: text,
+            latency: 0.01
+        ))
+        self.continuation = nil
+        self.request = nil
     }
 }

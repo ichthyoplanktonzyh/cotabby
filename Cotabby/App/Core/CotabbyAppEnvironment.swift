@@ -235,6 +235,10 @@ final class CotabbyAppEnvironment {
             history: typingHistoryStore,
             engineKind: { [weak suggestionSettings] in suggestionSettings?.selectedEngine ?? .openAICompatible }
         )
+        let learningService = LearningExpressionService(
+            settings: suggestionSettings,
+            client: openAICompatibleClient
+        )
         let suggestionEngine: any SuggestionGenerating = DebugForcedSuggestionEngine.isConfigured()
             ? DebugForcedSuggestionEngine(wrapping: historyAwareEngine)
             : historyAwareEngine
@@ -333,10 +337,53 @@ final class CotabbyAppEnvironment {
         // One coordinator fans every keystroke out to both inline-command controllers and owns the
         // input monitor's single capture decider and interception flag, which the `:` and `/` features
         // share. It is given first look at every keystroke the suggestion coordinator receives.
+        let learningAvailability: () -> String? = {
+                let settings = suggestionSettings.snapshot
+                return SuggestionAvailabilityEvaluator.disabledReason(
+                    globallyEnabled: settings.isGloballyEnabled,
+                    temporarilyPaused: settings.isTemporarilyPaused,
+                    isLowPowerModeActive: lowPowerModeMonitor.isLowPowerModeEnabled,
+                    isLowPowerModeAutoDisableEnabled: settings.isLowPowerModeAutoDisableEnabled,
+                    disabledAppBundleIdentifiers: settings.disabledAppBundleIdentifiers,
+                    disabledDomains: PerDomainDisableSettings.disabledDomains(),
+                    suggestInIntegratedTerminals: false,
+                    inputMonitoringGranted: permissionManager.inputMonitoringGranted,
+                    focusSnapshot: focusModel.snapshot,
+                    checkCapability: false
+                )
+        }
+        let learningReader = LearningSelectionReplacement(
+            focus: focusModel, inputSource: keyboardInputSourceMonitor, inserter: suggestionInserter
+        )
+        let learningCoordinator = LanguageLearningCoordinator(
+            service: learningService, focus: focusModel,
+            replacement: learningReader,
+            panel: LearningTranslationPanel(), availability: learningAvailability
+        )
+        let sentencePreview = LearningSentencePreviewCoordinator(
+            service: learningService, reader: learningReader, focus: focusModel,
+            panel: LearningSentencePanel(reservedFramePublisher: overlayController.$visiblePanelFrame.eraseToAnyPublisher()),
+            availability: learningAvailability
+        )
+        let hintCoordinator = LanguageLearningHintCoordinator(
+            service: learningService,
+            reader: LearningHintSourceReader(focus: focusModel, inputSource: keyboardInputSourceMonitor,
+                settings: suggestionSettings.languageLearning),
+            panel: LearningHintPanel(), focus: focusModel,
+            availability: {
+                learningAvailability() == nil && !learningCoordinator.isActive &&
+                    !suggestionSettings.languageLearning.sentencePreviewEnabled
+            }
+        )
+        inputMonitor.learningKeyDecider = { [weak learningCoordinator, weak hintCoordinator, weak sentencePreview] event in
+            Self.learningKeyDecision(event, automatic: suggestionSettings.languageLearning.sentencePreviewEnabled,
+                preview: sentencePreview, manual: learningCoordinator, hints: hintCoordinator)
+        }
         let inlineCommandCoordinator = InlineCommandCoordinator(
             emoji: emojiPickerController,
             macro: macroController,
-            inputMonitor: inputMonitor
+            inputMonitor: inputMonitor,
+            learning: learningCoordinator, hints: hintCoordinator, sentencePreview: sentencePreview
         )
         suggestionCoordinator.emojiInputObserver = { [weak inlineCommandCoordinator] event in
             inlineCommandCoordinator?.observe(event) ?? false
@@ -372,6 +419,8 @@ final class CotabbyAppEnvironment {
         self.focusDebugOverlayController = CotabbyDebugOptions.areOverlaysAvailable
             ? FocusDebugOverlayController()
             : nil
+
+        observeLanguageLearning(coordinator: learningCoordinator)
 
         // Recording reads every focus snapshot; the store ignores them unless recording is on and
         // the text changed. The same rule that decides whether Cotabby suggests (on, not paused,
@@ -422,6 +471,19 @@ final class CotabbyAppEnvironment {
 
         observePowerSourceProfileSwitching()
         observeOpenAICompatibleSelection()
+    }
+
+    /// Installs the translation tap only for the explicit feature switch. The module has a separate
+    /// interception reason so emoji/macro capture cannot tear down its shortcut handling.
+    private func observeLanguageLearning(coordinator: LanguageLearningCoordinator) {
+        suggestionSettings.languageLearning.$translationEnabled
+            .removeDuplicates()
+            .sink { [weak inputMonitor, weak coordinator] enabled in
+                inputMonitor?.setLearningInterceptionActive(enabled)
+                guard !enabled else { return }
+                coordinator?.cancel()
+            }
+            .store(in: &cancellables)
     }
 
     /// Applies the user's per-power-source profile (engine + model) whenever anything that could
@@ -506,7 +568,9 @@ final class CotabbyAppEnvironment {
     /// Connect once when the endpoint engine becomes active. Only server identity and credentials
     /// invalidate discovery: the selected model and generation route do not affect `GET /models`,
     /// so changing either must keep the catalog and connected status alive. Settings still owns
-    /// explicit Connect/Return refreshes and avoids network traffic per keystroke.
+    /// explicit Connect/Return refreshes and avoids network traffic per keystroke. Discovery can
+    /// also serve learning features under a local engine, so invalidation is independent of that
+    /// engine selection and never starts a connection by itself.
     private func observeOpenAICompatibleSelection() {
         suggestionSettings.$selectedEngine
             .removeDuplicates()
@@ -535,10 +599,20 @@ final class CotabbyAppEnvironment {
 
         Publishers.MergeMany(configurationChanges)
             .sink { [weak self] _ in
-                guard let self, self.suggestionSettings.selectedEngine == .openAICompatible else { return }
+                guard let self else { return }
                 self.openAICompatibleConnectionModel.invalidate()
             }
             .store(in: &cancellables)
+    }
+    /// Both learning modes borrow the same event-tap slot. Choose the active workflow here so
+    /// disabling automatic preview restores the explicit selection path without duplicate taps.
+    private static func learningKeyDecision(
+        _ event: InputMonitorKeyEvent, automatic: Bool, preview: LearningSentencePreviewCoordinator?,
+        manual: LanguageLearningCoordinator?, hints: LanguageLearningHintCoordinator?
+    ) -> InputMonitorAcceptTapDecision {
+        if automatic { return preview?.decide(event) ?? .notHandled }
+        let decision = manual?.decide(event) ?? .notHandled
+        return decision == .notHandled ? hints?.decide(event) ?? .notHandled : decision
     }
 }
 

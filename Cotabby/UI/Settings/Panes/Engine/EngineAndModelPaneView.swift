@@ -63,8 +63,12 @@ struct EngineAndModelPaneView: View {
             case .llamaOpenSource:
                 openSourceSections
             case .openAICompatible:
-                openAICompatibleSections
+                endpointModelSection
             }
+
+            // Learning features share this connection while keeping their own instruction model.
+            // Configuring that server must not require changing the ordinary completion engine.
+            endpointConnectionSection
         }
         .onAppear {
             foundationModelAvailabilityService.refresh()

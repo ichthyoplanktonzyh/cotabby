@@ -34,6 +34,7 @@ enum ShortcutAction: CaseIterable {
 /// cross-field keybinding rules, and routes each setter through the store.
 @MainActor
 final class SuggestionSettingsModel: ObservableObject {
+    let languageLearning: LanguageLearningSettings
     @Published private(set) var isGloballyEnabled: Bool
     /// The settings model owns pause lifetime so views and services observe one shared state.
     @Published private(set) var pauseState: SuggestionPauseState?
@@ -226,6 +227,7 @@ final class SuggestionSettingsModel: ObservableObject {
         userDefaults: UserDefaults = .standard,
         endpointCredentialStore: OpenAICompatibleCredentialStoring
     ) {
+        languageLearning = LanguageLearningSettings(defaults: userDefaults)
         let store = SuggestionSettingsStore(userDefaults: userDefaults)
         let data = store.load(configuration: configuration)
         self.store = store
@@ -316,6 +318,7 @@ final class SuggestionSettingsModel: ObservableObject {
     /// the two ever drift. Scope matches the store: unrelated app state (onboarding, the lifetime
     /// accepted-word count, emoji history, the login-item flag) is intentionally left untouched.
     func resetToDefaults() {
+        languageLearning.resetToDefaults()
         let data = store.resetToDefaults(configuration: configuration)
 
         isGloballyEnabled = data.isGloballyEnabled
@@ -1661,12 +1664,14 @@ final class SuggestionSettingsModel: ObservableObject {
     /// Without it the global-toggle hotkey can silently collide with an accept key: the toggle tap
     /// is head-inserted but the accept tap (installed later while a suggestion is visible) sits ahead
     /// of it and consumes the shared key first, so the toggle never fires. Blocking the duplicate up
-    /// front keeps every binding unambiguous. The disabled sentinel never conflicts — several actions
-    /// may be left unbound at once.
+    /// front keeps every binding unambiguous. When translation is enabled, its shortcut also
+    /// participates by default so existing recorders detect reverse conflicts; its own recorder opts
+    /// out. The disabled sentinel never conflicts — several actions may be left unbound at once.
     func conflictingShortcutName(
         keyCode: CGKeyCode,
         modifiers: ShortcutModifierMask,
-        excluding action: ShortcutAction
+        excluding action: ShortcutAction,
+        includingLearningShortcut: Bool = true
     ) -> String? {
         guard keyCode != Self.disabledKeyCode else { return nil }
 
@@ -1676,15 +1681,22 @@ final class SuggestionSettingsModel: ObservableObject {
                 return other.displayName
             }
         }
+        if includingLearningShortcut, languageLearning.translationEnabled,
+           languageLearning.keyCode == keyCode,
+           languageLearning.modifiers == modifiers {
+            return "跨语言表达学习"
+        }
         return nil
     }
 
-    /// Checks the same app's effective accept bindings plus the app-spanning global toggle.
+    /// Checks the same app's effective accept bindings plus the app-spanning global toggle. The
+    /// enabled learning shortcut participates by default so per-app recorders also detect it.
     func conflictingPerAppShortcutName(
         forBundleIdentifier bundleIdentifier: String,
         keyCode: CGKeyCode,
         modifiers: ShortcutModifierMask,
-        excluding action: ShortcutAction
+        excluding action: ShortcutAction,
+        includingLearningShortcut: Bool = true
     ) -> String? {
         guard keyCode != Self.disabledKeyCode else { return nil }
 
@@ -1705,6 +1717,11 @@ final class SuggestionSettingsModel: ObservableObject {
         // The global toggle tap would consume a matching per-app accept key first.
         if globalToggleKeyCode == keyCode, globalToggleKeyModifiers == modifiers {
             return ShortcutAction.toggleTabby.displayName
+        }
+        if includingLearningShortcut, languageLearning.translationEnabled,
+           languageLearning.keyCode == keyCode,
+           languageLearning.modifiers == modifiers {
+            return "跨语言表达学习"
         }
         return nil
     }

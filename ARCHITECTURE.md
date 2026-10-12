@@ -589,3 +589,107 @@ policies, prompt utilities, normalization, and layout logic should receive focus
 
 When a change crosses several rows, keep ownership at these boundaries rather than teaching one
 coordinator to perform every step itself.
+
+## Cross-Language Expression Learning
+
+The primary workflow is `LearningSentencePreviewCoordinator`, owned once by
+`InlineCommandCoordinator`. It initializes from the focus snapshot without sending its text, observes
+subsequent same-field mutations and debounces a bounded, read-only `LearningSelectionCapture`.
+Keyboard observations invalidate in-flight work without claiming ordinary keys. The detail shortcut
+opens an existing document or explicitly captures a selected/current sentence. The previous result
+retains its source and range; only a verified adjacent predecessor can be carried into a new preview.
+
+`LearningExpressionService+Sentence` implements `LearningSentenceGenerating` using the existing
+endpoint client and a separately configured instruction model. `streamInstruction` sends instruction
+messages with SSE enabled and requires a `stop` finish. `LearningSentencePrompt` requests NDJSON:
+first one complete translation, then meaning-unit records quoting exact source and target substrings.
+`LearningSentenceStreamParser` resolves those quotes to grapheme-safe UTF-16 spans, rejects overlaps
+and supports discontinuous spans or explicit grammatical additions/omissions. A valid translation is
+published even if later analysis fails. Settings and credentials are checked before every delivery.
+
+The coordinator rejects stale request IDs, keyboard edits, changed focus snapshots and a different
+frontmost application. Full AX recapture happens before the first translation and at completion,
+rather than on every analysis update. `LearningSentencePanel` remains nonactivating, preserves view
+selection within a request and dismisses on outside clicks. `LearningChunkDisplay` preserves exact
+characters and orders quoted spans by sentence position. `LearningSentenceCard` renders matching
+meaning IDs as colored chips; its wrapping layout also respects right-to-left targets.
+`LearningDetailPanel`, owned by the sentence panel, shares `LearningDetailState` for selected borders
+and switches one nonactivating child between a chunk explanation and word lookup. The parent's click
+monitor treats both windows as one family. Esc dismisses the child before the main pair, even if
+generation eligibility has changed. Document IDs, lookup revisions and cancellation reject stale
+word replies. Its `LearningDictionaryService` actor uses local Dictionary Services and a lemma
+fallback; plain output is reflowed at sentence boundaries without inventing sense metadata. Missing
+entries are not cached, allowing newly enabled dictionaries to be queried again. Word details never
+contact an LLM. All sentence caches are
+bounded, memory-only, and cleared on field or configuration changes.
+
+Learning cards reserve space independently from completion. `OverlayController` publishes its actual
+window rectangle after rendering or acceptance, without changing its ghost positioning or the
+coordinator's state callback. `LearningSentencePanelLayout` prefers above the caret and searches for
+an on-screen rectangle outside both the caret and that completion rectangle. A later completion
+repositions an existing learning card; when no space remains, learning waits and reappears when space
+is released. Card height follows content, with a bounded scroll viewport for details. Zero geometry
+preferences during host-root replacement are ignored so they cannot collapse the details viewport.
+
+The original explicit translation and committed-word hint workflows remain available when automatic
+sentence preview is disabled. Their safety boundaries are described below.
+
+Ordinary inline autocomplete remains owned by the suggestion pipeline. The legacy learning workflow
+has two operations: an explicitly triggered translation preview and an optional
+passive hint for one committed word. `LanguageLearningSettings` stores the source-language choices,
+target language, model name, shortcut, and off-by-default feature switches. `LearningExpressionTask`
+and `LearningExpressionPrompt` describe only translation and word-hint requests.
+
+For an explicit translation preview, one enabled source language is the user's direction preference;
+the short source text is not asked to prove that choice. With several enabled sources, the preview
+uses Natural Language constrained to those choices and requires a confident result with a clear
+margin. The target is excluded from source candidates. Passive word hints retain their separate
+language-detection policy.
+
+`CotabbyAppEnvironment` builds one `LearningExpressionService` using the endpoint client and
+credential owner already configured for OpenAI-compatible generation. The user explicitly configures
+that endpoint, which may be local or remote over HTTPS. A shortcut request is an explicit preview of
+the selected text, or the complete sentence at the caret when nothing is selected. Positive evidence
+of active marked IME composition blocks that request until the candidate is committed. If the editor
+cannot prove that text is committed, the user may still preview and copy it, but the capture carries
+no replacement capability. Automatic passive hints remain stricter: they use only a positively
+committed current word. Neither path includes screen contents, clipboard data, or typing history.
+
+`InlineCommandCoordinator` owns the sibling `LanguageLearningCoordinator` and passive
+`LanguageLearningHintCoordinator` with their start/stop lifetime.
+The new InputMonitor interception reason is independent of emoji/macro capture and is not installed
+until the monitor starts. A translation task retains one selection capture, task identity and preview;
+input, navigation or configuration changes invalidate it. `LearningContracts` separates model,
+selection transaction and presentation boundaries so controlled asynchronous test doubles can verify
+late-response rejection, cancellation, and commit failures without OS permissions.
+
+`LearningSelectionReplacement` verifies the live AX capture before mutation. Native fields receive a
+selected-text write; web fields use the existing inserter's target-PID Paste menu path with final
+selection validation and no synthetic-key fallback. Both paths inspect actual field contents before
+reporting success. An uncertain edit is never automatically rolled back (which might overwrite a new
+user edit) or repeated. The nonactivating `LearningTranslationPanel` owns the window; the SwiftUI
+`LearningTranslationCard` owns only display and explicit confirm/copy/cancel controls.
+
+`LearningTextScopePolicy` computes a full grapheme-safe selection or sentence from the locally retained
+AX value, capped at 6 KB and rejected rather than silently truncated. Sentence preview preserves the
+original insertion point throughout generation. Only a capture with replacement capability may
+start the confirmed transaction to select that sentence, followed by another exact capture check.
+Native post-write verification accepts the retained field's exact expected value despite a
+dirty-document title or transient focus change; web fields additionally retain session checks to
+prevent composer reuse after navigation from becoming a false receipt.
+
+Focus snapshots keep `documentSelection` and known `documentLength` separately from the bounded
+prompt-window `selection`. Native coordinates come from raw AX ranges; marker coordinates derive
+from full pre-selection text. Unknown after-caret reads never prove a document end. Editing uses
+`AXHelper.exactEditableTextSelection`, whose `AXEditableTextSelection` receipt requires exact UTF-16
+field/fragment agreement and complete graphemes. Opaque marker objects live only within one synchronous
+read, never across model awaits. Marker-only existing selections use verified Paste, while marker-only
+sentence previews have no replacement callback because no offset-to-marker mapping is guessed.
+
+Passive hints use the existing AX tracker and input-source monitor through `LearningHintSourceReader`.
+Raw keys dismiss display; only positively committed, same-session AX text changes schedule generation.
+A 700 ms debounce, 2 second request interval, UUID guards and an in-memory word cache bound background
+work. Only the word reaches the model. Turning hints on begins observing future committed changes; it
+does not retroactively process a word already in the field. The hint panel receives display/copy
+callbacks and no replacement capability. It never captures Return; its Escape handler only consumes
+an actually visible hint.

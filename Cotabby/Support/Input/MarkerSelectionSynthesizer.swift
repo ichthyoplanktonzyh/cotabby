@@ -6,9 +6,11 @@ import Foundation
 /// bloat every focus snapshot, and `selection` is expressed as an `NSRange` into that windowed
 /// `text` (not a document offset). Keeping the two consistent is the whole point: the rest of the
 /// pipeline treats `text` + `selection` as a unit when splitting before/after-caret context.
-struct MarkerSelection: Equatable {
+nonisolated struct MarkerSelection: Equatable {
     let text: String
     let selection: NSRange
+    var documentSelection: NSRange?
+    var documentLength: Int?
 }
 
 /// Pure logic for turning the three text fragments around a caret (before / selected / after),
@@ -16,7 +18,7 @@ struct MarkerSelection: Equatable {
 ///
 /// This is split out from the AX I/O so the windowing and offset arithmetic can be unit-tested
 /// without a live Accessibility tree.
-enum MarkerSelectionSynthesizer {
+nonisolated enum MarkerSelectionSynthesizer {
     /// Default half-window, in UTF-16 units, kept on each side of the caret.
     static let defaultWindow = 4096
 
@@ -31,7 +33,8 @@ enum MarkerSelectionSynthesizer {
         selected: String,
         afterCaret: String,
         window: Int = defaultWindow,
-        normalizeNonBreakingSpaces: Bool = false
+        normalizeNonBreakingSpaces: Bool = false,
+        afterCaretIsKnown: Bool = true
     ) -> MarkerSelection {
         let windowedBefore = suffix(of: beforeCaret, limit: window)
         let windowedAfter = prefix(of: afterCaret, limit: window)
@@ -47,7 +50,10 @@ enum MarkerSelectionSynthesizer {
         let location = (windowedBefore as NSString).length
         let length = (selected as NSString).length
 
-        return MarkerSelection(text: text, selection: NSRange(location: location, length: length))
+        let documentRange = NSRange(location: beforeCaret.utf16.count, length: selected.utf16.count)
+        return MarkerSelection(text: text, selection: NSRange(location: location, length: length),
+            documentSelection: documentRange,
+            documentLength: afterCaretIsKnown ? beforeCaret.utf16.count + selected.utf16.count + afterCaret.utf16.count : nil)
     }
 
     /// Trailing window measured in UTF-16 units so the kept slice lines up with `NSString` lengths.

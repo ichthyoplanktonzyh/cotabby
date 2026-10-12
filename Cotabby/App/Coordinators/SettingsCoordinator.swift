@@ -29,13 +29,6 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
 
     private var settingsWindowController: NSWindowController?
 
-    /// Whether this coordinator currently owns an open Settings window. This intentionally means
-    /// "created and not closed" rather than `isVisible`: AppKit reports miniaturized windows as
-    /// visible during reopen handling, and should be allowed to restore those normally.
-    var isSettingsWindowOpen: Bool {
-        settingsWindowController?.window != nil
-    }
-
     init(
         appUpdateManager: AppUpdateManager,
         permissionManager: PermissionManager,
@@ -70,11 +63,16 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
         self.typingHistoryStore = typingHistoryStore
     }
 
-    /// Shows the settings window, reusing the existing instance if it is already open.
+    /// Shows the settings window, reusing and restoring the existing instance when possible.
     /// Reusing one window avoids subtle state duplication and matches standard macOS settings
     /// behavior where there is a single shared preferences surface for the app.
     func showSettings() {
         if let window = settingsWindowController?.window {
+            // The app delegate handles reopen events itself, so AppKit will not restore a
+            // miniaturized Settings window as part of its default reopen behavior.
+            if window.isMiniaturized {
+                window.deminiaturize(nil)
+            }
             NSApp.activate(ignoringOtherApps: true)
             window.makeKeyAndOrderFront(nil)
             return

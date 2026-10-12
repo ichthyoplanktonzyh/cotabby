@@ -174,6 +174,47 @@ APIs in our pending CotabbyInference patch; preparation is automatic in CI and r
 
 If you want to understand the runtime and suggestion pipeline before contributing, read [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Cross-language expression learning
+
+Cotabby keeps its existing inline autocomplete and offers cross-language expression learning as a
+separate, opt-in feature. In **Settings → Writing**, choose one or more source languages, a target
+language, the independent learning model name, and a detail shortcut (default **Option+T**).
+The master feature is off by default; enabling it enables automatic sentence preview.
+
+Use your input method as usual: confirm the candidate and pause briefly. A read-only target-language
+expression appears beside the caret without stealing focus. One streaming model request delivers the
+translation first and then prepares meaning chunks for that exact translation. Option+T or the expand
+button reveals the source and target as matching colored meaning units, with small gaps between target
+units. Clicking a chunk outlines both sides and opens a separate, nonactivating explanation window.
+Word buttons in that window switch it to a paragraph-based lookup from the Mac's enabled dictionaries,
+with no model request. Esc closes the small window first; continuing to type closes it with the details.
+Tab and Return retain their ordinary behavior; Escape dismisses the learning card.
+
+Pauses trigger previews without ending a sentence. Extending an unfinished sentence updates that
+sentence; punctuation and newlines distinguish a new sentence. The preceding sentence's translation
+can remain visible while the new one arrives. An older version is labelled while typing continues.
+Focus entry alone never sends existing text: automatic requests require a new edit in the same field.
+No particular input-method brand or switch to ABC is required. Known active marked composition blocks
+generation; unavailable composition evidence permits only the read-only preview.
+
+Turning off automatic sentence preview restores the explicit selected-text/current-sentence preview,
+including its verified click-to-replace operation. Customized shortcuts are preserved; the old default
+Control+Command+T migrates to Option+T.
+
+When automatic sentence preview is off, an optional passive word hint appears after a committed text change pauses. It
+sends only that current word with the language choices; it does not send the surrounding sentence.
+Hints require positive evidence that the text was committed, so some editors skip them. Enabling hints
+only applies to text changes observed after the setting is turned on. Typing, navigation, focus or
+settings changes, and clicking outside dismiss a stale hint. Hints do not edit text or intercept
+Return, and Escape dismisses a visible hint.
+
+Learning requests use the model name in Writing and the explicitly configured OpenAI-compatible
+**Endpoint** in Engine & Model. The endpoint may be a local service or a remote HTTPS service. An
+sentence preview sends only the selected text or current sentence, up to 6 KB; larger scopes are
+rejected without truncation. A passive hint sends only one word. Learning requests do not include
+screen contents, clipboard data, or typing history. Missing configuration and failed requests remain
+recoverable, and model capability determines translation quality.
+
 ## Contributing
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, build, and PR guidelines, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community expectations. For a tour of the runtime and suggestion pipeline, read [ARCHITECTURE.md](ARCHITECTURE.md).

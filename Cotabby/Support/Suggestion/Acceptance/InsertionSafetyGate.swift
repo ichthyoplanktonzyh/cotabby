@@ -12,7 +12,7 @@ import Foundation
 /// Scope note: this intentionally does NOT reject punctuation-only output. A lone ")", ".", or "?"
 /// is a legitimate inline completion (closing a bracket, ending a sentence), so judging punctuation
 /// here would suppress useful suggestions. The gate is limited to unambiguous junk.
-enum InsertionSafetyGate {
+nonisolated enum InsertionSafetyGate {
     /// Returns true when `completion` is safe to display and insert.
     static func isSafeToInsert(_ completion: String) -> Bool {
         guard !completion.isEmpty else {

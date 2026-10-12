@@ -662,6 +662,78 @@ final class SuggestionSettingsModelTests: XCTestCase {
         XCTAssertEqual(model.globalToggleKeyModifiers, [])
     }
 
+    func test_conflictingShortcutNameIncludesLearningShortcutUnlessExplicitlyExcluded() {
+        let model = makeModel()
+        let learning = model.languageLearning
+        learning.translationEnabled = true
+        let keyCode = CGKeyCode(learning.keyCode)
+
+        XCTAssertEqual(
+            model.conflictingShortcutName(keyCode: keyCode, modifiers: learning.modifiers, excluding: .toggleTabby),
+            "跨语言表达学习"
+        )
+        XCTAssertNil(model.conflictingShortcutName(
+            keyCode: keyCode,
+            modifiers: learning.modifiers,
+            excluding: .toggleTabby,
+            includingLearningShortcut: false
+        ))
+        XCTAssertNil(model.conflictingShortcutName(
+            keyCode: SuggestionSettingsModel.disabledKeyCode,
+            modifiers: learning.modifiers,
+            excluding: .toggleTabby
+        ))
+    }
+
+    func test_conflictingPerAppShortcutNameIncludesLearningShortcutUnlessExplicitlyExcluded() {
+        let model = makeModel()
+        let learning = model.languageLearning
+        learning.translationEnabled = true
+        let keyCode = CGKeyCode(learning.keyCode)
+        let bundleIdentifier = "com.example.ChatHost"
+
+        XCTAssertEqual(
+            model.conflictingPerAppShortcutName(
+                forBundleIdentifier: bundleIdentifier,
+                keyCode: keyCode,
+                modifiers: learning.modifiers,
+                excluding: .toggleTabby
+            ),
+            "跨语言表达学习"
+        )
+        XCTAssertNil(model.conflictingPerAppShortcutName(
+            forBundleIdentifier: bundleIdentifier,
+            keyCode: keyCode,
+            modifiers: learning.modifiers,
+            excluding: .toggleTabby,
+            includingLearningShortcut: false
+        ))
+        XCTAssertNil(model.conflictingPerAppShortcutName(
+            forBundleIdentifier: bundleIdentifier,
+            keyCode: SuggestionSettingsModel.disabledKeyCode,
+            modifiers: learning.modifiers,
+            excluding: .toggleTabby
+        ))
+    }
+
+    func test_disabledTranslationDoesNotReserveItsConfiguredShortcut() {
+        let model = makeModel()
+        let learning = model.languageLearning
+        XCTAssertFalse(learning.translationEnabled)
+
+        XCTAssertNil(model.conflictingShortcutName(
+            keyCode: CGKeyCode(learning.keyCode),
+            modifiers: learning.modifiers,
+            excluding: .toggleTabby
+        ))
+        XCTAssertNil(model.conflictingPerAppShortcutName(
+            forBundleIdentifier: "com.example.ChatHost",
+            keyCode: CGKeyCode(learning.keyCode),
+            modifiers: learning.modifiers,
+            excluding: .toggleTabby
+        ))
+    }
+
     func test_globalToggleKey_setAndClearPersist() {
         let model = makeModel()
         model.setGlobalToggleKey(keyCode: 11, modifiers: [.command, .option], label: "⌘⌥B")
