@@ -1,3 +1,13 @@
+> **Independent fork in development:** This repository is maintained by
+> [ichthyoplanktonzyh](https://github.com/ichthyoplanktonzyh/cotabby) and derives from
+> [FuJacob/Cotabby](https://github.com/FuJacob/cotabby). Its direction is translation and
+> expression learning during everyday writing, while retaining the existing autocomplete.
+> The current milestone is a mature macOS experience in Swift; cross-platform work is planned
+> for later. The product name is provisional. Existing website, download, donation, and release
+> links below refer to the upstream project, not a release of this fork.
+>
+> Active work lives on `codex/language-learning` until reviewed and validated for the fork's
+> `main` branch. See [FORK.md](FORK.md) for repository ownership and release preparation.
 
 <p align="center">
   <a href="https://cotabby.app" target="_blank">
