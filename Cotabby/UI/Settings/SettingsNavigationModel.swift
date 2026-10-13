@@ -10,7 +10,7 @@ enum SettingsEngineTask: String, CaseIterable, Identifiable {
         switch self {
         case .completion: "补全"
         case .translation: "翻译"
-        case .analysis: "学习分析"
+        case .analysis: "语块对应"
         }
     }
     init(role: LearningModelRole) { self = role == .translation ? .translation : .analysis }

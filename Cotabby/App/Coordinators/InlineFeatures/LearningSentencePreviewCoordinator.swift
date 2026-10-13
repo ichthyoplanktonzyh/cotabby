@@ -295,7 +295,7 @@ final class LearningSentencePreviewCoordinator {
                 "request_id": .string(current.traceID), "source": .string("analysis"), "phase": .string("cache_hit")])
             document?.chunks = result.chunks
             document?.generating = false
-            document?.message = ""
+            document?.message = result.unresolvedChunkCount > 0 ? "部分语块无法可靠定位，已保留确定对应。" : ""
             render()
             return
         }
@@ -313,14 +313,19 @@ final class LearningSentencePreviewCoordinator {
                         guard let self, self.analysisID == id, self.service.settings.languageLearning.analysisEnabled,
                               self.isCurrent(current.id, capture: current.capture),
                               self.document?.translation == current.translation else { return }
-                        if case .chunk(let chunk) = update { self.document?.chunks.append(chunk); self.render() }
+                        switch update {
+                        case .chunks(let chunks): self.document?.chunks = chunks
+                        case .chunk(let chunk): self.document?.chunks.append(chunk)
+                        case .translation: return
+                        }
+                        self.render()
                     }
                     guard self.analysisID == id, self.isCurrent(current.id, capture: current.capture, verifyCapture: true),
                           result.translation == current.translation else { return }
                     self.analysisWork = nil
                     self.document?.chunks = result.chunks
                     self.document?.generating = false
-                    self.document?.message = ""
+                    self.document?.message = result.unresolvedChunkCount > 0 ? "部分语块无法可靠定位，已保留确定对应。" : ""
                     if self.analysisCache.count >= 64 { self.analysisCache.removeAll() }
                     self.analysisCache[key] = result
                     self.render()

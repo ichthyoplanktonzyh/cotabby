@@ -57,7 +57,7 @@ final class LearningDetailPanel {
             window.contentView = view
         }
         panel = window
-        window.title = "语块说明"
+        window.title = "语块对应"
         window.isReleasedWhenClosed = false
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]

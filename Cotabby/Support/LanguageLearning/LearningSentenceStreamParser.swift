@@ -1,13 +1,24 @@
 import Foundation
 
-/// Incremental NDJSON decoding keeps the first complete translation independent from later
-/// analysis. Exact quotes are resolved against that translation, never a second generated wording.
-/// Malformed, overlapping or non-grapheme spans fail closed instead of highlighting unrelated text.
+/// Historical NDJSON decoder retained for standalone translation/teaching experiments. The
+/// product's pair-only analysis uses LearningAlignmentParser instead. Keeping the legacy wire
+/// chunk here lets old evaluation scripts inspect explanations without adding them to UI models.
 nonisolated struct LearningSentenceStreamParser {
+    struct Chunk {
+        // This request-local wire value keeps historical evaluation evidence, including its
+        // explanation. Only the geometry projection enters today's shared presentation model.
+        let id: Int
+        let sourceRanges: [NSRange]
+        let targetRanges: [NSRange]
+        let explanation: String
+        var meaning: LearningMeaningChunk {
+            .init(id: id, sourceRanges: sourceRanges, targetRanges: targetRanges)
+        }
+    }
     private let source: String
     private var pending = ""
     private(set) var translation: String?
-    private(set) var chunks: [LearningMeaningChunk] = []
+    private(set) var chunks: [Chunk] = []
     private var totalBytes = 0
     private let fixedTranslation: Bool
 
@@ -39,7 +50,7 @@ nonisolated struct LearningSentenceStreamParser {
     func result() throws -> LearningSentenceResult {
         guard let translation else { throw LearningFailure.message("模型没有返回可用译文。") }
         guard !chunks.isEmpty else { throw LearningFailure.message("译文已生成，语块对应尚不可用。") }
-        return .init(translation: translation, chunks: chunks)
+        return .init(translation: translation, chunks: chunks.map(\.meaning))
     }
 
     private mutating func decode(_ line: String) throws -> LearningSentenceUpdate? {
@@ -65,10 +76,10 @@ nonisolated struct LearningSentenceStreamParser {
             }
             let sourceRanges = try resolve(sourceParts, in: source, occupied: chunks.flatMap(\.sourceRanges))
             let targetRanges = try resolve(targetParts, in: translation, occupied: chunks.flatMap(\.targetRanges))
-            let chunk = LearningMeaningChunk(id: chunks.count, sourceRanges: sourceRanges,
+            let chunk = Chunk(id: chunks.count, sourceRanges: sourceRanges,
                 targetRanges: targetRanges, explanation: explanation)
             chunks.append(chunk)
-            return .chunk(chunk)
+            return .chunk(chunk.meaning)
         default:
             throw LearningFailure.message("模型返回了未知的表达分析。")
         }

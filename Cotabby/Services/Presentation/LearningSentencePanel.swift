@@ -2,7 +2,7 @@ import AppKit
 import Combine
 import SwiftUI
 
-/// Owns one nonactivating learning window and its explanation panel. Updating its hosting
+/// Owns one nonactivating learning window and its correspondence panel. Updating its hosting
 /// root preserves SwiftUI selection within a document; a new request ID resets that selection.
 /// The window never becomes key, so showing, expanding or clicking learning content leaves typing
 /// focus in the host editor. Its position follows the existing caret geometry policy.
@@ -28,8 +28,10 @@ final class LearningSentencePanel: LearningSentencePresenting {
     /// App composition supplies only geometry, keeping translation independent of completion
     /// generation. A later completion can move this panel even when no new translation arrives.
     init(reservedFramePublisher: AnyPublisher<CGRect?, Never>? = nil,
-         dictionary: LearningSystemDictionaryPresenter = LearningSystemDictionaryPresenter()) {
-        sentenceDictionary = dictionary
+         dictionary: LearningSystemDictionaryPresenter? = nil) {
+        // Default arguments are evaluated by the caller, outside this actor-isolated body.
+        // Construct the AppKit collaborator here so its initialization always stays on MainActor.
+        sentenceDictionary = dictionary ?? LearningSystemDictionaryPresenter()
         reservationSubscription = reservedFramePublisher?.removeDuplicates().sink { [weak self] frame in
             guard let self else { return }
             self.reservedFrame = frame
@@ -40,7 +42,7 @@ final class LearningSentencePanel: LearningSentencePresenting {
     var visibleFrame: CGRect? { isVisible ? panel?.frame : nil }
     var detailState: LearningDetailState { detailPanel.state }
 
-    /// Esc closes native lookup, then the explanation, then the sentence pair. Generated content
+    /// Esc closes native lookup, then the correspondence detail, then the sentence pair. Generated content
     /// survives the first two steps, and the system receives no synthetic keyboard events.
     func dismissDetail() -> Bool {
         if sentenceDictionary.dismiss() { return true }
@@ -77,7 +79,7 @@ final class LearningSentencePanel: LearningSentencePresenting {
         if let selection = detailPanel.state.chunk,
            selection.documentID != presentation.id || !presentation.isExpanded || presentation.isStale ||
             !presentation.chunks.contains(where: { chunk in
-                chunk.id == selection.chunkID && chunk.explanation == selection.explanation &&
+                chunk.id == selection.chunkID &&
                 LearningChunkDisplay.quote(presentation.source, ranges: chunk.sourceRanges) == selection.source &&
                 LearningChunkDisplay.quote(presentation.translation, ranges: chunk.targetRanges) == selection.target
             }) {
@@ -140,7 +142,7 @@ final class LearningSentencePanel: LearningSentencePresenting {
     }
 
     /// The click carries only a validated meaning ID; the current document supplies its quotes
-    /// and explanation, so a stale view cannot query a term from a replaced sentence.
+    /// so a stale view cannot query a term from a replaced sentence.
     func inspectChunk(_ identifier: Int, documentID: UUID) {
         guard let presentation = currentPresentation, presentation.isExpanded, !presentation.isStale,
               presentation.id == documentID,
@@ -148,7 +150,7 @@ final class LearningSentencePanel: LearningSentencePresenting {
         let target = LearningChunkDisplay.quote(presentation.translation, ranges: chunk.targetRanges)
         let detail = LearningChunkDetail(documentID: presentation.id, chunkID: identifier,
             source: LearningChunkDisplay.quote(presentation.source, ranges: chunk.sourceRanges), target: target,
-            explanation: chunk.explanation, language: presentation.targetLanguage,
+            language: presentation.targetLanguage,
             words: LearningChunkDisplay.words(in: target, language: presentation.targetLanguage))
         let mouse = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { $0.frame.intersects(parent) } ?? NSScreen.main

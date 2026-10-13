@@ -83,6 +83,13 @@ private struct DownloadableModelRow: View {
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
 
+                    if let recommendation = model.recommendation {
+                        Text(recommendation)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
                     Text(metadataText)
                         .font(.system(size: 11))
                         .foregroundStyle(statusColor)

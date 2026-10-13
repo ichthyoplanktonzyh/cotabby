@@ -13,17 +13,24 @@ nonisolated enum LearningModelBackend: String, CaseIterable, Identifiable, Codab
 /// Known text-only instruction formats. Automatic selection reads the GGUF architecture; manual
 /// formats support renamed models. This is separate from autocomplete's base continuation prompt.
 nonisolated enum LearningChatTemplate: String, CaseIterable, Identifiable, Codable, Sendable {
-    case automatic, hyMT, chatML, qwen3, gemma4, gemma4Large, gemma3, llama3
+    case automatic, hyMT, hyMT7, chatML, qwen3, gemma4, gemma4Large, gemma3, translateGemma, llama3
     var id: String { rawValue }
+    /// Translation specialists have no alignment instruction contract. Keep their manual
+    /// template on the translation page; this does not rewrite previously saved selections.
+    static func available(for role: LearningModelRole) -> [Self] {
+        allCases.filter { role == .translation || $0 != .translateGemma }
+    }
     var label: String {
         switch self {
         case .automatic: "自动识别"
-        case .hyMT: "Hy-MT"
+        case .hyMT: "Hy-MT / Hy-MT2 1.8B"
+        case .hyMT7: "Hy-MT2 7B"
         case .chatML: "ChatML / Qwen2.5"
         case .qwen3: "Qwen3 / Qwen3.5（关闭思考）"
         case .gemma4: "Gemma 4 E2B / E4B（关闭思考）"
         case .gemma4Large: "Gemma 4 12B / 26B / 31B（关闭思考）"
         case .gemma3: "Gemma 3"
+        case .translateGemma: "TranslateGemma（翻译专用）"
         case .llama3: "Llama 3"
         }
     }

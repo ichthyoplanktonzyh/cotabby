@@ -197,10 +197,12 @@ expression appears beside the caret without stealing focus. A dedicated translat
 expression first. When optional analysis is enabled, its independently configured model prepares
 meaning chunks for that exact expression. Option+T or the expand
 button reveals the source and target as matching colored meaning units, with small gaps between target
-units. Clicking a chunk outlines both sides and opens a separate, nonactivating explanation window.
+units. Clicking a chunk outlines both sides and opens a separate, nonactivating correspondence window.
 Word buttons open the native macOS dictionary popover beside the clicked word, preserving the
 dictionary's own formatting without a model request. Available contents depend on the Mac's enabled
-dictionaries. Esc closes lookup first, then the explanation; continuing to type closes both.
+dictionaries. Compact translation also supports double-click word lookup. Esc closes lookup first,
+then correspondence details; continuing to type closes both. Alignment generates quoted pairs only;
+explanations are deferred to a future independent feature.
 Tab and Return retain their ordinary behavior; Escape dismisses the learning card.
 
 Pauses trigger previews without ending a sentence. Extending an unfinished sentence updates that
@@ -215,14 +217,19 @@ including its verified click-to-replace operation. Customized shortcuts are pres
 Control+Command+T migrates to Option+T.
 
 In Writing, enable cross-language translation. In Engine & Model, use the fixed **补全 / 翻译 /
-学习分析** tabs to select a task; each page uses the existing grouped settings layout. Writing
+语块对应** tabs to select a task; each page uses the existing grouped settings layout. Writing
 provides direct links to the translation and analysis pages. Switching tabs changes navigation only,
 and the page shows the actual configured model or an explicit unconfigured state. Translation and
 optional meaning-chunk analysis each support **in-process GGUF** or an independent OpenAI-compatible
 **Endpoint**, with separate model/address/API-key settings. Local GGUF execution needs no Ollama
 service. Both pages mirror completion: recommended downloads, Hugging Face import, models folder,
 LM Studio source, installed model management, connection/key controls and power-source settings.
-The catalogs offer Hy-MT2 1.8B for translation and Qwen3.5 4B as an analysis candidate; both tasks
+The translation catalog offers Hy-MT2 1.8B (1.13 GB), Hy-MT2 7B (4.62 GB) and
+TranslateGemma 4B (2.49 GB), all Q4_K_M. Tencent supplies the Hy-MT GGUFs;
+bullerwins supplies TranslateGemma's text-only GGUF. These are download sizes, not runtime memory
+requirements. TranslateGemma 12B is not included. Gemma 4 E4B / Qwen3.5 4B remain alignment candidates.
+Gemma uses the experiment's pinned 5.49 GB Q4_K_M text weights; E4B is not its total parameter count.
+These recommendations do not override existing selections. Both tasks
 also accept imported GGUFs or configured endpoints. Battery/AC selections belong to each task, and
 shared-file deletion protects all tasks’ saved model references. Original autocomplete model settings remain
 independent. Analysis defaults off: expansion still shows the source and translation, with direct
@@ -233,7 +240,20 @@ rejected without truncation. Analysis additionally receives the exact displayed 
 history. The settings disclose transmission to a configured LAN/HTTPS service, and the learning
 session rejects HTTP redirects. Existing learning endpoint selection migrates once into translation;
 analysis never inherits it. Missing configuration and failed requests remain recoverable, and model
-capability determines translation and explanation quality.
+capability determines translation and alignment quality. Alignment preserves the displayed wording,
+uses the short GE prompt baseline and publishes highlights only after complete output validation.
+
+`LearningTranslationPrompt` selects the specialist's translation instructions independently of
+chat framing. Hy-MT retains its existing vendor prompt; GGUF template metadata distinguishes the
+different 1.8B and 7B turn tokens. TranslateGemma uses the
+[Ollama plaintext guide](https://ollama.com/library/translategemma:4b), explicit source/target language
+codes (including zh-Hans / zh-Hant), and a user-only Gemma turn. Its Traditional Chinese label is
+explicit rather than relying on the script code alone. This is not Google's structured HF
+processor request: endpoints requiring that processor need a separate server adapter. Recognizable
+Endpoint model IDs select the plaintext guide; opaque aliases retain the generic prompt. Native
+TranslateGemma rejects input above 2,048 actual tokens, including instructions and framing, without
+truncation. Endpoint token limits are enforced by the selected server. Native sampling is model-specific;
+the shared OpenAI-compatible transport forwards only temperature and top_p.
 
 Performance tracking uses the existing opt-in switch. Its request-type picker separates autocomplete,
 translation and analysis; old history remains autocomplete history. The shared ring retains the most

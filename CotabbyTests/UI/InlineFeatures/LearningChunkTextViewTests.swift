@@ -11,8 +11,8 @@ struct LearningChunkTextViewTests {
     @Test(arguments: [false, true])
     func rightToLeftTargetsKeepTheFirstMeaningOnTheRight(_ rightToLeft: Bool) async throws {
         let chunks = [
-            LearningMeaningChunk(id: 0, sourceRanges: [], targetRanges: [.init(location: 0, length: 3)], explanation: "I"),
-            LearningMeaningChunk(id: 1, sourceRanges: [], targetRanges: [.init(location: 4, length: 6)], explanation: "can")
+            LearningMeaningChunk(id: 0, sourceRanges: [], targetRanges: [.init(location: 0, length: 3)]),
+            LearningMeaningChunk(id: 1, sourceRanges: [], targetRanges: [.init(location: 4, length: 6)])
         ]
         let view = LearningChunkTextView(text: "أنا أستطيع", chunks: chunks, source: false, selectedChunk: nil,
             select: { _ in }, rightToLeft: rightToLeft).frame(width: 300).background(Color.white)

@@ -99,7 +99,7 @@ under identical vendor settings. The report makes no overall translation-accurac
 
 `alignment-cases-v1.json` freezes 28 manually checked source/translation pairs. The translation is
 input, not an output being scored. Its reviewer expectations are never sent to the models.
-`scripts/alignment_prompt_export.swift` compiles the actual `LearningAnalysisPrompt` as A, removes
+`scripts/alignment_prompt_export.swift` freezes checkpoint 636af328's historical prompt as A, removes
 only explanation responsibility for B, and exports the continuous two-string-array proposal as C.
 C changes both instructions and schema (including discontinuous-span expressiveness); it is a
 compound proposal, not a format-only ablation. Production prompts and application settings remain
@@ -154,7 +154,8 @@ Completed fixed-translation results: [2026-10-13 report](alignment-results-2026-
 and [machine-readable summary](alignment-results-2026-10-13.json). The full 756-trial run and
 182 deduplicated blind-review items are complete. Removing explanations helped both general
 models; the compact-pair proposal improved Qwen availability but caused overly large chunks
-in Gemma. Production adoption awaits a granularity/outer-array follow-up, not just a speed check.
+in Gemma. Later local follow-ups selected GE as the product baseline. The exporter also emits
+the current GE renderer, so adopting it does not silently alter historical A/B/C requests.
 
 Quantity-only D and authorized cloud follow-up: [2026-10-13 report](alignment-quantity-results-2026-10-13.md)
 and [JSON summary](alignment-quantity-results-2026-10-13.json). It contains 168 local Gemma C/D

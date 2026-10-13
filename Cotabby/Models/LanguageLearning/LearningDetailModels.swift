@@ -9,7 +9,6 @@ nonisolated struct LearningChunkDetail: Equatable, Sendable {
     let chunkID: Int
     let source: String
     let target: String
-    let explanation: String
     let language: LearningLanguage
     let words: [String]
 }

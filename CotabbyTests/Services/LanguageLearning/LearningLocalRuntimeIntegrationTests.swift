@@ -6,6 +6,52 @@ import XCTest
 /// Opt-in native checks use an existing GGUF supplied by the runner. They never download a model
 /// or change app settings; normal CI skips them. Two engines exercise the shared backend lifetime.
 final class LearningLocalRuntimeIntegrationTests: XCTestCase {
+    /// Uses the pinned real files downloaded by a validation runner. Native framing, literal
+    /// tokenization, model load, complete generation and output policy all run as in the product.
+    /// Synthetic short fixtures exercise both directions; this is not a comparative quality score.
+    func testRecommendedTranslationSpecialistsUseNativeProductPath() async throws {
+        guard let directory = ProcessInfo.processInfo.environment["COTABBY_TRANSLATION_CATALOG_DIR"] else {
+            throw XCTSkip("Set COTABBY_TRANSLATION_CATALOG_DIR to the pinned translation GGUF directory")
+        }
+        let fixtures: [(String, String, LearningLanguage, LearningLanguage)] = [
+            ("greeting", "你好", .chinese, .english),
+            ("ability", "我能做到。", .chinese, .english),
+            ("reverse", "I like the food you cooked.", .english, .chinese),
+            ("korean", "你方便的时候给我回个电话就好。", .chinese, .korean),
+            ("traditional", "Please reply when you have time.", .english, .traditionalChinese)
+        ]
+        var evidence: [[String: String]] = []
+        for model in LearningRuntimeCatalog.translationModels {
+            let url = URL(fileURLWithPath: directory).appendingPathComponent(model.filename)
+            let template = try LearningLocalPrompt.resolve(.automatic, modelURL: url)
+            for (id, source, sourceLanguage, targetLanguage) in fixtures {
+                let request = try LearningTranslationPrompt.render(source: source, sourceLanguage: sourceLanguage,
+                    targetLanguage: targetLanguage, family: .init(template: template))
+                let raw = try await Task.detached {
+                    let runtime = LearningLocalRuntime(), operation = UUID()
+                    defer { runtime.shutdownSync() }
+                    runtime.claim(operation)
+                    return try runtime.generate(modelURL: url, template: .automatic, prompt: request.prompt,
+                        maxTokens: 512, operationID: operation) { _ in }
+                }.value
+                let text = try LearningExpressionOutputPolicy.validatedText(raw)
+                XCTAssertFalse(text.isEmpty)
+                XCTAssertNil(text.range(of: #"<[|｜]"#, options: .regularExpression), text)
+                if id == "greeting" {
+                    XCTAssertNotNil(text.range(of: #"\b(hello|hi)\b"#, options: [.regularExpression, .caseInsensitive]), text)
+                }
+                if id == "traditional" {
+                    XCTAssertNil(text.range(of: "[请时复]", options: .regularExpression), text)
+                }
+                evidence.append(["model": model.filename, "case": id, "source": source,
+                    "sourceLanguage": sourceLanguage.rawValue, "targetLanguage": targetLanguage.rawValue,
+                    "template": template.rawValue, "prompt": request.prompt, "translation": text])
+            }
+        }
+        let output = URL(fileURLWithPath: directory).appendingPathComponent("native-translations.json")
+        try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys]).write(to: output)
+    }
+
     func testShutdownCancelsLiveDecodeBeforeUnloading() async throws {
         guard let path = ProcessInfo.processInfo.environment["COTABBY_LEARNING_GGUF"] else {
             throw XCTSkip("Set COTABBY_LEARNING_GGUF to an existing Hy-MT2 GGUF")
@@ -68,12 +114,35 @@ final class LearningLocalRuntimeIntegrationTests: XCTestCase {
                 prompt: prompt, maxTokens: 1_024, operationID: id) { _ in }
         }.value
         XCTAssertFalse(raw.contains("<think>"), raw)
-        var parser = LearningSentenceStreamParser(source: "你好", translation: "Hello.")
-        _ = try parser.append(raw)
-        _ = try parser.finish()
-        let result = try parser.result()
+        let result = try LearningAlignmentParser.parse(raw, source: "你好", translation: "Hello.")
         XCTAssertEqual(result.translation, "Hello.")
         XCTAssertFalse(result.chunks.isEmpty)
+    }
+
+    func testGemmaAlignmentUsesProductTemplateAndFixedMultilingualEvidence() async throws {
+        guard let path = ProcessInfo.processInfo.environment["COTABBY_ALIGNMENT_GGUF"] else {
+            throw XCTSkip("Set COTABBY_ALIGNMENT_GGUF to the pinned Gemma 4 E4B GGUF")
+        }
+        let fixtures: [(String, String, LearningLanguage, LearningLanguage)] = [
+            ("你好", "Hello.", .chinese, .english),
+            ("我能做到", "I can do it.", .chinese, .english),
+            ("如果明天不下雨，我们就去散步。", "明日雨が降らなければ、私たちは散歩に行きます。", .chinese, .japanese)
+        ]
+        for (source, translation, sourceLanguage, targetLanguage) in fixtures {
+            let prompt = try LearningAnalysisPrompt.render(source: source, translation: translation,
+                sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)
+            let raw = try await Task.detached {
+                let runtime = LearningLocalRuntime(), id = UUID()
+                defer { runtime.shutdownSync() }
+                runtime.claim(id)
+                return try runtime.generate(modelURL: URL(fileURLWithPath: path), template: .automatic,
+                    prompt: prompt, maxTokens: 1_024, operationID: id) { _ in }
+            }.value
+            let result = try LearningAlignmentParser.parse(raw, source: source, translation: translation)
+            XCTAssertEqual(result.translation, translation)
+            XCTAssertFalse(result.chunks.isEmpty)
+            XCTAssertFalse(raw.contains("<think>"), raw)
+        }
     }
 
     func testLiteralTokenizerPreservesSourceControlTokenSpellings() async throws {

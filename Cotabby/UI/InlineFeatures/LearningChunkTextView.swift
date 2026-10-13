@@ -26,7 +26,7 @@ struct LearningChunkTextView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("语块 \(identifier + 1)：\(fragment.text)")
-                    .accessibilityHint("查看语块说明和单词释义")
+                    .accessibilityHint("查看语块对应和单词查词")
                 } else if fragment.text.allSatisfy(\.isNewline) {
                     Color.clear.frame(width: 0, height: 0).layoutValue(key: LearningLineBreakKey.self, value: true)
                 } else {

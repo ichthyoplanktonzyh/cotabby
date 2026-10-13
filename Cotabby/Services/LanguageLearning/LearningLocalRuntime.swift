@@ -46,12 +46,10 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
             var tokens = Array(prefix.withCString { native.engine.tokenizeInstruction($0, Int32(prefix.utf8.count)) })
             tokens += Array(prompt.withCString { native.engine.tokenizeLiteral($0, Int32(prompt.utf8.count)) })
             tokens += Array(suffix.withCString { native.engine.tokenizeInstruction($0, Int32(suffix.utf8.count)) })
-            guard !tokens.isEmpty, tokens.count + maxTokens < 8_192 else {
-                throw LearningFailure.message("原文与输出预算超过内置模型上下文，请分段输入。")
-            }
-            let hy = resolved == .hyMT
-            let sampling = SamplingConfig(temperature: hy ? 0.7 : 0.3, top_k: hy ? 20 : 40,
-                top_p: hy ? 0.6 : 0.9, min_p: 0, repetition_penalty: hy ? 1.05 : 1,
+            try LearningLocalPrompt.validateTokenBudget(input: tokens.count, output: maxTokens, template: resolved)
+            let parameters = LearningInstructionSampling.forTemplate(resolved)
+            let sampling = SamplingConfig(temperature: Float(parameters.temperature), top_k: Int32(parameters.topK),
+                top_p: Float(parameters.topP), min_p: 0, repetition_penalty: Float(parameters.repetitionPenalty),
                 seed: UInt32.max, single_line: false)
             let sequence = native.engine.createSequence(sampling)
             guard sequence >= 0 else { throw LearningFailure.message("无法创建模型生成任务。") }

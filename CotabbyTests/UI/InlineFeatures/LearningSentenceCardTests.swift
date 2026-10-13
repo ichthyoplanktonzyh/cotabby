@@ -62,7 +62,7 @@ struct LearningSentenceCardTests {
         let target = "Target translation must remain visible."
         return LearningSentencePresentation(id: id, source: source, translation: target,
             chunks: [.init(id: 0, sourceRanges: [.init(location: 0, length: source.utf16.count)],
-                targetRanges: [.init(location: 0, length: target.utf16.count)], explanation: "A complete phrase mapping.")],
+                targetRanges: [.init(location: 0, length: target.utf16.count)])],
             sourceLanguage: .chinese, targetLanguage: .english, caret: .zero,
             isExpanded: expanded, isGenerating: false, message: "", previousTranslation: nil, shortcutLabel: "⌥T")
     }

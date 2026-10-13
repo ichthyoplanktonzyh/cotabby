@@ -615,9 +615,13 @@ retains its source and range; only a verified adjacent predecessor can be carrie
 `LearningAnalysisService`. `LearningSentenceGenerating` exposes the two stages explicitly. The
 translator returns only the natural expression; the coordinator displays and caches it before
 starting optional analysis. `LearningAnalysisPrompt` sends the source plus that exact translation,
-and requests only NDJSON meaning chunks. A seeded `LearningSentenceStreamParser` rejects any
-translation record, resolves exact quotations to grapheme-safe UTF-16 spans, rejects overlaps, and
-supports discontinuous spans or explicit grammatical additions/omissions. Analysis failures preserve
+and uses the compact GE baseline to request only `[[source fragment, translation fragment]]`.
+`LearningAlignmentParser` validates the complete array before one batch reaches the UI, resolves
+exact continuous quotations to grapheme-safe UTF-16 spans and rejects rewrites or overlaps. Unique
+pairs can disambiguate remaining repeated occurrences; still ambiguous pairs stay uncolored and
+are counted explicitly. Source order generates IDs, while target order may differ. There are no
+explanations, model-generated IDs, positions or colors. `LearningSentenceStreamParser` retains the
+historical NDJSON experiment protocol but is not used by product analysis. Analysis failures preserve
 the expression, and changing an analysis model, credential, or switch restarts only analysis. Its
 cache includes the fixed sentence pair, languages and analysis model snapshot. With analysis off,
 expansion still shows the sentence pair and native dictionary word buttons.
@@ -639,9 +643,22 @@ Existing engine search anchors navigate back to the completion page before scrol
 The three forms reuse `ModelsFolderSection`, `InstalledRuntimeModelRow` and
 `ModelEndpointConnectionSection`: layout parity comes from common presentation code, while each
 role retains its own controller, endpoint catalog and unsaved credential draft. Catalog entries are
-task-specific (Hy-MT2 translation and Qwen3.5 4B analysis candidates). The global LM Studio source
+task-specific (Hy-MT2 1.8B / 7B and TranslateGemma 4B translation, Gemma 4 E4B / Qwen3.5 4B alignment candidates). The global LM Studio source
 refresh notifies all runtimes. `ModelUsagePolicy` combines completion and learning selections,
 including saved battery/AC choices; deletion rechecks that set when the confirmation is executed.
+
+`LearningTranslationPrompt` owns the pure specialist payload and per-request sampling values;
+`LearningTranslationService` selects it from local GGUF identity or a recognizable endpoint alias.
+`LearningLocalPrompt` owns bounded metadata inspection and trusted turn framing, while source text
+is tokenized literally by `LearningLocalRuntime`. Hy-MT2's 1.8B and 7B have the same architecture
+but different tokenizers, so their embedded chat-template metadata selects distinct turn tokens.
+TranslateGemma shares Gemma 3 framing but gets
+the Ollama plaintext translation guide with language codes, not generic assistant instructions.
+Its native token-budget policy enforces the documented 2K input ceiling before decoding, separately
+from the shared 8K allocation. The endpoint path uses text chat, not Google's structured HF processor;
+servers own token-limit enforcement and receive only supported temperature/top_p sampling fields.
+TranslateGemma's manual template is offered only on the translation page. Recommendations reuse
+the completion download rows with an optional task caption; no catalog refresh changes a saved choice.
 
 Each learning role persists independent `LearningPowerProfile` values and defaults source switching
 off. The shared power monitor selects its active profile without editing completion. Request
@@ -700,7 +717,7 @@ selection within a request and dismisses on outside clicks. `LearningChunkDispla
 characters and orders quoted spans by sentence position. `LearningSentenceCard` renders matching
 meaning IDs as colored chips; its wrapping layout also respects right-to-left targets.
 `LearningDetailPanel`, owned by the sentence panel, shares `LearningDetailState` for selected borders
-and keeps the chunk explanation visible while native word lookup opens. `LearningDictionaryButton`
+and keeps the selected source/target correspondence visible while native word lookup opens. `LearningDictionaryButton`
 bridges a native button's text and view geometry to the controller, which validates the immutable
 chunk and source window. Compact translation text also supports double-click word lookup through
 `LearningSentenceDictionaryText`: a read-only TextKit view keeps the sentence's original formatting,
@@ -712,7 +729,7 @@ overlay API. Each lookup uses a separate transparent, nonactivating source panel
 clicked title or inline word. That source is a child of the containing learning window and has no rendered content or mouse
 handling. Its public child-window hook rejects delayed AppKit windows after cancellation; a later
 lookup cannot revive an older source. The parent's click monitor treats the complete ancestor chain
-as one family. Esc closes lookup, then the explanation, then the main pair, even if generation
+as one family. Esc closes lookup, then the correspondence detail, then the main pair, even if generation
 eligibility has changed. Hiding, replacing, or losing placement closes the lookup source. Dictionary
 formatting and contents belong to the system's enabled dictionaries, with no plain-text reparsing,
 private API, hosted lookup service, or model request. All sentence caches are

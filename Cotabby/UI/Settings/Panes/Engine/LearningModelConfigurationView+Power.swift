@@ -47,7 +47,7 @@ extension LearningModelConfigurationView {
                 .textFieldStyle(.roundedBorder).accessibilityLabel("\(title) Endpoint model")
         } else if !selection.wrappedValue.localModel.isEmpty {
             Picker("\(title) · 指令模板", selection: selection.template) {
-                ForEach(LearningChatTemplate.allCases) { Text($0.label).tag($0) }
+                ForEach(LearningChatTemplate.available(for: profile.role)) { Text($0.label).tag($0) }
             }.pickerStyle(.menu)
         }
     }

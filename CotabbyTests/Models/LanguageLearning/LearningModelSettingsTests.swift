@@ -149,8 +149,17 @@ struct LearningModelSettingsTests {
     @Test
     func specialistDownloadCannotBecomeFallbackAutocomplete() {
         #expect(!LearningRuntimeCatalog.isCompletionCandidate(filename: "Hy-MT2-1.8B-Q4_K_M.gguf"))
+        #expect(!LearningRuntimeCatalog.isCompletionCandidate(filename: "Hy-MT2-7B-Q4_K_M.gguf"))
+        #expect(!LearningRuntimeCatalog.isCompletionCandidate(filename: "translategemma-4b-it-Q4_K_M.gguf"))
         #expect(!LearningRuntimeCatalog.isCompletionCandidate(filename: "Qwen3.5-4B-Q4_K_M.gguf"))
         #expect(LearningRuntimeCatalog.isCompletionCandidate(filename: "Qwen3.5-2B-Base-Q4_K_M.gguf"))
         #expect(LearningRuntimeCatalog.isCompletionCandidate(filename: "my-custom-model.gguf"))
+    }
+
+    @Test
+    func translationOnlyTemplateIsNotOfferedForAlignment() {
+        #expect(LearningChatTemplate.available(for: .translation).contains(.translateGemma))
+        #expect(!LearningChatTemplate.available(for: .analysis).contains(.translateGemma))
+        #expect(LearningChatTemplate.available(for: .analysis).contains(.automatic))
     }
 }

@@ -7,7 +7,7 @@ struct LearningChunkDisplayTests {
     func discontinuousUnitsPreserveExactTextAndMeaningIdentity() {
         let text = "I was able to do it.\nAgain!"
         let chunk = LearningMeaningChunk(id: 3, sourceRanges: [],
-            targetRanges: [.init(location: 2, length: 11), .init(location: 17, length: 2)], explanation: "ability")
+            targetRanges: [.init(location: 2, length: 11), .init(location: 17, length: 2)])
         let fragments = LearningChunkDisplay.fragments(text: text, chunks: [chunk], source: false)
         #expect(fragments.map(\.text).joined() == text)
         #expect(fragments.filter { $0.chunkID == 3 }.map(\.text) == ["was able to", "it"])
@@ -25,10 +25,10 @@ struct LearningChunkDisplayTests {
     func malformedOverlapsAndEmojiSplitsCannotDropCharacters() {
         let text = "👩🏽‍💻中文 hello"
         let chunks = [
-            LearningMeaningChunk(id: 0, sourceRanges: [.init(location: 0, length: 2)], targetRanges: [], explanation: "split"),
-            LearningMeaningChunk(id: 1, sourceRanges: [.init(location: 7, length: 2)], targetRanges: [], explanation: "valid"),
-            LearningMeaningChunk(id: 2, sourceRanges: [.init(location: 8, length: 2)], targetRanges: [], explanation: "overlap"),
-            LearningMeaningChunk(id: 3, sourceRanges: [.init(location: 999, length: 1)], targetRanges: [], explanation: "invalid")
+            LearningMeaningChunk(id: 0, sourceRanges: [.init(location: 0, length: 2)], targetRanges: []),
+            LearningMeaningChunk(id: 1, sourceRanges: [.init(location: 7, length: 2)], targetRanges: []),
+            LearningMeaningChunk(id: 2, sourceRanges: [.init(location: 8, length: 2)], targetRanges: []),
+            LearningMeaningChunk(id: 3, sourceRanges: [.init(location: 999, length: 1)], targetRanges: [])
         ]
         let fragments = LearningChunkDisplay.fragments(text: text, chunks: chunks, source: true)
         #expect(fragments.map(\.text).joined() == text)

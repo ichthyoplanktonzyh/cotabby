@@ -1,6 +1,6 @@
 import AppKit
 
-/// The explanation panel owns this narrow AppKit boundary for its lifetime. A clicked button
+/// The correspondence panel owns this narrow AppKit boundary for its lifetime. A clicked button
 /// supplies text and geometry; AppKit supplies the dictionary's original UI. Each lookup owns
 /// a separate transparent source window because showDefinition has no async cancellation token.
 @MainActor
@@ -46,7 +46,7 @@ final class LearningSystemDictionaryPresenter {
         source.allowsDictionaryWindows = true
         sourceWindow = source
         // The empty transparent view paints nothing over the real button. Its child relationship
-        // makes native lookup move with the explanation and stay inside its click-monitor family.
+        // makes native lookup move with the correspondence detail and stay inside its click-monitor family.
         parent.addChildWindow(source, ordered: .above)
         source.orderFrontRegardless()
         let text = NSAttributedString(string: word, attributes: [.font: font])
@@ -74,7 +74,7 @@ final class LearningSystemDictionaryPresenter {
         sourceWindow = nil
         source.allowsDictionaryWindows = false
         // The transparent source can outlive a popover dismissed by AppKit itself. Only visible
-        // native children justify consuming an extra Escape before closing the explanation.
+        // native children justify consuming an extra Escape before closing the correspondence detail.
         let wasVisible = (source.childWindows ?? []).contains { $0.isVisible }
         // Hide the source before closing its descendants. Closing only the synchronous highlight
         // does not cancel a pending popover; AppKit can otherwise show it after the user resumed.

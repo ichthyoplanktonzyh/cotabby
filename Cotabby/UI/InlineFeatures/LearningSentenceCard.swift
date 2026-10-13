@@ -81,7 +81,7 @@ struct LearningSentenceCard: View {
                         Text(presentation.isGenerating ? "译文先显示，语块对应正在准备…" : presentation.message)
                             .font(.caption).foregroundStyle(.secondary)
                     } else {
-                        Text("同色语块表达相同意思。点击语块查看说明，再选择单词查词。")
+                        Text("同色语块显示表达对应。点击语块查看两侧表达，再选择单词查词。")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     if !presentation.message.isEmpty, !presentation.isGenerating, !presentation.chunks.isEmpty {

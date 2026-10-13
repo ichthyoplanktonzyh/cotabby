@@ -84,7 +84,7 @@ Cotabby/
 │   │   └── Capability/               supported-field capability resolution
 │   ├── History/                      history retrieval, phrase prediction, scrubbing, import
 │   ├── Input/                        composition, key-label, and selection helpers
-│   ├── LanguageLearning/             sentence/chunk stream decoding, prompts, scopes and preview/write policies
+│   ├── LanguageLearning/             atomic pair alignment, historical stream decoding, prompts, scopes and preview/write policies
 │   ├── Logging/                      debug options, request IDs, and JSONL handlers
 │   ├── Macros/
 │   │   └── Evaluators/               deterministic arithmetic/date/unit evaluators

@@ -2,7 +2,7 @@ import AppKit
 import Testing
 @testable import Cotabby
 
-/// These fixtures exercise explanation geometry and the public window-family relationship;
+/// These fixtures exercise correspondence geometry and the public window-family relationship;
 /// no real dictionary, editor, or generation service participates.
 @Suite(.serialized)
 @MainActor
@@ -91,7 +91,7 @@ struct LearningDetailPanelTests {
 
     private static func chunk(identifier: Int = 0) -> LearningChunkDetail {
         .init(documentID: UUID(), chunkID: identifier, source: "能做到", target: "can do it",
-            explanation: "表达完成某事的能力。", language: .english, words: ["can", "do", "it"])
+            language: .english, words: ["can", "do", "it"])
     }
 
     private func placement() throws -> LearningDetailPlacement {

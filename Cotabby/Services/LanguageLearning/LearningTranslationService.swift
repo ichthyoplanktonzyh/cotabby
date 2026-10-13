@@ -32,30 +32,26 @@ final class LearningTranslationService {
             sourceLanguage = language
         }
         let profile = model.profile.snapshot
-        let name = profile.backend == .local ? profile.localModel : profile.endpointModel
-        var hy = profile.template == .hyMT || name.lowercased().contains("hy-mt") || name.lowercased().contains("hymt")
-        if profile.backend == .local, profile.template == .automatic, !profile.localModel.isEmpty {
+        let family: LearningTranslationPrompt.Family
+        if profile.backend == .local, !profile.localModel.isEmpty {
             let runtime = try BundledRuntimeLocator().resolve(configuration: .default, selectedModelFilename: profile.localModel)
-            hy = try LearningLocalPrompt.resolve(.automatic, modelURL: runtime.modelFileURL) == .hyMT
+            // Hy-MT template metadata may follow its tokenizer arrays. Inspect that bounded
+            // header away from UI/input work, then reject a selection changed during the read.
+            let template = try await Task.detached(priority: .userInitiated) {
+                try LearningLocalPrompt.resolve(profile.template, modelURL: runtime.modelFileURL)
+            }.value
+            try Task.checkCancellation()
+            guard model.profile.snapshot == profile else { throw CancellationError() }
+            family = .init(template: template)
+        } else if profile.backend == .endpoint {
+            family = .init(endpointModel: profile.endpointModel)
+        } else {
+            family = .generic
         }
-        let prompt: String, budget: Int
-        let userOnly: Bool
-        switch task {
-        case .translation:
-            // Hy-MT's user-only translation instruction does not ask a specialist to become a
-            // chat assistant or produce structural analysis. Other models use the bounded prompt.
-            if hy {
-                _ = try LearningExpressionPrompt.translation(source: source, sourceLanguage: sourceLanguage,
-                    targetLanguage: task.target)
-                prompt = "Translate the following text into \(task.target == .chinese ? "Chinese" : task.target.name). " +
-                    "Note that you should only output the translated result without any additional explanation:\n" + source
-            } else {
-                prompt = try LearningExpressionPrompt.translation(source: source, sourceLanguage: sourceLanguage, targetLanguage: task.target)
-            }
-            budget = 2_048
-            userOnly = hy
-        }
-        let raw = try await model.generate(prompt: prompt, maxTokens: budget, userOnly: userOnly)
+        let request = try LearningTranslationPrompt.render(source: source, sourceLanguage: sourceLanguage,
+            targetLanguage: task.target, family: family)
+        let raw = try await model.generate(prompt: request.prompt, maxTokens: 2_048,
+            userOnly: request.userOnly, sampling: request.sampling)
         try Task.checkCancellation()
         guard settings.languageLearning.snapshot == snapshot, settings.isGloballyEnabled, !settings.isTemporarilyPaused else {
             throw CancellationError()

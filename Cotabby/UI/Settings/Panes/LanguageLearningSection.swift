@@ -8,6 +8,7 @@ struct LanguageLearningSection: View {
     let suggestionSettings: SuggestionSettingsModel
     var configureModel: (LearningModelRole) -> Void = { _ in }
     @State private var recording = false
+    @State private var sourceLanguagesExpanded = false
 
     var body: some View {
         Section("跨语言表达学习") {
@@ -17,10 +18,10 @@ struct LanguageLearningSection: View {
             translationControls
             Text(
                 "照常输入并确认候选词上屏，停顿后会在旁边显示目标表达；" +
-                "开启学习分析后，语块对应随后准备；按快捷键展开原文与译文；" +
-                "点击语块打开说明小窗，再点击单词打开系统词典浮窗。" +
+                "开启语块对应后，对应结果随后准备；按快捷键展开原文与译文；" +
+                "点击语块查看两侧表达，再点击单词打开系统词典浮窗。译文可直接双击单词查词。" +
                 "不要求特定品牌输入法，也不需要切换到 ABC 键盘。" +
-                "翻译与学习分析分别配置模型，支持内置 GGUF 或独立 Endpoint。"
+                "翻译与语块对应分别配置模型，支持内置 GGUF 或独立 Endpoint。"
             )
                 .font(.caption).foregroundStyle(.secondary)
             Text("学习请求不包含屏幕、剪贴板或输入历史。")
@@ -28,11 +29,11 @@ struct LanguageLearningSection: View {
             LearningModelSummaryRow(title: "翻译模型", profile: settings.translation) {
                 configureModel(.translation)
             }
-            Toggle("启用语块对应与解释", isOn: $settings.analysisEnabled)
+            Toggle("启用语块对应", isOn: $settings.analysisEnabled)
                 .disabled(!settings.translationEnabled)
-            Text("关闭学习分析后仍可阅读译文、对照原文和查词。分析不会重新翻译或修改已显示的译文。")
+            Text("关闭语块对应后仍可阅读译文、对照原文和查词。对应任务只摘取片段，不重新翻译或生成解释。")
                 .font(.caption).foregroundStyle(.secondary)
-            LearningModelSummaryRow(title: "学习分析模型", profile: settings.analysis) {
+            LearningModelSummaryRow(title: "语块对应模型", profile: settings.analysis) {
                 configureModel(.analysis)
             }
             HStack {
@@ -67,7 +68,8 @@ struct LanguageLearningSection: View {
             Picker("目标语言", selection: $settings.targetLanguage) {
                 ForEach(LearningLanguage.allCases) { Text($0.label).tag($0) }
             }
-            DisclosureGroup("源语言（可选多个，当前 \(settings.sourceLanguages.count) 个）") {
+            DisclosureGroup("源语言（可选多个，当前 \(settings.sourceLanguages.count) 个）",
+                            isExpanded: sourceExpansionBinding) {
                 ForEach(LearningLanguage.allCases) { language in
                     Toggle(language.label, isOn: Binding(
                         get: { settings.sourceLanguages.contains(language) },
@@ -80,9 +82,20 @@ struct LanguageLearningSection: View {
                 Text("只选一个源语言时，按所选方向翻译；" +
                      "选择多个时，会根据本次原文自动判断，判断不确定时请调整设置或选择更长文本。")
                     .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
         }
+    }
+
+    /// Expansion is presentation state, not a persisted language preference. Its height change
+    /// reaches the grouped Form and outer ScrollView; animating that change can repeatedly alter
+    /// the scroller's document proportions. Apply the transaction at the binding write so the
+    /// parent layout receives it too, without changing animations in other settings controls.
+    private var sourceExpansionBinding: Binding<Bool> {
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        return $sourceLanguagesExpanded.transaction(transaction)
     }
 
     private func conflict(_ code: UInt16, _ modifiers: ShortcutModifierMask) -> String? {

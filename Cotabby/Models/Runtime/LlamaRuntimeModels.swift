@@ -66,6 +66,9 @@ struct DownloadableRuntimeModel: Equatable, Hashable, Sendable, Identifiable {
     /// `x-linked-etag` response header on its CDN URLs.
     let sha256: String?
     let alternateFilenames: [String]
+    /// Optional task guidance belongs to the catalog, not to download state or model selection.
+    /// Existing completion rows keep their layout when no task-specific recommendation is set.
+    let recommendation: String?
 
     var id: String { downloadURL.absoluteString }
     var actualModelName: String { filename }
@@ -82,7 +85,8 @@ struct DownloadableRuntimeModel: Equatable, Hashable, Sendable, Identifiable {
         approximateSizeInGigabytes: Double,
         expectedSizeBytes: Int64? = nil,
         sha256: String? = nil,
-        alternateFilenames: [String] = []
+        alternateFilenames: [String] = [],
+        recommendation: String? = nil
     ) {
         self.filename = filename
         self.displayName = displayName
@@ -91,6 +95,7 @@ struct DownloadableRuntimeModel: Equatable, Hashable, Sendable, Identifiable {
         self.expectedSizeBytes = expectedSizeBytes
         self.sha256 = sha256
         self.alternateFilenames = alternateFilenames
+        self.recommendation = recommendation
     }
 }
 

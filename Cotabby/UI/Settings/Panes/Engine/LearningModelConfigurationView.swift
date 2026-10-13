@@ -68,7 +68,7 @@ struct LearningModelConfigurationView: View {
     private var taskDescription: String {
         profile.role == .translation
             ? "为整句翻译选择内置 GGUF 或独立 Endpoint，建议使用翻译专用模型。"
-            : "为语块对应与解释选择内置指令 GGUF 或独立 Endpoint；分析使用已经确定的译文。"
+            : "为语块切分与对应选择内置指令 GGUF 或独立 Endpoint；只对齐已经确定的原文和译文。"
     }
 
     private var selectedModel: String {
@@ -81,7 +81,7 @@ struct LearningModelConfigurationView: View {
     private var localSections: some View {
         Section("Models") {
             Text(profile.role == .translation ? "请选择翻译模型，模型在本机运行。" :
-                "请选择指令模型解释语块，原有 Base 续写模型不适合此任务。")
+                "请选择指令模型切分与对齐语块，原有 Base 续写模型不适合此任务。")
                 .font(.caption).foregroundStyle(.secondary)
             if controller.availableModels.isEmpty {
                 Text("No local GGUF models found. Download one below or add your own model file.")
@@ -98,7 +98,7 @@ struct LearningModelConfigurationView: View {
             }
             .pickerStyle(.menu).disabled(profile.powerSwitchingEnabled)
             Picker(selection: templateBinding) {
-                ForEach(LearningChatTemplate.allCases) { Text($0.label).tag($0) }
+                ForEach(LearningChatTemplate.available(for: profile.role)) { Text($0.label).tag($0) }
             } label: {
                 SettingsRowLabel(title: "指令模板", description: "默认自动识别；重命名或特殊规格的模型可手动指定。", systemImage: "text.alignleft")
             }

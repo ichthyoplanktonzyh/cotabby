@@ -4,16 +4,16 @@ import Testing
 import Vision
 @testable import Cotabby
 
-/// Hidden-window rendering verifies the explanation and native word controls without a dictionary or editor.
+/// Hidden-window rendering verifies the correspondence and native word controls without a dictionary or editor.
 /// The generated PNGs contain only these explicit fixtures and help review the presentation.
 @Suite(.serialized)
 @MainActor
 struct LearningDetailCardTests {
     @Test
-    func explanationAndWordControlsRemainReadable() async throws {
+    func correspondenceAndWordControlsRemainReadable() async throws {
         let state = LearningDetailState()
         state.chunk = .init(documentID: UUID(), chunkID: 1, source: "能做到", target: "can do it",
-            explanation: "Ability to perform this action.", language: .english, words: ["can", "do", "it"])
+            language: .english, words: ["can", "do", "it"])
         let hosting = NSHostingView(rootView: LearningDetailCard(state: state,
             selectWord: { _, _ in }, close: {}, sizeChanged: { _ in }))
         let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 320, height: 200),
@@ -40,7 +40,8 @@ struct LearningDetailCardTests {
         recognition.recognitionLanguages = ["en-US"]
         try VNImageRequestHandler(cgImage: try #require(bitmap.cgImage)).perform([recognition])
         let text = (recognition.results?.compactMap { $0.topCandidates(1).first?.string } ?? []).joined(separator: " ")
-        #expect(text.contains("Ability to perform this action"))
+        #expect(text.contains("can do it"))
+        #expect(!text.contains("Ability to perform"))
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent()
         let output = root.appendingPathComponent("build/LanguageLearning/Validation/native-dictionary-phrase-test.png")

@@ -1,26 +1,28 @@
 import CoreGraphics
 import Foundation
 
-/// A meaning unit joins exact spans in the source and the displayed translation. Multiple spans
-/// support reordered or discontinuous expressions; an empty side represents an explicit omission
-/// or a grammatical addition. The stream parser, rather than the model, owns UTF-16 offsets.
+/// Drawable correspondence for one immutable sentence pair. Parsing owns exact UTF-16 ranges;
+/// views own color and selection. Explanations are not part of the alignment model's contract.
 nonisolated struct LearningMeaningChunk: Identifiable, Equatable, Sendable {
     let id: Int
     let sourceRanges: [NSRange]
     let targetRanges: [NSRange]
-    let explanation: String
 }
 
 /// Each request produces one translation first, followed by its meaning units. Request identity
 /// belongs to the coordinator so a late event cannot attach analysis to a newer sentence.
 nonisolated enum LearningSentenceUpdate: Equatable, Sendable {
     case translation(String)
+    /// Complete validated alignment is published as one batch, preserving atomic highlighting.
+    case chunks([LearningMeaningChunk])
+    /// Retained for the historical NDJSON evaluator and controlled coordinator test fixtures.
     case chunk(LearningMeaningChunk)
 }
 
 nonisolated struct LearningSentenceResult: Equatable, Sendable {
     let translation: String
     let chunks: [LearningMeaningChunk]
+    var unresolvedChunkCount: Int = 0
 }
 
 /// Separate from continuation generation: learning has its own model, prompt and output contract.

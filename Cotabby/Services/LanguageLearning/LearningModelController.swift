@@ -86,6 +86,7 @@ final class LearningModelController: ObservableObject {
     func resetEndpointBaseURL() { profile.baseURL = OpenAICompatibleEndpointConfiguration.defaultBaseURLString }
 
     func generate(prompt: String, maxTokens: Int, userOnly: Bool = false,
+                  sampling: LearningInstructionSampling? = nil,
                   onDelta: (@MainActor (String) throws -> Void)? = nil) async throws -> String {
         guard generationAllowed, generationEligibility() else { throw CancellationError() }
         idleRelease?.cancel(); idleRelease = nil
@@ -93,6 +94,7 @@ final class LearningModelController: ObservableObject {
         measurement?.beginGeneration(prompt: prompt)
         task?.cancel()
         let id = UUID(), snapshot = profile.snapshot
+        let sampling = sampling ?? (userOnly ? .hyMT : .standard)
         taskID = id
         status = snapshot.backend == .local ? "加载 / 生成中" : "请求中"
         let work = Task { [self] in
@@ -102,18 +104,20 @@ final class LearningModelController: ObservableObject {
                 if let onDelta {
                     var raw = ""
                     try await client.streamInstruction(configuration: configuration, apiKey: profile.apiKey(),
-                        prompt: prompt, options: .init(maxPredictionTokens: maxTokens, temperature: userOnly ? 0.7 : 0.3,
-                            topP: userOnly ? 0.6 : 0.9), userOnly: userOnly) { delta in
+                        prompt: prompt, options: .init(maxPredictionTokens: maxTokens, temperature: sampling.temperature,
+                            topP: sampling.topP), userOnly: userOnly) { delta in
                         guard self.profile.snapshot == snapshot else { throw CancellationError() }
                         measurement?.received(delta)
-                        raw += delta
                         try onDelta(delta)
+                        // Role-specific byte/eligibility checks run before this retained buffer grows.
+                        // Invalid output must not be accumulated first and rejected afterwards.
+                        raw += delta
                     }
                     return raw
                 }
                 let raw = try await client.generateInstruction(configuration: configuration, apiKey: profile.apiKey(),
-                    prompt: prompt, options: .init(maxPredictionTokens: maxTokens, temperature: userOnly ? 0.7 : 0.3,
-                        topP: userOnly ? 0.6 : 0.9), userOnly: userOnly,
+                    prompt: prompt, options: .init(maxPredictionTokens: maxTokens, temperature: sampling.temperature,
+                        topP: sampling.topP), userOnly: userOnly,
                     onRawText: { measurement?.received($0) })
                 return raw
             case .local:

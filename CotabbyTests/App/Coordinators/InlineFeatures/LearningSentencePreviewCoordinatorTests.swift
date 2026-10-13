@@ -235,7 +235,7 @@ struct LearningSentencePreviewCoordinatorTests {
         await waitUntil { rig.service.requests.count == 1 }
         rig.service.emit(.translation("I can do it."))
         await waitUntil { rig.panel.last?.translation.isEmpty == false && !rig.service.pending.isEmpty }
-        rig.service.emit(.chunk(Self.chunk))
+        rig.service.emit(.chunks([Self.chunk]))
         rig.service.finish()
         await waitUntil { rig.panel.last?.isGenerating == false }
         #expect(rig.coordinator.decide(.init(keyCode: 17, flags: .maskAlternate)) == .consume)
@@ -371,7 +371,26 @@ struct LearningSentencePreviewCoordinatorTests {
     }
 
     private static let chunk = LearningMeaningChunk(id: 0, sourceRanges: [.init(location: 1, length: 1)],
-        targetRanges: [.init(location: 2, length: 3)], explanation: "表达能力")
+        targetRanges: [.init(location: 2, length: 3)])
+
+    @Test
+    func completeBatchReplacesChunksAndPartialLocationKeepsTranslation() async throws {
+        let rig = try Rig()
+        defer { rig.cleanup() }
+        rig.coordinator.start()
+        try rig.edit("我能做到")
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I can do it."))
+        await waitUntil { rig.service.analysisCalls == 1 }
+        let batch = [Self.chunk]
+        rig.service.emit(.chunks(batch))
+        rig.service.emit(.chunks(batch))
+        #expect(rig.panel.last?.chunks == batch)
+        rig.service.finish(unresolvedChunkCount: 1)
+        await waitUntil { rig.panel.last?.isGenerating == false }
+        #expect(rig.panel.last?.translation == "I can do it.")
+        #expect(rig.panel.last?.message.contains("部分语块无法可靠定位") == true)
+    }
 
     /// Hold debounce completion explicitly so assertions never depend on machine speed. Obsolete
     /// waits may resume too; the production request identity must still reject their publication.
@@ -502,10 +521,11 @@ struct LearningSentencePreviewCoordinatorTests {
                 }
             } else { requests[index].update(update) }
         }
-        func finish(translation: String = "I can do it.") {
+        func finish(translation: String = "I can do it.", unresolvedChunkCount: Int = 0) {
             let index = requests.count - 1
             if let id = analysisIDs[index] {
-                pending.removeValue(forKey: id)?.resume(returning: .init(translation: translated[index] ?? translation, chunks: [chunk]))
+                pending.removeValue(forKey: id)?.resume(returning: .init(translation: translated[index] ?? translation,
+                    chunks: [chunk], unresolvedChunkCount: unresolvedChunkCount))
             }
         }
         func fail() {

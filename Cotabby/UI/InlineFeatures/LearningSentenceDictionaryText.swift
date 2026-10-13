@@ -46,8 +46,29 @@ struct LearningSentenceDictionaryText: NSViewRepresentable {
 /// focus away from the editor or select the translation as editable text.
 @MainActor
 final class LearningDictionaryTextView: NSTextView {
+    /// Retain the TextKit 1 ownership graph for this view's lifetime. Recent macOS defaults may
+    /// create TextKit 2 when init receives nil; then layoutManager is nil and both our size and
+    /// exact glyph-hit calculations become unavailable. This view deliberately uses TextKit 1.
+    private var ownedTextStorage: NSTextStorage?
     var language: LearningLanguage = .english
     var lookup: (LearningDictionaryTextAnchor, NSTextView) -> Void = { _, _ in }
+
+    override init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
+        let resolved: NSTextContainer
+        if let container {
+            resolved = container
+        } else {
+            let storage = NSTextStorage(), manager = NSLayoutManager()
+            let container = NSTextContainer(size: frameRect.size)
+            storage.addLayoutManager(manager)
+            manager.addTextContainer(container)
+            ownedTextStorage = storage
+            resolved = container
+        }
+        super.init(frame: frameRect, textContainer: resolved)
+    }
+
+    required init?(coder: NSCoder) { super.init(coder: coder) }
 
     override var acceptsFirstResponder: Bool { false }
 

@@ -1,7 +1,8 @@
 import Foundation
 
 /// Optional analysis owns a separate model and consumes a fixed sentence pair. It publishes only
-/// exact-quote chunks; it cannot replace the translator's wording or modify the user's editor.
+/// a validated complete set of exact-quote chunks; it cannot replace the translator's wording
+/// or modify the editor. Buffering until completion makes publication an atomic state change.
 @MainActor
 final class LearningAnalysisService {
     let settings: SuggestionSettingsModel
@@ -35,22 +36,18 @@ final class LearningAnalysisService {
         let text = try LearningExpressionOutputPolicy.validatedText(translation)
         let prompt = try LearningAnalysisPrompt.render(source: source, translation: text,
             sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)
-        var parser = LearningSentenceStreamParser(source: source, translation: text)
-        var delivered = 0
-        let publish: () -> Void = {
-            while delivered < parser.chunks.count {
-                LearningRequestTrace.measurement?.usable()
-                onUpdate(.chunk(parser.chunks[delivered])); delivered += 1
-            }
-        }
-        _ = try await model.generate(prompt: prompt, maxTokens: 4_096) { delta in
+        var bytes = 0
+        let raw = try await model.generate(prompt: prompt, maxTokens: 4_096) { delta in
             try validate()
-            defer { publish() }
-            _ = try parser.append(delta)
+            bytes += delta.utf8.count
+            guard bytes <= 48_000 else { throw LearningFailure.message("语块对应超过可显示范围。") }
         }
         try validate()
-        defer { publish() }
-        _ = try parser.finish()
-        return try parser.result()
+        let result = try LearningAlignmentParser.parse(raw, source: source, translation: text)
+        LearningRequestTrace.measurement?.usable()
+        // No await occurs between validation and publication. The next sentence or a setting
+        // change cannot interleave with this complete batch on MainActor.
+        onUpdate(.chunks(result.chunks))
+        return result
     }
 }

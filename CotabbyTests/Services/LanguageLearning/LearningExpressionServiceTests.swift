@@ -8,6 +8,28 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct LearningExpressionServiceTests {
+    @Test(arguments: ["translategemma:4b", "hy-mt2:7b", "learning-instruction-model"])
+    func specialistEndpointUsesItsOwnPromptAndSampling(_ model: String) async throws {
+        let harness = try makeHarness(translationEnabled: true, reply: instructionResponse("Hello."))
+        defer { harness.cleanUp() }
+        harness.settings.languageLearning.translation.endpointModel = model
+        let text = try await harness.service.translateSentence(source: "你好", sourceLanguage: .chinese, targetLanguage: .english)
+        #expect(text == "Hello.")
+        let request = await harness.exchange.waitForRequest()
+        let data = try #require(request.body)
+        let body = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let messages = try #require(body["messages"] as? [[String: String]])
+        let family = LearningTranslationPrompt.Family(endpointModel: model)
+        let expected = try LearningTranslationPrompt.render(source: "你好", sourceLanguage: .chinese,
+            targetLanguage: .english, family: family)
+        #expect(messages.count == (expected.userOnly ? 1 : 2))
+        #expect(messages.last?["role"] == "user")
+        #expect(messages.last?["content"] == expected.prompt)
+        #expect(body["temperature"] as? Double == expected.sampling.temperature)
+        #expect(body["top_p"] as? Double == expected.sampling.topP)
+        #expect(harness.exchange.requestCount == 1)
+    }
+
     @Test
     func disabledAnalysisUsesOneTranslationRequestAndKeepsTranslationWhenAnalysisSettingsChange() async throws {
         let harness = try makeHarness(translationEnabled: true, holdResponse: true)
@@ -137,7 +159,7 @@ struct LearningExpressionServiceTests {
         harness.settings.languageLearning.analysis.saveAPIKey("analysis-key")
         let result = try await harness.service.generateSentence(source: "我能做到", sourceLanguage: .chinese,
             targetLanguage: .english) { _ in }
-        #expect(result.chunks.count == 1)
+        #expect(result.chunks.count == 3)
         let translationRequest = await harness.exchange.waitForRequest()
         let analysisRequest = await harness.exchange.waitForRequest(index: 1)
         #expect(translationRequest.headers["Authorization"] == "Bearer translation-key")
@@ -160,12 +182,14 @@ struct LearningExpressionServiceTests {
                 targetLanguage: .english) { updates.append($0) }
             #expect(!malformed)
             #expect(result.translation == "I can do it.")
-            #expect(result.chunks.count == 1)
+            #expect(result.chunks.count == 3)
         } catch {
             #expect(malformed)
         }
         #expect(updates.first == .translation("I can do it."))
         #expect(updates.count == (malformed ? 1 : 2))
+        if !malformed, case .chunks(let chunks) = updates.last { #expect(chunks.count == 3) }
+        else if !malformed { Issue.record("Alignment must publish one complete batch") }
         let prompt = try instructionPrompt(from: await harness.exchange.waitForRequest())
         let expectedPrompt = try LearningExpressionPrompt.translation(source: "我能做到", sourceLanguage: .chinese, targetLanguage: .english)
         let analysisPrompt = try instructionPrompt(from: await harness.exchange.waitForRequest(index: 1))
@@ -198,12 +222,31 @@ struct LearningExpressionServiceTests {
     }
 
     private func sentenceReply(malformed: Bool) throws -> LearningExpressionServiceReply {
-        let chunk = malformed ? "invalid analysis\n" :
-            #"{"type":"chunk","source":["能"],"target":["can"],"explanation":"能力"}"# + "\n"
+        let chunk = malformed ? #"[["能","can"],{"broken":true}]"# :
+            #"[["我","I"],["能","can"],["做到","do it"]]"# + "\n"
         let content = try JSONSerialization.data(withJSONObject: ["choices": [["delta": ["content": chunk]]]])
         let wire = "data: " + String(decoding: content, as: UTF8.self) + "\n\n" +
             "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n"
         return .init(statusCode: 200, body: Data(wire.utf8))
+    }
+
+    @Test
+    func oversizedAlignmentDeltaCannotPublishAnyHighlight() async throws {
+        let delta = String(repeating: "x", count: 48_001)
+        let content = try JSONSerialization.data(withJSONObject: ["choices": [["delta": ["content": delta]]]])
+        let wire = "data: " + String(decoding: content, as: UTF8.self) + "\n\n" +
+            "data: {\"choices\":[{\"delta\":{},\"finish_reason\":\"stop\"}]}\n\ndata: [DONE]\n\n"
+        let harness = try makeHarness(translationEnabled: true, analysisEnabled: true,
+            reply: instructionResponse("I can do it."), analysisReply: .init(statusCode: 200, body: Data(wire.utf8)))
+        defer { harness.cleanUp() }
+        var updates: [LearningSentenceUpdate] = []
+        do {
+            _ = try await harness.service.generateSentence(source: "我能做到", sourceLanguage: .chinese,
+                targetLanguage: .english) { updates.append($0) }
+            Issue.record("Oversized alignment must be rejected")
+        } catch {
+            #expect(updates == [.translation("I can do it.")])
+        }
     }
 
     @Test

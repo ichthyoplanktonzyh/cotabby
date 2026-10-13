@@ -24,7 +24,7 @@ struct InstalledRuntimeModelRow: View {
                 if let select { Button("选用", action: select).buttonStyle(.borderless) }
                 if downloads.isModelInUse(filename: model.filename) {
                     Text("In Use").font(.caption).foregroundStyle(.secondary)
-                        .help("此文件被补全、翻译、学习分析或电源配置引用。")
+                        .help("此文件被补全、翻译、语块对应或电源配置引用。")
                 } else if downloads.canDeleteModel(filename: model.filename) {
                     Button(action: delete) { Image(systemName: "trash").foregroundStyle(.secondary) }
                         .buttonStyle(.borderless).accessibilityLabel("Delete \(model.filename)")
