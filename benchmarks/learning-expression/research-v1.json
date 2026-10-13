@@ -1,0 +1,59 @@
+{
+  "checkedOn": "2026-10-12",
+  "scope": "Recent general small models for multilingual translation plus meaning-chunk teaching. Model cards are candidate evidence, not proof of our task accuracy.",
+  "primary": [
+    {
+      "model": "Qwen3.5-4B",
+      "source": "https://huggingface.co/Qwen/Qwen3.5-4B",
+      "role": "General instruction model; joint translation and exact-wording chunk analysis with thinking disabled.",
+      "evaluationAlias": "cotabby-eval-qwen35:chat",
+      "weightOrigin": "Official Ollama registry qwen3.5:4b, text model layer only",
+      "weightSHA256": "a9d0a3e1d8c91732a3812becd31f8d4a8ff57414903f226306069f0437e2ac50",
+      "weightBytes": 2648593216,
+      "quantization": "Q4_K_M",
+      "chatFraming": "Explicit evaluation-only text conversation template matching vendor nonthinking turn markers; initial imported aliases retained separately."
+    },
+    {
+      "model": "Gemma 4 E4B instruction-tuned",
+      "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+      "role": "General multilingual model; joint translation and chunk analysis with thinking disabled.",
+      "parameterCaveat": "4.5B effective, 8B total including per-layer embeddings; not an ordinary 4B memory comparison.",
+      "evaluationAlias": "cotabby-eval-gemma4:chat",
+      "weightOrigin": "Official Ollama registry gemma4:e4b, text model layer only; no speculative draft model",
+      "weightSHA256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "weightBytes": 5493439296,
+      "quantization": "Q4_K_M",
+      "textModelParameterSizeReportedByRuntime": "7.5B",
+      "chatFraming": "Explicit evaluation-only text conversation template matching vendor nonthinking turn markers; initial imported aliases retained separately."
+    }
+  ],
+  "backupsNotYetTested": [
+    {
+      "model": "Gemma 4 E2B instruction-tuned",
+      "source": "https://ai.google.dev/gemma/docs/core/model_card_4",
+      "role": "Lighter backup if E4B is too slow; 2.3B effective, 5.1B total including embeddings."
+    },
+    {
+      "model": "Qwen3.5-9B",
+      "source": "https://huggingface.co/Qwen/Qwen3.5-9B",
+      "role": "Larger general-model fallback if 4B chunk teaching proves unreliable; still smaller than the old 14B."
+    }
+  ],
+  "translationOnly": {
+    "model": "Hy-MT2-1.8B Q4_K_M",
+    "source": "https://huggingface.co/tencent/Hy-MT2-1.8B",
+    "evaluationAlias": "cotabby-eval-hymt:1.8b",
+    "weightSHA256": "dc5f44fcf1fa496ee7ad725982c0c8c553a4de00259b53af84c4b89fb0c06699",
+    "role": "Specialized translator. Corrected vendor user-only chat template; no claim of chunk-analysis capability."
+  },
+  "excluded": [
+    {
+      "model": "Qwen2.5-14B",
+      "reason": "User reports poor chunk analysis while translation remains usable; explicitly removed as baseline. Existing weights preserved, running instance unloaded."
+    },
+    {
+      "model": "Ministral 3 3B Instruct",
+      "reason": "Excluded at user's request; prioritize selected multilingual candidates. No quality conclusion from an unrun test."
+    }
+  ]
+}

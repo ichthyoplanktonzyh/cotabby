@@ -258,9 +258,19 @@ text. Posting events is not treated as proof of success; the later AX snapshot i
   http://127.0.0.1:11434/v1; LAN and public HTTPS endpoints are supported, while insecure public HTTP
   is rejected.
 
-LlamaRuntimeCore is a nonisolated lock/condition-protected native boundary, not a Swift actor. Its
-autocomplete lock serializes cache/decode state, and its lifecycle condition prevents shutdown from
-racing active native work. Heavy work runs away from MainActor.
+`NativeLlamaSession` is the common native ownership boundary used by `LlamaRuntimeCore` and each
+`LearningLocalRuntime`. Each owner constructs a separate session/engine. `NativeRuntimeWorkGate`
+serializes allocation, vocabulary/cache access and decoding, closes admission before release,
+cancels only the live operation/sequence identity, and drains work before freeing native state.
+Learning leases are checked both on admission and after an idle release waits for the current work;
+a new claim makes that old release obsolete. No prompt, sampler policy or KV bookkeeping lives in
+the common session. `LlamaRuntimeCore` retains its autocomplete prefix/sequence/fingerprint policy.
+Heavy work runs away from MainActor; these serialized native owners are not Swift actors.
+
+The session's allocation identity includes the standardized model URL, GPU layer request, context
+window and batch size. Failed loading clears the identity and partial allocation so the same file
+can be retried. The autocomplete shutdown timeout is a drain grace period, never permission to free
+live pointers. Already-started native loading has no safe abort API and can delay termination.
 
 The app and CotabbyInference intentionally expose one live autocomplete sequence. The package uses
 one llama.cpp sequence slot and a changing external ID to reject stale work after a reset; the Swift
@@ -595,17 +605,93 @@ coordinator to perform every step itself.
 The primary workflow is `LearningSentencePreviewCoordinator`, owned once by
 `InlineCommandCoordinator`. It initializes from the focus snapshot without sending its text, observes
 subsequent same-field mutations and debounces a bounded, read-only `LearningSelectionCapture`.
-Keyboard observations invalidate in-flight work without claiming ordinary keys. The detail shortcut
+Keyboard observations hide the preview/details/lookup immediately and invalidate in-flight work
+without claiming ordinary keys. Automatic presentation resumes only after the existing 600ms quiet
+period; stale documents remain internal history/cache evidence and cannot render. The detail shortcut
 opens an existing document or explicitly captures a selected/current sentence. The previous result
 retains its source and range; only a verified adjacent predecessor can be carried into a new preview.
 
-`LearningExpressionService+Sentence` implements `LearningSentenceGenerating` using the existing
-endpoint client and a separately configured instruction model. `streamInstruction` sends instruction
-messages with SSE enabled and requires a `stop` finish. `LearningSentencePrompt` requests NDJSON:
-first one complete translation, then meaning-unit records quoting exact source and target substrings.
-`LearningSentenceStreamParser` resolves those quotes to grapheme-safe UTF-16 spans, rejects overlaps
-and supports discontinuous spans or explicit grammatical additions/omissions. A valid translation is
-published even if later analysis fails. Settings and credentials are checked before every delivery.
+`LearningExpressionService` is an app-owned facade over `LearningTranslationService` and
+`LearningAnalysisService`. `LearningSentenceGenerating` exposes the two stages explicitly. The
+translator returns only the natural expression; the coordinator displays and caches it before
+starting optional analysis. `LearningAnalysisPrompt` sends the source plus that exact translation,
+and requests only NDJSON meaning chunks. A seeded `LearningSentenceStreamParser` rejects any
+translation record, resolves exact quotations to grapheme-safe UTF-16 spans, rejects overlaps, and
+supports discontinuous spans or explicit grammatical additions/omissions. Analysis failures preserve
+the expression, and changing an analysis model, credential, or switch restarts only analysis. Its
+cache includes the fixed sentence pair, languages and analysis model snapshot. With analysis off,
+expansion still shows the sentence pair and native dictionary word buttons.
+
+`LanguageLearningSettings` owns two `LearningModelSettings` profiles and separate translation and
+analysis switches. `CotabbyAppEnvironment` constructs one `LearningModelCollection`; settings views,
+services and termination share those controllers. Each role owns model selection, status, task identity
+and a separate `LearningLocalRuntime`, or its own configured OpenAI-compatible Endpoint and Keychain
+namespace. Legacy learning model/address/key migrate once into translation; later completion changes
+cannot redirect it. Analysis defaults off and never inherits a remote address or credential.
+
+Model controls live in Engine & Model. `SettingsNavigationModel.engineTask` is window-owned
+navigation state for the fixed completion/translation/analysis tabs; it never writes runtime
+selection. Completion retains its existing grouped form. `LearningModelConfigurationView` uses
+the same scaffold, section structure and row controls for each learning role. Writing observes
+profile summaries and routes through `openLearningModel`; it contains no server or key editors.
+Learning page identity is bound to its role so an unsaved key draft cannot carry into another role.
+Existing engine search anchors navigate back to the completion page before scrolling.
+The three forms reuse `ModelsFolderSection`, `InstalledRuntimeModelRow` and
+`ModelEndpointConnectionSection`: layout parity comes from common presentation code, while each
+role retains its own controller, endpoint catalog and unsaved credential draft. Catalog entries are
+task-specific (Hy-MT2 translation and Qwen3.5 4B analysis candidates). The global LM Studio source
+refresh notifies all runtimes. `ModelUsagePolicy` combines completion and learning selections,
+including saved battery/AC choices; deletion rechecks that set when the confirmation is executed.
+
+Each learning role persists independent `LearningPowerProfile` values and defaults source switching
+off. The shared power monitor selects its active profile without editing completion. Request
+snapshots include only the effective backend/model/template/address/credential revision. The
+post-assignment `changes` publisher invalidates work only when that snapshot changes, so a dormant
+Endpoint or inactive power-source edit does not unload the active model. Endpoint discovery still
+invalidates separately on its role's server/key changes. Low Power Mode uses the existing shared
+pause preference and immediately clears learning work and panels when pausing becomes active.
+`LearningModelCollection` also stops the native controllers. It reads global/temporary pause and the
+existing low-power provider through the shared `LocalRuntimeResidencyPolicy`: translator warm,
+analyzer on demand. Live eligibility callbacks and tracked warmup tasks prevent queued work from
+loading after a disable. An analyzer native-load attempt schedules idle release even if cancellation
+prevented delivery of its ready event. After 60 seconds idle it unloads; cached sentence/chunk values
+remain in the coordinator. Endpoint eligibility does not imply native residency and never cancels
+an unrelated HTTP request just because local residency is released.
+
+
+Local learning uses fresh native sequences and instruction templates, independent of autocomplete's
+base renderer, KV cache and sentence stop rules. GGUF metadata selects supported templates; explicit
+selection handles renamed/variant models. Trusted turn markers are tokenized as specials while the
+source-bearing payload is tokenized literally. Native load/decode/unload use the same per-instance
+`NativeLlamaSession` ownership boundary as autocomplete, with operation leases preventing stale unloads. Disabling a role releases its model. Quit
+cancels decoding and waits for any non-cancellable native load to finish before unloading Metal
+contexts; a slow native load can therefore delay quit. The inference workspace patch reference-counts
+global backend ownership and installs its global logger once before engines run. A shared GGUF
+folder/download manager does not share contexts; catalogued translation specialists are excluded from
+autocomplete candidates and fallback selection.
+
+`LearningRequestTelemetry` wraps each validated service operation. A task-local sentence request ID
+is shared by translation and analysis; stage operation IDs distinguish retries and are passed as
+immutable evidence into detached native work. Logs cover start/generation/load/prefill/decode/first
+output/first usable/finish/publication, outcomes and cache hits. Cancellation UUIDs remain independent
+stale guards. Ordinary events contain counts, types and timings, not source/prompt/output/server/key.
+Debug-only full model input/output uses the original `llmIO` sink; transient debug strings are cleared
+at operation completion. `LearningDisplayReporting` reports only a visible, current panel. Analysis
+publication is observed when usable chunks are expanded, so its display time can include the user's
+wait before opening details; first-usable time measures when the first validated chunk was ready.
+
+`PerformanceMetricEntry` retains its original fields/key and decodes old JSON as completion/completed
+with unobserved timings nil. Completion's returned/suppressed result still means completed, not a
+quality judgment. The existing opt-in ring now records learning and completion failures/cancellations
+as well, with cancellation mapped from both Swift and app-specific cancellation errors. Display
+updates patch an extant entry once and cannot resurrect cleared/evicted history. The pane defaults to
+completion, filters both chart and rows by task, and labels outcome and stages. The cap is 100 across
+all tasks. Completion acceptance/suppression quality counters remain completion-only.
+
+Endpoint learning reuses the HTTP client implementation with a dedicated ephemeral session that
+rejects redirects. Translation sends only bounded source/language direction; analysis sends that
+source plus the fixed displayed translation. Both require complete text responses; analysis streams
+valid chunks. No screen OCR, clipboard, history or autocomplete prompt is included.
 
 The coordinator rejects stale request IDs, keyboard edits, changed focus snapshots and a different
 frontmost application. Full AX recapture happens before the first translation and at completion,
@@ -614,13 +700,22 @@ selection within a request and dismisses on outside clicks. `LearningChunkDispla
 characters and orders quoted spans by sentence position. `LearningSentenceCard` renders matching
 meaning IDs as colored chips; its wrapping layout also respects right-to-left targets.
 `LearningDetailPanel`, owned by the sentence panel, shares `LearningDetailState` for selected borders
-and switches one nonactivating child between a chunk explanation and word lookup. The parent's click
-monitor treats both windows as one family. Esc dismisses the child before the main pair, even if
-generation eligibility has changed. Document IDs, lookup revisions and cancellation reject stale
-word replies. Its `LearningDictionaryService` actor uses local Dictionary Services and a lemma
-fallback; plain output is reflowed at sentence boundaries without inventing sense metadata. Missing
-entries are not cached, allowing newly enabled dictionaries to be queried again. Word details never
-contact an LLM. All sentence caches are
+and keeps the chunk explanation visible while native word lookup opens. `LearningDictionaryButton`
+bridges a native button's text and view geometry to the controller, which validates the immutable
+chunk and source window. Compact translation text also supports double-click word lookup through
+`LearningSentenceDictionaryText`: a read-only TextKit view keeps the sentence's original formatting,
+rejects whitespace and truncated glyph hits, and cannot take first-responder focus. The word policy
+uses the configured target language and returns the exact UTF-16 occurrence for document validation.
+Single clicks do not trigger lookup; background chunk updates preserve an open compact lookup for
+the same fixed translation. `LearningSystemDictionaryPresenter` calls the public AppKit `showDefinition`
+overlay API. Each lookup uses a separate transparent, nonactivating source panel anchored to the
+clicked title or inline word. That source is a child of the containing learning window and has no rendered content or mouse
+handling. Its public child-window hook rejects delayed AppKit windows after cancellation; a later
+lookup cannot revive an older source. The parent's click monitor treats the complete ancestor chain
+as one family. Esc closes lookup, then the explanation, then the main pair, even if generation
+eligibility has changed. Hiding, replacing, or losing placement closes the lookup source. Dictionary
+formatting and contents belong to the system's enabled dictionaries, with no plain-text reparsing,
+private API, hosted lookup service, or model request. All sentence caches are
 bounded, memory-only, and cleared on field or configuration changes.
 
 Learning cards reserve space independently from completion. `OverlayController` publishes its actual
@@ -631,32 +726,29 @@ repositions an existing learning card; when no space remains, learning waits and
 is released. Card height follows content, with a bounded scroll viewport for details. Zero geometry
 preferences during host-root replacement are ignored so they cannot collapse the details viewport.
 
-The original explicit translation and committed-word hint workflows remain available when automatic
-sentence preview is disabled. Their safety boundaries are described below.
+The explicit translation workflow remains available when automatic sentence preview is disabled.
+The redundant word-hint coordinator, settings entry and model task have been retired; old keys are ignored.
 
 Ordinary inline autocomplete remains owned by the suggestion pipeline. The legacy learning workflow
-has two operations: an explicitly triggered translation preview and an optional
-passive hint for one committed word. `LanguageLearningSettings` stores the source-language choices,
+provides an explicitly triggered translation preview. `LanguageLearningSettings` stores the source-language choices,
 target language, model name, shortcut, and off-by-default feature switches. `LearningExpressionTask`
-and `LearningExpressionPrompt` describe only translation and word-hint requests.
+and `LearningExpressionPrompt` describe translation requests.
 
 For an explicit translation preview, one enabled source language is the user's direction preference;
 the short source text is not asked to prove that choice. With several enabled sources, the preview
 uses Natural Language constrained to those choices and requires a confident result with a clear
-margin. The target is excluded from source candidates. Passive word hints retain their separate
-language-detection policy.
+margin. The target is excluded from source candidates.
 
-`CotabbyAppEnvironment` builds one `LearningExpressionService` using the endpoint client and
-credential owner already configured for OpenAI-compatible generation. The user explicitly configures
-that endpoint, which may be local or remote over HTTPS. A shortcut request is an explicit preview of
+`CotabbyAppEnvironment` builds one `LearningExpressionService` using the role-specific model collection.
+Each learning Endpoint has its own credential owner and is explicitly configured by the user;
+it may be local or remote over HTTPS. A shortcut request is an explicit preview of
 the selected text, or the complete sentence at the caret when nothing is selected. Positive evidence
 of active marked IME composition blocks that request until the candidate is committed. If the editor
 cannot prove that text is committed, the user may still preview and copy it, but the capture carries
-no replacement capability. Automatic passive hints remain stricter: they use only a positively
-committed current word. Neither path includes screen contents, clipboard data, or typing history.
+no replacement capability. Learning includes no screen contents, clipboard data, or typing history.
 
-`InlineCommandCoordinator` owns the sibling `LanguageLearningCoordinator` and passive
-`LanguageLearningHintCoordinator` with their start/stop lifetime.
+`InlineCommandCoordinator` owns the sibling manual `LanguageLearningCoordinator` and automatic
+`LearningSentencePreviewCoordinator` with their start/stop lifetime.
 The new InputMonitor interception reason is independent of emoji/macro capture and is not installed
 until the monitor starts. A translation task retains one selection capture, task identity and preview;
 input, navigation or configuration changes invalidate it. `LearningContracts` separates model,
@@ -685,11 +777,3 @@ from full pre-selection text. Unknown after-caret reads never prove a document e
 field/fragment agreement and complete graphemes. Opaque marker objects live only within one synchronous
 read, never across model awaits. Marker-only existing selections use verified Paste, while marker-only
 sentence previews have no replacement callback because no offset-to-marker mapping is guessed.
-
-Passive hints use the existing AX tracker and input-source monitor through `LearningHintSourceReader`.
-Raw keys dismiss display; only positively committed, same-session AX text changes schedule generation.
-A 700 ms debounce, 2 second request interval, UUID guards and an in-memory word cache bound background
-work. Only the word reaches the model. Turning hints on begins observing future committed changes; it
-does not retroactively process a word already in the field. The hint panel receives display/copy
-callbacks and no replacement capability. It never captures Return; its Escape handler only consumes
-an actually visible hint.

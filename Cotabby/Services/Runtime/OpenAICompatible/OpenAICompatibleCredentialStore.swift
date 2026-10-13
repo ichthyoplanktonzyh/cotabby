@@ -11,8 +11,8 @@ final class KeychainOpenAICompatibleCredentialStore: OpenAICompatibleCredentialS
     private let service: String
     private let account = "api-key"
 
-    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.jacobfu.tabby") {
-        service = "\(bundleIdentifier).openai-compatible-endpoint"
+    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.jacobfu.tabby", namespace: String? = nil) {
+        service = "\(bundleIdentifier).\(namespace ?? "openai-compatible-endpoint")"
     }
 
     // Keep this explicit while Xcode 26.0–26.3 remain supported. Those toolchains can emit an

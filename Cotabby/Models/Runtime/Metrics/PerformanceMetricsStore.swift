@@ -5,26 +5,9 @@ import Logging
 /// File overview:
 /// In-memory + UserDefaults-backed ring buffer of the most recent LLM generation latencies.
 /// Capped at `maximumEntries` so the persisted blob stays small and the Performance settings pane
-/// renders a bounded list without virtualization. Records flow in from `SuggestionEngineRouter`
+/// renders a bounded list without virtualization. Records flow in from autocomplete and the learning telemetry boundary
 /// only when the user has enabled performance tracking in Settings, so the default user pays no
 /// storage or write cost.
-
-/// One recorded LLM request — kept intentionally narrow: just the three fields the
-/// Performance pane shows. Codable so the whole array round-trips through UserDefaults
-/// as a JSON blob.
-struct PerformanceMetricEntry: Identifiable, Codable, Equatable, Hashable {
-    let id: UUID
-    let timestamp: Date
-    let modelName: String
-    let latencyMs: Int
-
-    init(id: UUID = UUID(), timestamp: Date = Date(), modelName: String, latencyMs: Int) {
-        self.id = id
-        self.timestamp = timestamp
-        self.modelName = modelName
-        self.latencyMs = latencyMs
-    }
-}
 
 @MainActor
 final class PerformanceMetricsStore: ObservableObject {
@@ -42,20 +25,38 @@ final class PerformanceMetricsStore: ObservableObject {
         entries = Self.loadEntries(from: userDefaults)
     }
 
+    nonisolated deinit {}
+
     /// Append a new metric and drop the oldest entries above the cap. Persists after every record
-    /// because the cap keeps the JSON blob small (well under 10 KB) and the write happens at most
+    /// because the cap keeps the JSON blob small (bounded by the fixed entry cap) and the write happens at most
     /// once per LLM request — far below any debouncing threshold.
-    func record(modelName: String, latencyMs: Int, timestamp: Date = Date()) {
+    @discardableResult
+    func record(modelName: String, latencyMs: Int, timestamp: Date = Date(),
+                source: ModelRequestSource = .completion, outcome: ModelRequestOutcome = .completed,
+                requestID: String? = nil, modelLoadMs: Int? = nil, firstOutputMs: Int? = nil,
+                usableResultMs: Int? = nil, displayMs: Int? = nil) -> UUID {
         let entry = PerformanceMetricEntry(
             timestamp: timestamp,
             modelName: modelName,
-            latencyMs: latencyMs
+            latencyMs: latencyMs, source: source, outcome: outcome, requestID: requestID,
+            modelLoadMs: modelLoadMs, firstOutputMs: firstOutputMs, usableResultMs: usableResultMs, displayMs: displayMs
         )
         var updated = entries
         updated.append(entry)
         if updated.count > Self.maximumEntries {
             updated.removeFirst(updated.count - Self.maximumEntries)
         }
+        entries = updated
+        persist(updated)
+        return entry.id
+    }
+
+    /// Display follows model completion on a later main-actor turn. Patch only that entry, once;
+    /// clearing history or evicting it must never resurrect a row when a late panel callback arrives.
+    func recordDisplay(entryID: UUID, elapsedMs: Int) {
+        guard let index = entries.firstIndex(where: { $0.id == entryID }), entries[index].displayMs == nil else { return }
+        var updated = entries
+        updated[index].displayMs = max(0, elapsedMs)
         entries = updated
         persist(updated)
     }

@@ -1,6 +1,21 @@
 import Combine
 import SwiftUI
 
+/// The fixed Engine & Model tabs select which task's settings are visible. This is window
+/// navigation state, independent of the engine/model values that control actual generation.
+enum SettingsEngineTask: String, CaseIterable, Identifiable {
+    case completion, translation, analysis
+    var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .completion: "补全"
+        case .translation: "翻译"
+        case .analysis: "学习分析"
+        }
+    }
+    init(role: LearningModelRole) { self = role == .translation ? .translation : .analysis }
+}
+
 /// File overview:
 /// Navigation state for the Settings window: which pane is selected, which individual setting
 /// (if any) search wants revealed, and a pending request to focus the Home search field. Owned by
@@ -13,6 +28,7 @@ import SwiftUI
 @MainActor
 final class SettingsNavigationModel: ObservableObject {
     @Published var selection: SettingsCategory = .home
+    @Published var engineTask: SettingsEngineTask = .completion
     /// The setting search navigated to, while its arrival pulse is active. Distributed to rows
     /// through the `settingsHighlightedItem` environment value.
     @Published private(set) var highlightedItem: SettingsItem?
@@ -33,9 +49,25 @@ final class SettingsNavigationModel: ObservableObject {
         selection = category
     }
 
+    /// Writing's model links choose both the category and the task before SwiftUI renders the
+    /// destination. Keeping this here lets sidebar/search and cross-pane links share one owner.
+    func openLearningModel(_ role: LearningModelRole) {
+        openEngineTask(SettingsEngineTask(role: role))
+    }
+
+    /// Task-specific links (including Home's completion engine card) land on the matching page
+    /// even if the user last inspected a different task. Plain sidebar navigation keeps the tab.
+    func openEngineTask(_ task: SettingsEngineTask) {
+        engineTask = task
+        open(.engineAndModel)
+    }
+
     /// Search navigation: selects the item's pane and pulses the row. The pane's scaffold watches
     /// `highlightedItem` to perform the scroll.
     func reveal(_ item: SettingsItem) {
+        // Existing engine search anchors belong to the original completion page. A prior visit
+        // to translation must not leave those search hits scrolling an unrelated learning form.
+        if item.category == .engineAndModel { engineTask = .completion }
         selection = item.category
         highlightedItem = item
 

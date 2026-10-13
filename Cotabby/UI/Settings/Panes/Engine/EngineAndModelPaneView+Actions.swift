@@ -179,12 +179,14 @@ extension EngineAndModelPaneView {
     func deleteModel(_ model: RuntimeModelOption) {
         modelDownloadManager.deleteModel(filename: model.filename)
         runtimeModel.refreshAvailableModels()
+        learningModels?.refreshModels()
         pendingDeletionModel = nil
     }
 
     func refreshModels() {
         modelDownloadManager.refreshModelStates()
         runtimeModel.refreshAvailableModels()
+        learningModels?.refreshModels()
     }
 
     /// Reset is intentionally local to the address. The selected model and Keychain credential

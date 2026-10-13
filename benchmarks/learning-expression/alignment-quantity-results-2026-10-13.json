@@ -1,0 +1,879 @@
+{
+  "date": "2026-10-13",
+  "scope": "Fixed translation alignment only; no translation generation, app change, training or saved credentials",
+  "design": {
+    "cases": 28,
+    "cloudArms": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "localArms": [
+      "C",
+      "D"
+    ],
+    "repetitions": 3,
+    "cloudTrials": 336,
+    "localTrials": 168,
+    "D": "C plus quantity guideline only: ordinary sentence 3–6, short/fixed 1–3, long may exceed6; intact meaning takes precedence"
+  },
+  "officialReferences": [
+    "https://api-docs.deepseek.com/news/news260910/",
+    "https://api-docs.deepseek.com/api/create-chat-completion/"
+  ],
+  "limitations": [
+    "AI rubric judgements, not human accuracy; strict-format failures excluded from primary semantic scoring but counted as unavailable.",
+    "Cloud repetitions have no seed control; latency includes network, scheduling, prefill and cache. Local/cloud timings do not isolate architecture speed.",
+    "Small synthetic multilingual corpus; no general multilingual capability claim.",
+    "Quantity rule is a soft guideline with vague short-sentence exception, not a hard3–6 compliance experiment."
+  ],
+  "results": {
+    "cloud": {
+      "directory": "/Users/shadow/cotabby/build/LanguageLearning/AlignmentQuantityEval/20261013T032534Z-cloud",
+      "metadata": {
+        "status": "completed",
+        "provider": "cloud",
+        "expectedTrials": 336,
+        "models": {
+          "deepseek": {
+            "object": "list",
+            "data": [
+              {
+                "id": "deepseek-flash",
+                "object": "model",
+                "owned_by": "deepseek",
+                "name": "DeepSeek-V4.1-Flash",
+                "context_window": 1048576,
+                "max_output_tokens": 393216,
+                "input_modalities": [
+                  "text",
+                  "image"
+                ],
+                "output_modalities": [
+                  "text"
+                ],
+                "effort": {
+                  "supported_levels": [
+                    "low",
+                    "high",
+                    "max"
+                  ],
+                  "default_level": "high"
+                },
+                "api_capabilities": {
+                  "anthropic_messages": {
+                    "system_prompt_update": "in-history"
+                  }
+                }
+              },
+              {
+                "id": "deepseek-v4-pro",
+                "object": "model",
+                "owned_by": "deepseek",
+                "name": "DeepSeek-V4-Pro",
+                "context_window": 1048576,
+                "max_output_tokens": 393216,
+                "input_modalities": [
+                  "text"
+                ],
+                "output_modalities": [
+                  "text"
+                ],
+                "effort": {
+                  "supported_levels": [
+                    "low",
+                    "high",
+                    "max"
+                  ],
+                  "default_level": "high"
+                },
+                "api_capabilities": {
+                  "anthropic_messages": {
+                    "system_prompt_update": "leading-only"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "arms": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "repetitions": 3,
+        "seeds": null,
+        "frozenABCFrom": "/Users/shadow/cotabby/build/LanguageLearning/AlignmentEval/20261013T022023Z-formal",
+        "DChange": "6. Aim for 3–6 corresponding meaning groups for an ordinary sentence. A short sentence or fixed expression may have 1–3 groups. For a long sentence, split by clauses and allow more than 6 groups when needed. Keep complete expressions intact; do not split mechanically just to reach the count or merge different meanings just to stay below it.\n",
+        "sourceHashes": {
+          "source-snapshot/scripts/learning_alignment_eval.py": "4e1bc55c171a2203aa4feb23fa3a072fa4dd0920db2bb12fb70da99be4a59d95",
+          "source-snapshot/scripts/learning_alignment_quantity_eval.py": "af6c0a80c17f6c4035a1251bf7e27fab12a2ae92e7d71e33ab512989c69d8412",
+          "source-snapshot/scripts/learning_alignment_review.py": "64ec1c59f7bcf02fed7fd3e7a47673e52e31e22b999e7456a1adc1e8778c61de"
+        },
+        "credentialPolicy": "getpass memory only; no headers/key persisted; redirects and proxies disabled",
+        "transmission": "Only the frozen synthetic corpus and prompts to https://api.deepseek.com",
+        "cloudLimits": "No server seed control; repetitions matched by round. Network/queue/cache are included; no local/cloud architecture speed attribution.",
+        "cloudSettings": {
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "temperature": 0.3,
+          "top_p": "effective 1 in nonthinking mode per official docs; omitted",
+          "max_tokens": 4096,
+          "schemaEnforcement": false
+        },
+        "observedTrials": 336
+      },
+      "summary": {
+        "deepseek-A": {
+          "trials": 84,
+          "formatValid": 80,
+          "quotesValid": 49,
+          "usableProtocol": 49,
+          "multipleCandidateTrials": 7,
+          "singleGroupTrials": 0,
+          "groupCounts": {
+            "9": 12,
+            "4": 11,
+            "10": 3,
+            "5": 10,
+            "11": 8,
+            "6": 14,
+            "2": 3,
+            "8": 7,
+            "7": 6,
+            "14": 1,
+            "3": 3,
+            "15": 2
+          },
+          "firstContentMs": {
+            "n": 84,
+            "p50": 2106.6364790000025,
+            "p95": 2456.6763982500047
+          },
+          "firstUniquePairMs": {
+            "n": 49,
+            "p50": 2375.205459,
+            "p95": 2728.1431752000344
+          },
+          "completionMs": {
+            "n": 49,
+            "p50": 3303.1448340000225,
+            "p95": 4162.173883400054
+          },
+          "eval_count": {
+            "n": 84,
+            "p50": 257.5,
+            "p95": 411.14999999999986
+          }
+        },
+        "deepseek-B": {
+          "trials": 84,
+          "formatValid": 78,
+          "quotesValid": 63,
+          "usableProtocol": 63,
+          "multipleCandidateTrials": 7,
+          "singleGroupTrials": 1,
+          "groupCounts": {
+            "9": 2,
+            "4": 14,
+            "11": 7,
+            "10": 5,
+            "6": 17,
+            "2": 2,
+            "8": 11,
+            "5": 11,
+            "7": 4,
+            "3": 3,
+            "15": 1,
+            "1": 1
+          },
+          "firstContentMs": {
+            "n": 84,
+            "p50": 2095.6345420000844,
+            "p95": 2438.361160650038
+          },
+          "firstUniquePairMs": {
+            "n": 63,
+            "p50": 2234.7565419999996,
+            "p95": 2543.9623831000376
+          },
+          "completionMs": {
+            "n": 63,
+            "p50": 2555.638292000026,
+            "p95": 2906.8694922999894
+          },
+          "eval_count": {
+            "n": 84,
+            "p50": 116.0,
+            "p95": 211.54999999999998
+          }
+        },
+        "deepseek-C": {
+          "trials": 84,
+          "formatValid": 63,
+          "quotesValid": 59,
+          "usableProtocol": 59,
+          "multipleCandidateTrials": 0,
+          "singleGroupTrials": 15,
+          "groupCounts": {
+            "2": 31,
+            "3": 17,
+            "1": 15
+          },
+          "firstContentMs": {
+            "n": 84,
+            "p50": 2129.883104499996,
+            "p95": 2495.8566463000175
+          },
+          "firstUniquePairMs": {
+            "n": 59,
+            "p50": 2250.1258749999806,
+            "p95": 2495.5083161000384
+          },
+          "completionMs": {
+            "n": 59,
+            "p50": 2307.8525839999884,
+            "p95": 3243.911379700003
+          },
+          "eval_count": {
+            "n": 84,
+            "p50": 33.0,
+            "p95": 47.849999999999994
+          }
+        },
+        "deepseek-D": {
+          "trials": 84,
+          "formatValid": 79,
+          "quotesValid": 72,
+          "usableProtocol": 72,
+          "multipleCandidateTrials": 0,
+          "singleGroupTrials": 9,
+          "groupCounts": {
+            "2": 29,
+            "3": 36,
+            "1": 9,
+            "4": 4,
+            "6": 1
+          },
+          "firstContentMs": {
+            "n": 84,
+            "p50": 2090.544499499998,
+            "p95": 2714.267952599994
+          },
+          "firstUniquePairMs": {
+            "n": 72,
+            "p50": 2214.868645499976,
+            "p95": 2718.0683603500015
+          },
+          "completionMs": {
+            "n": 72,
+            "p50": 2299.7211245000103,
+            "p95": 2721.650652750008
+          },
+          "eval_count": {
+            "n": 84,
+            "p50": 35.0,
+            "p95": 50.849999999999994
+          }
+        }
+      },
+      "semantic": {
+        "deepseek-A": {
+          "trials": 84,
+          "semanticReviewed": 80,
+          "allDimensions2": 16,
+          "protocolAndAllDimensions2": 15,
+          "scores": {
+            "alignment": {
+              "0": 2,
+              "1": 31,
+              "2": 47
+            },
+            "segmentation": {
+              "0": 10,
+              "1": 54,
+              "2": 16
+            },
+            "coverage": {
+              "0": 0,
+              "1": 4,
+              "2": 76
+            }
+          }
+        },
+        "deepseek-B": {
+          "trials": 84,
+          "semanticReviewed": 78,
+          "allDimensions2": 23,
+          "protocolAndAllDimensions2": 22,
+          "scores": {
+            "alignment": {
+              "0": 2,
+              "1": 21,
+              "2": 55
+            },
+            "segmentation": {
+              "0": 5,
+              "1": 50,
+              "2": 23
+            },
+            "coverage": {
+              "0": 0,
+              "1": 4,
+              "2": 74
+            }
+          }
+        },
+        "deepseek-C": {
+          "trials": 84,
+          "semanticReviewed": 63,
+          "allDimensions2": 56,
+          "protocolAndAllDimensions2": 53,
+          "scores": {
+            "alignment": {
+              "0": 0,
+              "1": 3,
+              "2": 60
+            },
+            "segmentation": {
+              "0": 0,
+              "1": 7,
+              "2": 56
+            },
+            "coverage": {
+              "0": 0,
+              "1": 0,
+              "2": 63
+            }
+          }
+        },
+        "deepseek-D": {
+          "trials": 84,
+          "semanticReviewed": 79,
+          "allDimensions2": 70,
+          "protocolAndAllDimensions2": 66,
+          "scores": {
+            "alignment": {
+              "0": 0,
+              "1": 8,
+              "2": 71
+            },
+            "segmentation": {
+              "0": 1,
+              "1": 8,
+              "2": 70
+            },
+            "coverage": {
+              "0": 0,
+              "1": 0,
+              "2": 79
+            }
+          }
+        }
+      },
+      "performance": {
+        "arms": {
+          "deepseek-A": {
+            "allCompletionMs": {
+              "n": 84,
+              "p50": 3364.0924789999926,
+              "p95": 4323.420231249984
+            },
+            "maxCompletionMs": 7074.015083999939,
+            "lengthLimitTrials": 0,
+            "singleGroupFormatValidTrials": 0,
+            "formatValidTrials": 80,
+            "maxOutputBytes": 1924,
+            "fullyUniqueProtocolTrials": 42
+          },
+          "deepseek-B": {
+            "allCompletionMs": {
+              "n": 84,
+              "p50": 2573.3156459999973,
+              "p95": 3118.406643700035
+            },
+            "maxCompletionMs": 3416.7717499999953,
+            "lengthLimitTrials": 0,
+            "singleGroupFormatValidTrials": 1,
+            "formatValidTrials": 78,
+            "maxOutputBytes": 804,
+            "fullyUniqueProtocolTrials": 56
+          },
+          "deepseek-C": {
+            "allCompletionMs": {
+              "n": 84,
+              "p50": 2303.458083999999,
+              "p95": 3137.0351000999826
+            },
+            "maxCompletionMs": 3459.265457999976,
+            "lengthLimitTrials": 0,
+            "singleGroupFormatValidTrials": 15,
+            "formatValidTrials": 63,
+            "maxOutputBytes": 260,
+            "fullyUniqueProtocolTrials": 59
+          },
+          "deepseek-D": {
+            "allCompletionMs": {
+              "n": 84,
+              "p50": 2274.9596875000293,
+              "p95": 2826.1780962999965
+            },
+            "maxCompletionMs": 3538.077334000036,
+            "lengthLimitTrials": 0,
+            "singleGroupFormatValidTrials": 9,
+            "formatValidTrials": 79,
+            "maxOutputBytes": 272,
+            "fullyUniqueProtocolTrials": 72
+          }
+        },
+        "pairedSuccessfulFixtures": {
+          "deepseek-A-to-B": {
+            "completionRatio": {
+              "n": 44,
+              "p50": 0.7724437483332924,
+              "p95": 1.043295984515108
+            },
+            "completionDifferenceMs": {
+              "n": 44,
+              "p50": -714.8791879999408,
+              "p95": 112.61272499996863
+            }
+          },
+          "deepseek-B-to-C": {
+            "completionRatio": {
+              "n": 46,
+              "p50": 0.9171408111394547,
+              "p95": 1.2871274570652422
+            },
+            "completionDifferenceMs": {
+              "n": 46,
+              "p50": -213.4012915000767,
+              "p95": 755.6870617499851
+            }
+          },
+          "deepseek-A-to-C": {
+            "completionRatio": {
+              "n": 36,
+              "p50": 0.7213354607613313,
+              "p95": 0.9601028061771395
+            },
+            "completionDifferenceMs": {
+              "n": 36,
+              "p50": -892.6103125000109,
+              "p95": -98.45365675001733
+            }
+          },
+          "deepseek-C-to-D": {
+            "completionRatio": {
+              "n": 52,
+              "p50": 0.9858598255480855,
+              "p95": 1.2260023747317963
+            },
+            "completionDifferenceMs": {
+              "n": 52,
+              "p50": -32.33716700000855,
+              "p95": 470.0487422500239
+            }
+          }
+        }
+      },
+      "review": {
+        "runStatus": "completed",
+        "observedTrials": 336,
+        "formatValidTrials": 300,
+        "uniqueReviewItems": 158,
+        "pendingReviewItems": 0,
+        "shards": 1,
+        "excluded": "Strict format failures are excluded from primary semantic ratings, counted in protocol availability. No JSON repair."
+      },
+      "reusedReviewItems": 28
+    },
+    "local": {
+      "directory": "/Users/shadow/cotabby/build/LanguageLearning/AlignmentQuantityEval/20261013T034137Z-local",
+      "metadata": {
+        "status": "completed",
+        "provider": "local",
+        "expectedTrials": 168,
+        "models": {
+          "gemma": {
+            "show": {
+              "thinking": {
+                "values": [
+                  false,
+                  true
+                ],
+                "default": true
+              },
+              "modelfile": "# Modelfile generated by \"ollama show\"\n# To build a new Modelfile based on this, replace FROM with:\n# FROM cotabby-eval-gemma4:chat\n\nFROM /Users/shadow/.ollama/models/blobs/sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c\nTEMPLATE \"\"\"<bos>{{ range .Messages }}<|turn>{{ if eq .Role \"assistant\" }}model{{ else }}{{ .Role }}{{ end }}\n{{ .Content }}<turn|>\n{{ end }}<|turn>model\n{{ .Response }}\"\"\"\nRENDERER gemma4\nPARSER gemma4\nPARAMETER stop <turn|>\n",
+              "parameters": "stop                           \"<turn|>\"",
+              "template": "<bos>{{ range .Messages }}<|turn>{{ if eq .Role \"assistant\" }}model{{ else }}{{ .Role }}{{ end }}\n{{ .Content }}<turn|>\n{{ end }}<|turn>model\n{{ .Response }}",
+              "details": {
+                "parent_model": "cotabby-eval-gemma4:e4b",
+                "format": "gguf",
+                "family": "gemma4",
+                "families": [
+                  "gemma4"
+                ],
+                "parameter_size": "7.5B",
+                "quantization_level": "Q4_K_M",
+                "runner": "llamacpp"
+              },
+              "model_info": {
+                "gemma4.attention.head_count": 8,
+                "gemma4.attention.head_count_kv": 2,
+                "gemma4.attention.key_length": 512,
+                "gemma4.attention.key_length_swa": 256,
+                "gemma4.attention.layer_norm_rms_epsilon": 1e-06,
+                "gemma4.attention.shared_kv_layers": 18,
+                "gemma4.attention.sliding_window": 512,
+                "gemma4.attention.sliding_window_pattern": [
+                  true,
+                  true,
+                  true,
+                  true,
+                  true,
+                  false,
+                  true,
+                  true,
+                  true,
+                  true,
+                  true,
+                  false,
+                  true,
+                  true,
+                  true,
+                  true,
+                  true,
+                  false,
+                  true,
+                  true,
+                  true,
+                  true,
+                  true,
+                  false,
+                  true,
+                  true,
+                  true,
+                  true,
+                  true,
+                  false,
+                  true,
+                  true,
+                  true,
+                  true,
+                  true,
+                  false,
+                  true,
+                  true,
+                  true,
+                  true,
+                  true,
+                  false
+                ],
+                "gemma4.attention.value_length": 512,
+                "gemma4.attention.value_length_swa": 256,
+                "gemma4.block_count": 42,
+                "gemma4.context_length": 131072,
+                "gemma4.embedding_length": 2560,
+                "gemma4.embedding_length_per_layer_input": 256,
+                "gemma4.feed_forward_length": 10240,
+                "gemma4.final_logit_softcapping": 30,
+                "gemma4.rope.dimension_count": 512,
+                "gemma4.rope.dimension_count_swa": 256,
+                "gemma4.rope.freq_base": 1000000,
+                "gemma4.rope.freq_base_swa": 10000,
+                "general.architecture": "gemma4",
+                "general.base_model.0.name": "Gemma 4 E4B",
+                "general.base_model.0.organization": "Google",
+                "general.base_model.0.repo_url": "https://huggingface.co/google/gemma-4-E4B",
+                "general.base_model.count": 1,
+                "general.file_type": 15,
+                "general.license": "apache-2.0",
+                "general.license.link": "https://ai.google.dev/gemma/docs/gemma_4_license",
+                "general.parameter_count": 7518069290,
+                "general.quantization_version": 2,
+                "general.sampling.temp": 1,
+                "general.sampling.top_k": 64,
+                "general.sampling.top_p": 0.95,
+                "general.size_label": "7.5B",
+                "general.tags": [
+                  "any-to-any"
+                ],
+                "general.type": "model",
+                "quantize.imatrix.chunks_count": 128,
+                "quantize.imatrix.dataset": "/Users/daniel/code/gemma4-publish-20260925/.cache/gemma4-040/perplexity-20260927/wikitext-2-raw/wiki.train.raw",
+                "quantize.imatrix.entries_count": 342,
+                "quantize.imatrix.file": "/Users/daniel/code/gemma4-publish-20260925/.cache/gemma4-040/imatrix-20260927-e4b/imatrix.gguf",
+                "tokenizer.ggml.add_bos_token": true,
+                "tokenizer.ggml.add_space_prefix": false,
+                "tokenizer.ggml.bos_token_id": 2,
+                "tokenizer.ggml.eos_token_id": 1,
+                "tokenizer.ggml.mask_token_id": 4,
+                "tokenizer.ggml.merges": [],
+                "tokenizer.ggml.model": "gemma4",
+                "tokenizer.ggml.padding_token_id": 0,
+                "tokenizer.ggml.scores": [],
+                "tokenizer.ggml.token_type": [],
+                "tokenizer.ggml.tokens": [],
+                "tokenizer.ggml.unknown_token_id": 3
+              },
+              "capabilities": [
+                "completion",
+                "tools",
+                "thinking"
+              ],
+              "modified_at": "2026-10-12T15:43:33.911149454+08:00"
+            },
+            "manifest": {
+              "name": "cotabby-eval-gemma4:chat",
+              "model": "cotabby-eval-gemma4:chat",
+              "modified_at": "2026-10-12T15:43:33.911149454+08:00",
+              "size": 5493439639,
+              "digest": "61f32bb053138549c87cf50bbdbe4f449edf5fbf3653b4bd2fd96fca23598b80",
+              "details": {
+                "parent_model": "cotabby-eval-gemma4:e4b",
+                "format": "gguf",
+                "family": "gemma4",
+                "families": [
+                  "gemma4"
+                ],
+                "parameter_size": "7.5B",
+                "quantization_level": "Q4_K_M",
+                "context_length": 131072,
+                "embedding_length": 2560,
+                "runner": "llamacpp"
+              },
+              "capabilities": [
+                "completion",
+                "tools",
+                "thinking"
+              ]
+            },
+            "profile": [
+              "cotabby-eval-gemma4:chat",
+              0.3,
+              0.9,
+              40,
+              1.0
+            ],
+            "ollama": {
+              "version": "0.40.3"
+            }
+          }
+        },
+        "arms": [
+          "C",
+          "D"
+        ],
+        "repetitions": 3,
+        "seeds": [
+          42,
+          43,
+          44
+        ],
+        "frozenABCFrom": "/Users/shadow/cotabby/build/LanguageLearning/AlignmentEval/20261013T022023Z-formal",
+        "DChange": "6. Aim for 3–6 corresponding meaning groups for an ordinary sentence. A short sentence or fixed expression may have 1–3 groups. For a long sentence, split by clauses and allow more than 6 groups when needed. Keep complete expressions intact; do not split mechanically just to reach the count or merge different meanings just to stay below it.\n",
+        "sourceHashes": {
+          "source-snapshot/scripts/learning_alignment_eval.py": "4e1bc55c171a2203aa4feb23fa3a072fa4dd0920db2bb12fb70da99be4a59d95",
+          "source-snapshot/scripts/learning_alignment_quantity_eval.py": "d1bcfdf36024c01d048f9872c51167b33caebbfea956fc9f617f594bace92db7",
+          "source-snapshot/scripts/learning_alignment_review.py": "f7f4ed53271a5c9bd0feb387dae86660fcc04ecc179e68da0f111d72622a8514"
+        },
+        "credentialPolicy": "getpass memory only; no headers/key persisted; redirects and proxies disabled",
+        "transmission": "Loopback Ollama only",
+        "cloudLimits": "No server seed control; repetitions matched by round. Network/queue/cache are included; no local/cloud architecture speed attribution.",
+        "cloudSettings": null,
+        "observedTrials": 168
+      },
+      "summary": {
+        "gemma-C": {
+          "trials": 84,
+          "formatValid": 84,
+          "quotesValid": 84,
+          "usableProtocol": 84,
+          "multipleCandidateTrials": 0,
+          "singleGroupTrials": 60,
+          "groupCounts": {
+            "1": 60,
+            "2": 19,
+            "3": 5
+          },
+          "firstContentMs": {
+            "n": 84,
+            "p50": 557.4226040000099,
+            "p95": 748.7625411500204
+          },
+          "firstUniquePairMs": {
+            "n": 84,
+            "p50": 1376.6188119999897,
+            "p95": 1986.984193699996
+          },
+          "completionMs": {
+            "n": 84,
+            "p50": 1609.5973330000247,
+            "p95": 2611.0366436999852
+          },
+          "eval_count": {
+            "n": 84,
+            "p50": 28.5,
+            "p95": 57.54999999999998
+          }
+        },
+        "gemma-D": {
+          "trials": 84,
+          "formatValid": 84,
+          "quotesValid": 82,
+          "usableProtocol": 82,
+          "multipleCandidateTrials": 0,
+          "singleGroupTrials": 29,
+          "groupCounts": {
+            "1": 29,
+            "2": 49,
+            "3": 6
+          },
+          "firstContentMs": {
+            "n": 84,
+            "p50": 728.6180830000148,
+            "p95": 915.293243799995
+          },
+          "firstUniquePairMs": {
+            "n": 82,
+            "p50": 1384.6630624999996,
+            "p95": 1837.8643872000198
+          },
+          "completionMs": {
+            "n": 82,
+            "p50": 2026.6009789999941,
+            "p95": 3110.3357375000096
+          },
+          "eval_count": {
+            "n": 84,
+            "p50": 36.0,
+            "p95": 62.24999999999997
+          }
+        }
+      },
+      "semantic": {
+        "gemma-C": {
+          "trials": 84,
+          "semanticReviewed": 84,
+          "allDimensions2": 45,
+          "protocolAndAllDimensions2": 45,
+          "scores": {
+            "alignment": {
+              "0": 0,
+              "1": 0,
+              "2": 84
+            },
+            "segmentation": {
+              "0": 12,
+              "1": 27,
+              "2": 45
+            },
+            "coverage": {
+              "0": 0,
+              "1": 0,
+              "2": 84
+            }
+          }
+        },
+        "gemma-D": {
+          "trials": 84,
+          "semanticReviewed": 84,
+          "allDimensions2": 67,
+          "protocolAndAllDimensions2": 67,
+          "scores": {
+            "alignment": {
+              "0": 2,
+              "1": 0,
+              "2": 82
+            },
+            "segmentation": {
+              "0": 2,
+              "1": 15,
+              "2": 67
+            },
+            "coverage": {
+              "0": 0,
+              "1": 0,
+              "2": 84
+            }
+          }
+        }
+      },
+      "performance": {
+        "arms": {
+          "gemma-C": {
+            "allCompletionMs": {
+              "n": 84,
+              "p50": 1609.5973330000247,
+              "p95": 2611.0366436999852
+            },
+            "maxCompletionMs": 3440.690375000003,
+            "lengthLimitTrials": 0,
+            "singleGroupFormatValidTrials": 60,
+            "formatValidTrials": 84,
+            "maxOutputBytes": 268,
+            "fullyUniqueProtocolTrials": 84
+          },
+          "gemma-D": {
+            "allCompletionMs": {
+              "n": 84,
+              "p50": 2042.6814579999968,
+              "p95": 3152.840185699989
+            },
+            "maxCompletionMs": 3618.8097909999897,
+            "lengthLimitTrials": 0,
+            "singleGroupFormatValidTrials": 29,
+            "formatValidTrials": 84,
+            "maxOutputBytes": 268,
+            "fullyUniqueProtocolTrials": 82
+          }
+        },
+        "pairedSuccessfulFixtures": {
+          "gemma-C-to-D": {
+            "completionRatio": {
+              "n": 82,
+              "p50": 1.1886190988252534,
+              "p95": 1.483384288223164
+            },
+            "completionDifferenceMs": {
+              "n": 82,
+              "p50": 283.0448954999981,
+              "p95": 628.6757619000255
+            }
+          }
+        }
+      },
+      "review": {
+        "runStatus": "completed",
+        "observedTrials": 168,
+        "formatValidTrials": 168,
+        "uniqueReviewItems": 46,
+        "pendingReviewItems": 0,
+        "shards": 1,
+        "excluded": "Strict format failures are excluded from primary semantic ratings, counted in protocol availability. No JSON repair."
+      },
+      "reusedReviewItems": 44
+    }
+  },
+  "cloudUsage": {
+    "prompt_tokens": 89049,
+    "completion_tokens": 38417,
+    "prompt_cache_hit_tokens": 24690,
+    "prompt_cache_miss_tokens": 64359,
+    "total_tokens": 127466
+  },
+  "cloudObserved": {
+    "returnedModels": [
+      "deepseek-flash"
+    ],
+    "fingerprints": [
+      "aeb56401ca74e127821c4f9126dcb669"
+    ],
+    "httpFailures": 0,
+    "unexpectedThinking": 0
+  },
+  "recommendation": "Keep the D direction as a soft quantity guide. Clarify the short-expression exception and add complete outer-array shape examples; validate exact nonoverlapping spans. Cloud D is best among its four arms; not evidence of universal superiority to local Gemma."
+}

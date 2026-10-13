@@ -1,0 +1,798 @@
+{
+  "date": "2026-10-13",
+  "runDirectory": "/Users/shadow/cotabby/build/LanguageLearning/AlignmentEval/20261013T022023Z-formal",
+  "status": "completed",
+  "trials": 756,
+  "design": {
+    "cases": 28,
+    "models": 3,
+    "arms": 3,
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "A": "Production alignment plus explanation",
+    "B": "A minus explanation responsibility, same object/NDJSON protocol",
+    "C": "Compact continuous two-string-pair proposal; combined instructions and schema change"
+  },
+  "structure": {
+    "hy-A": {
+      "trials": 84,
+      "formatValid": 9,
+      "quotesValid": 9,
+      "usableProtocol": 9,
+      "multipleCandidateTrials": 0,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 62.82652099999808,
+        "p95": 185.2859044499999
+      },
+      "firstUniquePairMs": {
+        "n": 9,
+        "p50": 844.5033750000022,
+        "p95": 1465.7196998000015
+      },
+      "completionMs": {
+        "n": 9,
+        "p50": 844.5033750000022,
+        "p95": 1465.7196998000015
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 65.5,
+        "p95": 169.79999999999995
+      }
+    },
+    "hy-B": {
+      "trials": 84,
+      "formatValid": 0,
+      "quotesValid": 0,
+      "usableProtocol": 0,
+      "multipleCandidateTrials": 0,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 57.340395499991814,
+        "p95": 181.92832854999952
+      },
+      "firstUniquePairMs": {
+        "n": 0,
+        "p50": null,
+        "p95": null
+      },
+      "completionMs": {
+        "n": 0,
+        "p50": null,
+        "p95": null
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 58.0,
+        "p95": 106.85
+      }
+    },
+    "hy-C": {
+      "trials": 84,
+      "formatValid": 2,
+      "quotesValid": 2,
+      "usableProtocol": 0,
+      "multipleCandidateTrials": 0,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 59.31114550000416,
+        "p95": 143.78382495000025
+      },
+      "firstUniquePairMs": {
+        "n": 0,
+        "p50": null,
+        "p95": null
+      },
+      "completionMs": {
+        "n": 0,
+        "p50": null,
+        "p95": null
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 20.0,
+        "p95": 49.0
+      }
+    },
+    "qwen-A": {
+      "trials": 84,
+      "formatValid": 59,
+      "quotesValid": 48,
+      "usableProtocol": 48,
+      "multipleCandidateTrials": 1,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 583.654666999962,
+        "p95": 1067.5289187499857
+      },
+      "firstUniquePairMs": {
+        "n": 48,
+        "p50": 1404.760249999967,
+        "p95": 2242.437627100044
+      },
+      "completionMs": {
+        "n": 48,
+        "p50": 3451.8328954999333,
+        "p95": 6920.804058550044
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 161.5,
+        "p95": 3544.599999999979
+      }
+    },
+    "qwen-B": {
+      "trials": 84,
+      "formatValid": 74,
+      "quotesValid": 52,
+      "usableProtocol": 52,
+      "multipleCandidateTrials": 3,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 543.9297715000748,
+        "p95": 1214.3256330499185
+      },
+      "firstUniquePairMs": {
+        "n": 52,
+        "p50": 944.6460830000376,
+        "p95": 1775.380510900015
+      },
+      "completionMs": {
+        "n": 52,
+        "p50": 1902.278707999983,
+        "p95": 3620.476702299925
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 59.0,
+        "p95": 113.74999999999991
+      }
+    },
+    "qwen-C": {
+      "trials": 84,
+      "formatValid": 68,
+      "quotesValid": 63,
+      "usableProtocol": 60,
+      "multipleCandidateTrials": 0,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 475.16750000002617,
+        "p95": 1008.8037812998547
+      },
+      "firstUniquePairMs": {
+        "n": 60,
+        "p50": 867.0253750000256,
+        "p95": 1980.7483514498356
+      },
+      "completionMs": {
+        "n": 60,
+        "p50": 1298.8453959999902,
+        "p95": 2184.422724349946
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 30.0,
+        "p95": 49.849999999999994
+      }
+    },
+    "gemma-A": {
+      "trials": 84,
+      "formatValid": 83,
+      "quotesValid": 76,
+      "usableProtocol": 76,
+      "multipleCandidateTrials": 0,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 650.8908125001653,
+        "p95": 777.3353419499584
+      },
+      "firstUniquePairMs": {
+        "n": 76,
+        "p50": 2106.474708500059,
+        "p95": 2883.985791249984
+      },
+      "completionMs": {
+        "n": 76,
+        "p50": 4032.060854499946,
+        "p95": 6625.466843500135
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 109.0,
+        "p95": 187.09999999999997
+      }
+    },
+    "gemma-B": {
+      "trials": 84,
+      "formatValid": 84,
+      "quotesValid": 80,
+      "usableProtocol": 80,
+      "multipleCandidateTrials": 0,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 614.2794994999576,
+        "p95": 766.3515268499509
+      },
+      "firstUniquePairMs": {
+        "n": 80,
+        "p50": 1328.6601665000717,
+        "p95": 1713.671433350066
+      },
+      "completionMs": {
+        "n": 80,
+        "p50": 2052.8044369999634,
+        "p95": 3387.7932235499884
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 44.5,
+        "p95": 79.0
+      }
+    },
+    "gemma-C": {
+      "trials": 84,
+      "formatValid": 84,
+      "quotesValid": 84,
+      "usableProtocol": 84,
+      "multipleCandidateTrials": 0,
+      "firstContentMs": {
+        "n": 84,
+        "p50": 529.3391874998861,
+        "p95": 663.4857875500416
+      },
+      "firstUniquePairMs": {
+        "n": 84,
+        "p50": 1214.2358954999963,
+        "p95": 1747.0446187499306
+      },
+      "completionMs": {
+        "n": 84,
+        "p50": 1408.3013539999456,
+        "p95": 2394.637498199847
+      },
+      "eval_count": {
+        "n": 84,
+        "p50": 28.5,
+        "p95": 57.54999999999998
+      }
+    }
+  },
+  "semanticReview": {
+    "gemma-A": {
+      "trials": 84,
+      "semanticReviewed": 83,
+      "allDimensions2": 69,
+      "protocolAndAllDimensions2": 68,
+      "scores": {
+        "alignment": {
+          "0": 4,
+          "1": 7,
+          "2": 72
+        },
+        "segmentation": {
+          "0": 4,
+          "1": 10,
+          "2": 69
+        },
+        "coverage": {
+          "0": 0,
+          "1": 1,
+          "2": 82
+        }
+      }
+    },
+    "gemma-B": {
+      "trials": 84,
+      "semanticReviewed": 84,
+      "allDimensions2": 75,
+      "protocolAndAllDimensions2": 75,
+      "scores": {
+        "alignment": {
+          "0": 4,
+          "1": 2,
+          "2": 78
+        },
+        "segmentation": {
+          "0": 4,
+          "1": 5,
+          "2": 75
+        },
+        "coverage": {
+          "0": 0,
+          "1": 2,
+          "2": 82
+        }
+      }
+    },
+    "gemma-C": {
+      "trials": 84,
+      "semanticReviewed": 84,
+      "allDimensions2": 45,
+      "protocolAndAllDimensions2": 45,
+      "scores": {
+        "alignment": {
+          "0": 0,
+          "1": 0,
+          "2": 84
+        },
+        "segmentation": {
+          "0": 12,
+          "1": 27,
+          "2": 45
+        },
+        "coverage": {
+          "0": 0,
+          "1": 0,
+          "2": 84
+        }
+      }
+    },
+    "hy-A": {
+      "trials": 84,
+      "semanticReviewed": 9,
+      "allDimensions2": 3,
+      "protocolAndAllDimensions2": 3,
+      "scores": {
+        "alignment": {
+          "0": 0,
+          "1": 0,
+          "2": 9
+        },
+        "segmentation": {
+          "0": 1,
+          "1": 1,
+          "2": 7
+        },
+        "coverage": {
+          "0": 0,
+          "1": 4,
+          "2": 5
+        }
+      }
+    },
+    "hy-B": {
+      "trials": 84,
+      "semanticReviewed": 0,
+      "allDimensions2": 0,
+      "protocolAndAllDimensions2": 0,
+      "scores": {
+        "alignment": {
+          "0": 0,
+          "1": 0,
+          "2": 0
+        },
+        "segmentation": {
+          "0": 0,
+          "1": 0,
+          "2": 0
+        },
+        "coverage": {
+          "0": 0,
+          "1": 0,
+          "2": 0
+        }
+      }
+    },
+    "hy-C": {
+      "trials": 84,
+      "semanticReviewed": 2,
+      "allDimensions2": 0,
+      "protocolAndAllDimensions2": 0,
+      "scores": {
+        "alignment": {
+          "0": 2,
+          "1": 0,
+          "2": 0
+        },
+        "segmentation": {
+          "0": 2,
+          "1": 0,
+          "2": 0
+        },
+        "coverage": {
+          "0": 2,
+          "1": 0,
+          "2": 0
+        }
+      }
+    },
+    "qwen-A": {
+      "trials": 84,
+      "semanticReviewed": 59,
+      "allDimensions2": 27,
+      "protocolAndAllDimensions2": 25,
+      "scores": {
+        "alignment": {
+          "0": 7,
+          "1": 14,
+          "2": 38
+        },
+        "segmentation": {
+          "0": 3,
+          "1": 29,
+          "2": 27
+        },
+        "coverage": {
+          "0": 0,
+          "1": 8,
+          "2": 51
+        }
+      }
+    },
+    "qwen-B": {
+      "trials": 84,
+      "semanticReviewed": 74,
+      "allDimensions2": 53,
+      "protocolAndAllDimensions2": 40,
+      "scores": {
+        "alignment": {
+          "0": 6,
+          "1": 10,
+          "2": 58
+        },
+        "segmentation": {
+          "0": 3,
+          "1": 15,
+          "2": 56
+        },
+        "coverage": {
+          "0": 1,
+          "1": 2,
+          "2": 71
+        }
+      }
+    },
+    "qwen-C": {
+      "trials": 84,
+      "semanticReviewed": 68,
+      "allDimensions2": 54,
+      "protocolAndAllDimensions2": 49,
+      "scores": {
+        "alignment": {
+          "0": 3,
+          "1": 1,
+          "2": 64
+        },
+        "segmentation": {
+          "0": 3,
+          "1": 11,
+          "2": 54
+        },
+        "coverage": {
+          "0": 3,
+          "1": 0,
+          "2": 65
+        }
+      }
+    }
+  },
+  "performance": {
+    "arms": {
+      "gemma-A": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 4083.4554165002146,
+          "p95": 6730.117668700176
+        },
+        "maxCompletionMs": 9955.839166000032,
+        "lengthLimitTrials": 0,
+        "singleGroupFormatValidTrials": 13,
+        "formatValidTrials": 83,
+        "maxOutputBytes": 1069,
+        "fullyUniqueProtocolTrials": 76
+      },
+      "gemma-B": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 2060.616457999913,
+          "p95": 3382.4816963499984
+        },
+        "maxCompletionMs": 3977.6487500000712,
+        "lengthLimitTrials": 0,
+        "singleGroupFormatValidTrials": 15,
+        "formatValidTrials": 84,
+        "maxOutputBytes": 408,
+        "fullyUniqueProtocolTrials": 80
+      },
+      "gemma-C": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 1408.3013539999456,
+          "p95": 2394.637498199847
+        },
+        "maxCompletionMs": 2626.46712500009,
+        "lengthLimitTrials": 0,
+        "singleGroupFormatValidTrials": 60,
+        "formatValidTrials": 84,
+        "maxOutputBytes": 268,
+        "fullyUniqueProtocolTrials": 84
+      },
+      "hy-A": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 1023.6155834999963,
+          "p95": 2720.0496732499914
+        },
+        "maxCompletionMs": 7856.072749999981,
+        "lengthLimitTrials": 0,
+        "singleGroupFormatValidTrials": 9,
+        "formatValidTrials": 9,
+        "maxOutputBytes": 1301,
+        "fullyUniqueProtocolTrials": 9
+      },
+      "hy-B": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 847.987145500003,
+          "p95": 1976.2316420000052
+        },
+        "maxCompletionMs": 3050.5865000000085,
+        "lengthLimitTrials": 0,
+        "singleGroupFormatValidTrials": 0,
+        "formatValidTrials": 0,
+        "maxOutputBytes": 548,
+        "fullyUniqueProtocolTrials": 0
+      },
+      "hy-C": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 330.05458350000083,
+          "p95": 755.7393105999989
+        },
+        "maxCompletionMs": 1334.3544999999892,
+        "lengthLimitTrials": 0,
+        "singleGroupFormatValidTrials": 0,
+        "formatValidTrials": 2,
+        "maxOutputBytes": 254,
+        "fullyUniqueProtocolTrials": 0
+      },
+      "qwen-A": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 4618.821082999957,
+          "p95": 99324.3197454995
+        },
+        "maxCompletionMs": 128416.92650000005,
+        "lengthLimitTrials": 5,
+        "singleGroupFormatValidTrials": 5,
+        "formatValidTrials": 59,
+        "maxOutputBytes": 18587,
+        "fullyUniqueProtocolTrials": 47
+      },
+      "qwen-B": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 1928.6781244999815,
+          "p95": 3945.8318830000508
+        },
+        "maxCompletionMs": 10196.492416999945,
+        "lengthLimitTrials": 0,
+        "singleGroupFormatValidTrials": 6,
+        "formatValidTrials": 74,
+        "maxOutputBytes": 540,
+        "fullyUniqueProtocolTrials": 49
+      },
+      "qwen-C": {
+        "allCompletionMs": {
+          "n": 84,
+          "p50": 1266.428271000052,
+          "p95": 2153.121416099929
+        },
+        "maxCompletionMs": 3707.8938329999573,
+        "lengthLimitTrials": 0,
+        "singleGroupFormatValidTrials": 14,
+        "formatValidTrials": 68,
+        "maxOutputBytes": 260,
+        "fullyUniqueProtocolTrials": 60
+      }
+    },
+    "pairedSuccessfulFixtures": {
+      "gemma-A-to-B": {
+        "completionRatio": {
+          "n": 76,
+          "p50": 0.5257800514244748,
+          "p95": 0.6981532968374271
+        },
+        "completionDifferenceMs": {
+          "n": 76,
+          "p50": -1921.288291999872,
+          "p95": -717.7256455000816
+        }
+      },
+      "gemma-B-to-C": {
+        "completionRatio": {
+          "n": 80,
+          "p50": 0.7006061447593552,
+          "p95": 0.8978599542702684
+        },
+        "completionDifferenceMs": {
+          "n": 80,
+          "p50": -599.0559370000028,
+          "p95": -223.84187710006273
+        }
+      },
+      "gemma-A-to-C": {
+        "completionRatio": {
+          "n": 76,
+          "p50": 0.37521185742851326,
+          "p95": 0.4891895735787462
+        },
+        "completionDifferenceMs": {
+          "n": 76,
+          "p50": -2475.4131044999212,
+          "p95": -1148.788739499878
+        }
+      },
+      "hy-A-to-B": {
+        "completionRatio": {
+          "n": 0,
+          "p50": null,
+          "p95": null
+        },
+        "completionDifferenceMs": {
+          "n": 0,
+          "p50": null,
+          "p95": null
+        }
+      },
+      "hy-B-to-C": {
+        "completionRatio": {
+          "n": 0,
+          "p50": null,
+          "p95": null
+        },
+        "completionDifferenceMs": {
+          "n": 0,
+          "p50": null,
+          "p95": null
+        }
+      },
+      "hy-A-to-C": {
+        "completionRatio": {
+          "n": 0,
+          "p50": null,
+          "p95": null
+        },
+        "completionDifferenceMs": {
+          "n": 0,
+          "p50": null,
+          "p95": null
+        }
+      },
+      "qwen-A-to-B": {
+        "completionRatio": {
+          "n": 30,
+          "p50": 0.5239267799234726,
+          "p95": 0.818536822573509
+        },
+        "completionDifferenceMs": {
+          "n": 30,
+          "p50": -1753.119583499938,
+          "p95": -265.35426450017786
+        }
+      },
+      "qwen-B-to-C": {
+        "completionRatio": {
+          "n": 35,
+          "p50": 0.6153065036149129,
+          "p95": 1.0560877800353645
+        },
+        "completionDifferenceMs": {
+          "n": 35,
+          "p50": -746.4631670000017,
+          "p95": 144.88474129999287
+        }
+      },
+      "qwen-A-to-C": {
+        "completionRatio": {
+          "n": 34,
+          "p50": 0.29422596591871863,
+          "p95": 0.6317980452008957
+        },
+        "completionDifferenceMs": {
+          "n": 34,
+          "p50": -2455.3377495000177,
+          "p95": -1048.071658100004
+        }
+      }
+    }
+  },
+  "crossReview": {
+    "sampleSize": 12,
+    "selection": "Four diagnostic disputed/boundary items plus fixed-seed score-stratified sample; not a random population accuracy estimate.",
+    "exactScoresAgreement": 5,
+    "dimensionAgreementCounts": {
+      "alignment": 9,
+      "segmentation": 6,
+      "coverage": 11
+    },
+    "interpretation": "AI judgement varies especially on chunk granularity. Keep primary ratings, retain cross-review separately; use qualitative examples rather than certified accuracy claims."
+  },
+  "review": {
+    "uniqueItems": 182,
+    "reviewers": "Independent GPT-6 Luna xhigh agents; model/arm labels and explanations hidden; identical outputs deduplicated; primary ratings preserved.",
+    "limits": "Independent AI judgement, not certified human accuracy. Strict-format failures excluded from semantic ratings but counted in protocol availability. No explanation-quality score. Small synthetic language cells."
+  },
+  "observedMaxOutputBytes": 18587,
+  "productionByteLimitAudit": "Every raw output below 48000 bytes, so the runner 96000-byte evidence cap caused no difference in this corpus.",
+  "models": {
+    "hy": {
+      "alias": "cotabby-eval-hymt:1.8b",
+      "digest": "1379f5ca0b74c7bef9e3ef87ed978166c3a1475065c5d2fd50b252a37f46c366",
+      "details": {
+        "parent_model": "hf.co/tencent/Hy-MT2-1.8B-GGUF:Q4_K_M",
+        "format": "gguf",
+        "family": "hunyuan-dense",
+        "families": [
+          "hunyuan-dense"
+        ],
+        "parameter_size": "1.79B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 262144,
+        "embedding_length": 2048,
+        "runner": "llamacpp"
+      },
+      "profile": [
+        "cotabby-eval-hymt:1.8b",
+        0.7,
+        0.6,
+        20,
+        1.05
+      ]
+    },
+    "qwen": {
+      "alias": "cotabby-eval-qwen35:chat",
+      "digest": "ab611957a5b12e1002091f19f034890bec84aeb97967ad1c4e4951ff429096f4",
+      "details": {
+        "parent_model": "cotabby-eval-qwen35:4b",
+        "format": "gguf",
+        "family": "qwen35",
+        "families": [
+          "qwen35"
+        ],
+        "parameter_size": "4.2B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 262144,
+        "embedding_length": 2560,
+        "runner": "llamacpp"
+      },
+      "profile": [
+        "cotabby-eval-qwen35:chat",
+        0.3,
+        0.9,
+        40,
+        1.0
+      ]
+    },
+    "gemma": {
+      "alias": "cotabby-eval-gemma4:chat",
+      "digest": "61f32bb053138549c87cf50bbdbe4f449edf5fbf3653b4bd2fd96fca23598b80",
+      "details": {
+        "parent_model": "cotabby-eval-gemma4:e4b",
+        "format": "gguf",
+        "family": "gemma4",
+        "families": [
+          "gemma4"
+        ],
+        "parameter_size": "7.5B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 131072,
+        "embedding_length": 2560,
+        "runner": "llamacpp"
+      },
+      "profile": [
+        "cotabby-eval-gemma4:chat",
+        0.3,
+        0.9,
+        40,
+        1.0
+      ]
+    }
+  },
+  "recommendation": "Remove explanations first. Gemma B is the most useful tested configuration by this rubric. Keep the compact-pair direction but retest explicit segmentation granularity and complete outer-array example before adopting C. Hy-MT2 alignment is not ready in this configuration.",
+  "application": "No app build, install, restart, model setting or production prompt change; installed binary SHA256 unchanged: 46ed18ad2322a1ba73b2b7155e82cc6fcddfd7f52f06f813b6f2d0fe7826c3cf"
+}

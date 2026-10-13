@@ -70,50 +70,7 @@ extension EngineAndModelPaneView {
             .settingsItem(.huggingFaceBrowser)
         }
 
-        Section("Folder") {
-            LabeledContent {
-                VStack(alignment: .trailing, spacing: 8) {
-                    Text(modelDownloadManager.modelsDirectoryPath)
-                        .font(.callout.monospaced())
-                        .textSelection(.enabled)
-                        .multilineTextAlignment(.trailing)
-
-                    HStack(spacing: 8) {
-                        Button("Open Folder") {
-                            modelDownloadManager.openModelsDirectory()
-                        }
-
-                        Button("Refresh") {
-                            refreshModels()
-                        }
-                    }
-                }
-            } label: {
-                SettingsRowLabel(
-                    title: "Models Folder",
-                    description: "Where downloaded model files are stored on this Mac.",
-                    systemImage: "folder"
-                )
-            }
-            .settingsItem(.modelsFolder)
-
-            Toggle(isOn: $lmStudioSourceEnabled) {
-                SettingsRowLabel(
-                    title: "Also Use LM Studio Models",
-                    description: lmStudioModelsURL == nil
-                        ? "Install LM Studio to load models from its library here."
-                        : "Add models from your LM Studio library (~/.lmstudio/models) to the picker " +
-                            "above. Downloads still save to Cotabby's own folder.",
-                    systemImage: "square.stack.3d.up"
-                )
-            }
-            .disabled(lmStudioModelsURL == nil)
-            .onChange(of: lmStudioSourceEnabled) { _, _ in
-                modelDownloadManager.refreshSearchDirectories()
-                refreshModels()
-            }
-            .settingsItem(.lmStudio)
-        }
+        ModelsFolderSection(downloads: modelDownloadManager, refresh: refreshModels)
 
         if !runtimeModel.availableModels.isEmpty {
             Section("Installed") {

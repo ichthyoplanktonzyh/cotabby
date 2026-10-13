@@ -9,6 +9,8 @@ struct LearningSentenceCard: View {
     let inspect: (Int) -> Void
     let expand: () -> Void
     let dismiss: () -> Void
+    var lookup: (String, NSButton) -> Void = { _, _ in }
+    var lookupText: (LearningDictionaryTextAnchor, NSTextView) -> Void = { _, _ in }
     let sizeChanged: (CGSize) -> Void
     @State private var detailsHeight: CGFloat = 180
 
@@ -21,10 +23,16 @@ struct LearningSentenceCard: View {
                 if let previous = presentation.previousTranslation {
                     Text(previous).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
-                Text(presentation.translation.isEmpty ?
+                if !presentation.translation.isEmpty, !presentation.isStale {
+                    LearningSentenceDictionaryText(text: presentation.translation, language: presentation.targetLanguage,
+                        lookup: lookupText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text(presentation.translation.isEmpty ?
                      (presentation.isStale ? "输入停止后生成目标表达…" : "正在生成目标表达…") : presentation.translation)
                     .font(.system(size: 16)).lineLimit(3).frame(maxWidth: .infinity, alignment: .leading)
                     .foregroundStyle(presentation.isStale ? Color.secondary : Color.primary)
+                }
                 if !presentation.isGenerating, !presentation.message.isEmpty {
                     Text(presentation.message).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
@@ -63,6 +71,13 @@ struct LearningSentenceCard: View {
                     Text("目标表达").font(.caption).foregroundStyle(.secondary)
                     sentence(presentation.translation, source: false)
                     if presentation.chunks.isEmpty {
+                        let words = LearningChunkDisplay.words(in: presentation.translation, language: presentation.targetLanguage)
+                        if !words.isEmpty {
+                            Text("点击单词查词").font(.caption).foregroundStyle(.secondary)
+                            LearningTextFlowLayout(spacing: 5, rowSpacing: 6, rightToLeft: presentation.targetLanguage == .arabic) {
+                                ForEach(words, id: \.self) { word in LearningDictionaryButton(word: word, lookup: lookup) }
+                            }
+                        }
                         Text(presentation.isGenerating ? "译文先显示，语块对应正在准备…" : presentation.message)
                             .font(.caption).foregroundStyle(.secondary)
                     } else {

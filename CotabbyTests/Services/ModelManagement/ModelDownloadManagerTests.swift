@@ -59,6 +59,33 @@ final class ModelDownloadManagerTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: testFile.path))
     }
 
+    func test_deleteRechecksAllTaskReferencesAfterConfirmation() throws {
+        let testFile = tempDir.appendingPathComponent("shared.gguf")
+        try "fixture".write(to: testFile, atomically: true, encoding: .utf8)
+        let manager = makeManager()
+        var protected: Set<String> = []
+        manager.protectedModelFilenames = { protected }
+        XCTAssertTrue(manager.canDeleteModel(filename: "shared.gguf"))
+        protected = ModelUsagePolicy.protectedFilenames(completion: "completion.gguf",
+            completionPower: [.llama(filename: "battery.gguf"), .openAICompatible(modelName: "remote")],
+            learning: [["shared.gguf"], ["analyst.gguf"]])
+        XCTAssertEqual(protected, ["shared.gguf", "completion.gguf", "battery.gguf", "analyst.gguf"])
+        manager.deleteModel(filename: "shared.gguf")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: testFile.path))
+        XCTAssertTrue(manager.isModelInUse(filename: "shared.gguf"))
+        protected.remove("shared.gguf")
+        manager.deleteModel(filename: "shared.gguf")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: testFile.path))
+    }
+
+    func test_sourceRefreshNotifiesAllRuntimeConsumers() {
+        let manager = makeManager()
+        var notificationCount = 0
+        manager.onModelDirectoryChanged = { notificationCount += 1 }
+        manager.refreshSearchDirectories()
+        XCTAssertEqual(notificationCount, 1)
+    }
+
     func test_sameFilenameSourcesKeepIndependentStateAndPreserveFailureOnRefresh() async throws {
         let manager = makeManager()
         let first = try makeModel(source: "https://example.com/first/shared.gguf")

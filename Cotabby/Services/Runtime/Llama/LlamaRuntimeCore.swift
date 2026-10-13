@@ -2,16 +2,10 @@ import Foundation
 import Logging
 import CotabbyInference
 
-/// File overview:
-/// Owns the C++ inference engine and manages the autocomplete KV cache lifecycle. This is the
-/// lowest-level runtime boundary in the app: it loads the GGUF model, owns Cotabby's single
-/// autocomplete sequence, tokenizes prompts, samples continuations, and frees native resources on
-/// shutdown.
-///
-/// The engine serializes its one mutable llama context internally. This class is `@unchecked
-/// Sendable` rather than an `actor` so native work can execute away from MainActor.
-/// `autocompleteLock` serializes autocomplete-specific KV-cache state, while a separate
-/// `lifecycleCondition` prevents `shutdown()` from unloading the model during generation.
+/// Owns autocomplete's prompt/sequence/KV bookkeeping. Its per-instance NativeLlamaSession owns
+/// the C++ engine, serializes load/cache/decode/release, and exposes operation-specific cancellation.
+/// The learning adapters use the same ownership code with separate sessions and instruction rules.
+/// Heavy synchronous work runs on the manager's detached tasks, away from MainActor.
 
 /// Immutable runtime metadata captured after a model has been successfully prepared.
 struct PreparedLlamaRuntime: Sendable {
@@ -24,10 +18,9 @@ struct PreparedLlamaRuntime: Sendable {
 }
 
 nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
-    private var engine = CotabbyInferenceEngine()
+    private let native = NativeLlamaSession()
     private var preparedRuntime: PreparedLlamaRuntime?
 
-    private let autocompleteLock = NSLock()
     private var autocompleteSequenceID: Int32 = -1
     /// Describes the last successfully decoded prompt, not the current end of native KV. Sampling
     /// may leave a generated tail after this prefix; obtainAutocompleteSequence must restore the
@@ -36,24 +29,13 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
     private var autocompletePromptTokens: [Int32] = []
     private var autocompleteSamplingFingerprint: SamplingFingerprint?
 
-    /// The sequence the in-flight autocomplete operation is decoding into, published for
-    /// `abortInFlightGeneration` to target from the canceller's thread. Guarded by its own lock
-    /// because the abort fires while `autocompleteLock` is held by the very work being aborted.
-    private let abortTargetLock = NSLock()
-    private var abortTargetSequenceID: Int32 = -1
-    private var abortTargetOperationID: UUID?
+    /// Set only inside the native operation scope; registered sequence IDs use this identity so
+    /// cancellation of an old request cannot abort a newer use of the same native sequence.
     private var currentOperationID: UUID?
 
     /// A restoration miss describes one checkpoint/prefix, not a model family's permanent
     /// capability. Log the first miss prominently and keep trying later compatible prompts.
     private var loggedTrimRejectionForCurrentModel = false
-
-    /// Coordinates model lifecycle with in-flight generation. `generate()` increments the active
-    /// count on entry and decrements on exit. `shutdown()` sets the
-    /// shutting-down flag and blocks until all active operations finish before unloading.
-    private let lifecycleCondition = NSCondition()
-    private var activeOperationCount = 0
-    private var isShuttingDown = false
 
     // MARK: - Model lifecycle
 
@@ -62,72 +44,70 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
         resolvedRuntime: ResolvedLlamaRuntime,
         configuration: LlamaRuntimeConfiguration
     ) throws -> PreparedLlamaRuntime {
-        if let preparedRuntime,
-           preparedRuntime.resolvedRuntime.modelFileURL == resolvedRuntime.modelFileURL {
-            return preparedRuntime
-        }
+        return try native.withOperation {
+            let allocation = NativeLlamaModelConfiguration(modelURL: resolvedRuntime.modelFileURL,
+                gpuLayerCount: configuration.gpuLayerCount, contextWindowTokens: configuration.contextWindowTokens,
+                batchSize: configuration.batchSize)
+            // Clear the role's retained sequence before a model/config change. The session itself owns
+            // allocation identity; cache policy belongs here and never enters the shared component.
+            if let preparedRuntime, native.isPrepared(allocation) {
+                return preparedRuntime
+            }
+            discardAutocompleteSequence()
+            preparedRuntime = nil
 
-        if preparedRuntime != nil {
-            shutdown()
-        }
-
-        CotabbyLogger.runtime.info(
-            "Loading model",
-            metadata: [
-                "model_path": .string(resolvedRuntime.modelFileURL.path),
-                "context_window_tokens": .stringConvertible(configuration.contextWindowTokens),
-                "batch_size": .stringConvertible(configuration.batchSize),
-                "gpu_layers": .stringConvertible(configuration.gpuLayerCount)
-            ]
-        )
-        let status = engine.loadModel(
-            resolvedRuntime.modelFileURL.path,
-            configuration.gpuLayerCount,
-            configuration.contextWindowTokens,
-            configuration.batchSize
-        )
-
-        guard status == .ok else {
-            CotabbyLogger.runtime.error(
-                "Model load failed",
+            CotabbyLogger.runtime.info(
+                "Loading model",
                 metadata: [
-                    "model": .string(resolvedRuntime.modelDisplayName),
-                    "model_path": .string(resolvedRuntime.modelFileURL.path)
+                    "model_path": .string(resolvedRuntime.modelFileURL.path),
+                    "context_window_tokens": .stringConvertible(configuration.contextWindowTokens),
+                    "batch_size": .stringConvertible(configuration.batchSize),
+                    "gpu_layers": .stringConvertible(configuration.gpuLayerCount)
                 ]
             )
-            throw LlamaRuntimeError.unavailable(
-                "Unable to load \(resolvedRuntime.modelDisplayName) with CotabbyInferenceEngine."
-            )
-        }
+            let preparation: NativeLlamaPreparation
+            do {
+                preparation = try native.prepare(allocation)
+            } catch {
+                CotabbyLogger.runtime.error("Model load failed", metadata: [
+                    "model": .string(resolvedRuntime.modelDisplayName),
+                    "model_path": .string(resolvedRuntime.modelFileURL.path)
+                ])
+                throw LlamaRuntimeError.unavailable(
+                    "Unable to load \(resolvedRuntime.modelDisplayName) with CotabbyInferenceEngine."
+                )
+            }
+            try Task.checkCancellation()
 
-        let result = PreparedLlamaRuntime(
-            resolvedRuntime: resolvedRuntime,
-            contextWindowTokens: Int(engine.getContextWindowTokens()),
-            batchSize: Int(engine.getBatchSize()),
-            threadCount: Int(engine.getThreadCount()),
-            gpuLayerCount: Int(engine.getGPULayerCount()),
-            backendName: "CotabbyInferenceEngine (llama.cpp in-process)"
-        )
-        self.preparedRuntime = result
-        loggedTrimRejectionForCurrentModel = false
-        CotabbyLogger.runtime.info(
-            "Model loaded",
-            metadata: [
-                "model": .string(resolvedRuntime.modelDisplayName),
-                "context_window_tokens": .stringConvertible(result.contextWindowTokens),
-                "batch_size": .stringConvertible(result.batchSize),
-                "threads": .stringConvertible(result.threadCount),
-                "gpu_layers": .stringConvertible(result.gpuLayerCount),
-                "backend": .string(result.backendName)
-            ]
-        )
-        return result
+            let result = PreparedLlamaRuntime(
+                resolvedRuntime: resolvedRuntime,
+                contextWindowTokens: preparation.contextWindowTokens,
+                batchSize: preparation.batchSize,
+                threadCount: preparation.threadCount,
+                gpuLayerCount: preparation.gpuLayerCount,
+                backendName: "CotabbyInferenceEngine (llama.cpp in-process)"
+            )
+            self.preparedRuntime = result
+            loggedTrimRejectionForCurrentModel = false
+            CotabbyLogger.runtime.info(
+                "Model loaded",
+                metadata: [
+                    "model": .string(resolvedRuntime.modelDisplayName),
+                    "context_window_tokens": .stringConvertible(result.contextWindowTokens),
+                    "batch_size": .stringConvertible(result.batchSize),
+                    "threads": .stringConvertible(result.threadCount),
+                    "gpu_layers": .stringConvertible(result.gpuLayerCount),
+                    "backend": .string(result.backendName)
+                ]
+            )
+            return result
+        }
     }
 
     // MARK: - Autocomplete generation
 
     /// Prepares the prompt context, reusing cached KV state when safe, then samples a short completion.
-    /// Holds `autocompleteLock` for the full call to prevent concurrent KV cache mutation.
+    /// Holds the native operation scope for the full call to prevent concurrent KV cache mutation.
     /// `onPartialRawText` receives the cumulative raw completion after each sampled token, on the
     /// calling (detached) thread, so the UI can render ghost text before the decode finishes.
     func generate(
@@ -137,52 +117,37 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
         operationID: UUID = UUID(),
         onPartialRawText: ((String) -> Void)? = nil
     ) throws -> LlamaGenerationOutput {
-        lifecycleCondition.lock()
-        guard !isShuttingDown else {
-            lifecycleCondition.unlock()
-            throw LlamaRuntimeError.unavailable("The runtime is shutting down.")
+        return try native.withOperation {
+            try Task.checkCancellation()
+            currentOperationID = operationID
+            defer { currentOperationID = nil }
+            // Tokenization reads native vocabulary; lifecycle ownership must begin before that read
+            // so shutdown cannot free the model while this request waits for the cache lock.
+            let preparation = try preparedPrompt(prompt: prompt, cachedPrefixBytes: cachedPrefixBytes, options: options, kind: "generate")
+            // Registered before `obtainAutocompleteSequence` because that call publishes the abort
+            // target ahead of its prompt decode; every exit (including a cancelled prefill throwing)
+            // must clear it so a late abort can never flag a recycled sequence slot.
+            defer { clearAbortTarget() }
+
+            let sequenceID = try obtainAutocompleteSequence(
+                preparation: preparation,
+                options: options
+            )
+            // Record only after the entire prompt decoded successfully. Leave generated tokens in
+            // native memory until the next request reveals the exact shared prefix to restore. Eagerly
+            // restoring this whole prompt would replay its tail now and a second time during reuse.
+            // The exit defer closes this operation's abort target; successful restoration in obtain
+            // rearms native cancellation before publishing the next operation's target.
+            autocompletePromptBytes = preparation.promptBytes
+            autocompletePromptTokens = preparation.promptTokens
+            autocompleteSamplingFingerprint = preparation.fingerprint
+            return runEngineSampledDecode(
+                sequenceID: sequenceID,
+                options: options,
+                healingPrefix: preparation.healingPrefix,
+                onPartialRawText: onPartialRawText
+            )
         }
-        activeOperationCount += 1
-        lifecycleCondition.unlock()
-
-        defer {
-            lifecycleCondition.lock()
-            activeOperationCount -= 1
-            lifecycleCondition.broadcast()
-            lifecycleCondition.unlock()
-        }
-
-        autocompleteLock.lock()
-        defer { autocompleteLock.unlock() }
-        try Task.checkCancellation()
-        currentOperationID = operationID
-        defer { currentOperationID = nil }
-        // Tokenization reads native vocabulary; lifecycle ownership must begin before that read
-        // so shutdown cannot free the model while this request waits for the cache lock.
-        let preparation = try preparedPrompt(prompt: prompt, cachedPrefixBytes: cachedPrefixBytes, options: options, kind: "generate")
-        // Registered before `obtainAutocompleteSequence` because that call publishes the abort
-        // target ahead of its prompt decode; every exit (including a cancelled prefill throwing)
-        // must clear it so a late abort can never flag a recycled sequence slot.
-        defer { clearAbortTarget() }
-
-        let sequenceID = try obtainAutocompleteSequence(
-            preparation: preparation,
-            options: options
-        )
-        // Record only after the entire prompt decoded successfully. Leave generated tokens in
-        // native memory until the next request reveals the exact shared prefix to restore. Eagerly
-        // restoring this whole prompt would replay its tail now and a second time during reuse.
-        // The exit defer closes this operation's abort target; successful restoration in obtain
-        // rearms native cancellation before publishing the next operation's target.
-        autocompletePromptBytes = preparation.promptBytes
-        autocompletePromptTokens = preparation.promptTokens
-        autocompleteSamplingFingerprint = preparation.fingerprint
-        return runEngineSampledDecode(
-            sequenceID: sequenceID,
-            options: options,
-            healingPrefix: preparation.healingPrefix,
-            onPartialRawText: onPartialRawText
-        )
     }
 
     /// Decodes `prompt` into the autocomplete KV cache without sampling, so the next `generate`
@@ -195,52 +160,37 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
         options: LlamaGenerationOptions,
         operationID: UUID = UUID()
     ) throws {
-        lifecycleCondition.lock()
-        guard !isShuttingDown else {
-            lifecycleCondition.unlock()
-            throw LlamaRuntimeError.unavailable("The runtime is shutting down.")
-        }
-        activeOperationCount += 1
-        lifecycleCondition.unlock()
+        return try native.withOperation {
+            try Task.checkCancellation()
+            currentOperationID = operationID
+            defer { currentOperationID = nil }
+            let preparation = try preparedPrompt(prompt: prompt, cachedPrefixBytes: cachedPrefixBytes, options: options, kind: "prefill")
+            // Same exit guarantee as `generate`: see the comment there.
+            defer { clearAbortTarget() }
 
-        defer {
-            lifecycleCondition.lock()
-            activeOperationCount -= 1
-            lifecycleCondition.broadcast()
-            lifecycleCondition.unlock()
-        }
+            // A superseding generation cancels the warmup task before contending on the lock above.
+            // The engine-level abort only reaches a decode that already published its target, so close
+            // the window where the cancel landed while this prefill was still tokenizing or queued.
+            guard !Task.isCancelled else {
+                throw CancellationError()
+            }
 
-        autocompleteLock.lock()
-        defer { autocompleteLock.unlock() }
-        try Task.checkCancellation()
-        currentOperationID = operationID
-        defer { currentOperationID = nil }
-        let preparation = try preparedPrompt(prompt: prompt, cachedPrefixBytes: cachedPrefixBytes, options: options, kind: "prefill")
-        // Same exit guarantee as `generate`: see the comment there.
-        defer { clearAbortTarget() }
+            let sequenceID = try obtainAutocompleteSequence(
+                preparation: preparation,
+                options: options
+            )
 
-        // A superseding generation cancels the warmup task before contending on the lock above.
-        // The engine-level abort only reaches a decode that already published its target, so close
-        // the window where the cancel landed while this prefill was still tokenizing or queued.
-        guard !Task.isCancelled else {
-            throw CancellationError()
-        }
-
-        let sequenceID = try obtainAutocompleteSequence(
-            preparation: preparation,
-            options: options
-        )
-
-        // The seed is sampled but not decoded; prefill already has prompt-only KV. Trimming
-        // clears pending sampling and cancellation without requiring recurrent rollback.
-        clearAbortTarget()
-        if engine.trimKV(sequenceID, Int32(preparation.promptTokens.count)) {
-            autocompletePromptBytes = preparation.promptBytes
-            autocompletePromptTokens = preparation.promptTokens
-            autocompleteSamplingFingerprint = preparation.fingerprint
-        } else {
-            discardAutocompleteSequence()
-            logTrimRejectionIfNeeded(reusableTokenCount: preparation.promptTokens.count)
+            // The seed is sampled but not decoded; prefill already has prompt-only KV. Trimming
+            // clears pending sampling and cancellation without requiring recurrent rollback.
+            clearAbortTarget()
+            if native.engine.trimKV(sequenceID, Int32(preparation.promptTokens.count)) {
+                autocompletePromptBytes = preparation.promptBytes
+                autocompletePromptTokens = preparation.promptTokens
+                autocompleteSamplingFingerprint = preparation.fingerprint
+            } else {
+                discardAutocompleteSequence()
+                logTrimRejectionIfNeeded(reusableTokenCount: preparation.promptTokens.count)
+            }
         }
     }
 
@@ -249,30 +199,15 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
     /// of a stale prompt. Safe from any thread: the engine flag
     /// is atomic and its sequence lookup is mutex-guarded; a no-op when nothing is in flight.
     func abortInFlightGeneration(operationID: UUID) {
-        abortTargetLock.lock()
-        defer { abortTargetLock.unlock() }
-        guard abortTargetOperationID == operationID, abortTargetSequenceID >= 0 else {
-            return
-        }
-        engine.cancelSequence(abortTargetSequenceID)
+        native.cancel(operationID)
     }
 
     private func setAbortTarget(_ sequenceID: Int32) {
-        abortTargetLock.lock()
-        abortTargetSequenceID = sequenceID
-        abortTargetOperationID = currentOperationID
-        // A cancellation can arrive during tokenization, before there is a native target. Close
-        // that gap when publishing the target so stale work cannot enter an entire prompt decode.
-        if Task.isCancelled { engine.cancelSequence(sequenceID) }
-        abortTargetLock.unlock()
+        guard let currentOperationID else { return }
+        native.publishTarget(operationID: currentOperationID, sequenceID: sequenceID)
     }
 
-    private func clearAbortTarget() {
-        abortTargetLock.lock()
-        abortTargetSequenceID = -1
-        abortTargetOperationID = nil
-        abortTargetLock.unlock()
-    }
+    private func clearAbortTarget() { native.clearTarget() }
 
     /// Shared tokenize/truncate/log front half of `generate` and `prefill`.
     private func preparedPrompt(
@@ -311,7 +246,7 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
             ? TokenHealingPlan.unhealed(tokens: allPromptTokens)
             : TokenHealingPlan(
                 prompt: prompt, tokens: allPromptTokens, singleLine: options.singleLine,
-                piece: { Array(engine.tokenPiece($0)) }
+                piece: { Array(native.engine.tokenPiece($0)) }
             )
         let tokens = healing.promptTokens
         let healingPrefix = healing.replayBytes
@@ -359,14 +294,14 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
         for _ in 0 ..< options.maxPredictionTokens + healingPrefix.count {
             // Cooperative cancellation: when the wrapping Task is cancelled (caller hit a new
             // keystroke, focus changed, Compose started), bail before the next sampleNext call so
-            // we release `autocompleteLock` instead of running the full prediction budget and
+            // we leave the native operation scope instead of running the full prediction budget and
             // making the next autocomplete wait behind us.
             if Task.isCancelled {
                 stopReason = "cancelled"
                 break
             }
 
-            let result = engine.sampleNext(sequenceID)
+            let result = native.engine.sampleNext(sequenceID)
 
             if result.was_cancelled {
                 stopReason = "engine_cancelled"
@@ -494,13 +429,12 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
 
     /// Drops the reusable autocomplete sequence while keeping the loaded model alive.
     func resetPromptCache() {
-        autocompleteLock.lock()
-        defer { autocompleteLock.unlock() }
-
-        discardAutocompleteSequence()
+        // Reset is maintenance: a cancelled caller still needs to drop stale KV. A concurrent
+        // release may close admission; its own before-unload callback clears this same state.
+        try? native.withOperation(checkCancellation: false) { discardAutocompleteSequence() }
     }
 
-    /// Called with autocompleteLock held. Clearing both native memory and its prompt description
+    /// Called with native operation scope held. Clearing both native memory and its prompt description
     /// together prevents failed restoration from masquerading as a reusable prefix on the next run.
     private func discardAutocompleteSequence() {
         if autocompleteSequenceID >= 0 {
@@ -508,7 +442,7 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
                 "Prompt cache reset",
                 metadata: ["sequence_id": .stringConvertible(autocompleteSequenceID)]
             )
-            engine.destroySequence(autocompleteSequenceID)
+            native.engine.destroySequence(autocompleteSequenceID)
         }
         autocompleteSequenceID = -1
         autocompletePromptBytes = []
@@ -516,43 +450,18 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
         autocompleteSamplingFingerprint = nil
     }
 
-    /// Waits for all in-flight `generate()` calls to finish, then frees all
-    /// sequences and the loaded model. Blocking is intentional: callers should dispatch this off
-    /// the main thread via `Task.detached` when UI responsiveness matters.
-    ///
-    /// `timeoutSeconds` caps the wait for in-flight work to drain. On timeout we still proceed
-    /// with `engine.unloadModel()` so the caller (typically `applicationWillTerminate`) does not
-    /// hang the main thread on a runaway generation. A nil timeout waits indefinitely.
+    /// Closes admission and cancels live decode before draining load/generation/cache work.
+    /// The timeout is a drain grace period; it never allows freeing a live native pointer. As with
+    /// learning, already-started loading must finish safely before Metal resources are released.
     func shutdown(timeoutSeconds: TimeInterval? = nil) {
-        CotabbyLogger.runtime.info(
-            "Runtime shutdown requested",
-            metadata: [
-                "timeout_seconds": .string(timeoutSeconds.map { String(format: "%.1f", $0) } ?? "unbounded")
-            ]
-        )
-        lifecycleCondition.lock()
-        isShuttingDown = true
-
-        if let timeoutSeconds {
-            let deadline = Date(timeIntervalSinceNow: timeoutSeconds)
-            while activeOperationCount > 0 {
-                if !lifecycleCondition.wait(until: deadline) { break }
-            }
-        } else {
-            while activeOperationCount > 0 {
-                lifecycleCondition.wait()
-            }
+        CotabbyLogger.runtime.info("Runtime shutdown requested", metadata: [
+            "timeout_seconds": .string(timeoutSeconds.map { String(format: "%.1f", $0) } ?? "unbounded")
+        ])
+        native.release(timeoutSeconds: timeoutSeconds) {
+            discardAutocompleteSequence()
+            preparedRuntime = nil
         }
-        lifecycleCondition.unlock()
-
-        resetPromptCache()
-        engine.unloadModel()
-        preparedRuntime = nil
         CotabbyLogger.runtime.info("Runtime shutdown complete")
-
-        lifecycleCondition.lock()
-        isShuttingDown = false
-        lifecycleCondition.unlock()
     }
 
     // MARK: - Private: autocomplete sequence management
@@ -560,7 +469,7 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
     /// Returns a sequence ID with KV state representing the new prompt. The existing sequence may
     /// retain generated tokens or a cancellation flag; restoration is mandatory before reuse,
     /// even when both prompt descriptions are identical. A missed checkpoint rebuilds cold.
-    /// Must be called while holding `autocompleteLock`.
+    /// Must be called inside the native operation scope.
     private func obtainAutocompleteSequence(
         preparation: PreparedPrompt,
         options: LlamaGenerationOptions
@@ -587,13 +496,13 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
                 )
 
                 if reusableTokenCount > 0 {
-                    if engine.trimKV(autocompleteSequenceID, Int32(reusableTokenCount)) {
+                    if native.engine.trimKV(autocompleteSequenceID, Int32(reusableTokenCount)) {
                         logCacheRestoration(sequenceID: autocompleteSequenceID)
                         let remaining = Array(promptTokens[reusableTokenCount...])
                         if !remaining.isEmpty {
                             // Seed for the reuse path is sampled at the end of this decodePrompt;
                             // apply the word-continuation constraint to it like the fresh path does.
-                            engine.setForceWordContinuation(
+                            native.engine.setForceWordContinuation(
                                 autocompleteSequenceID,
                                 healingPrefix.isEmpty && options.forceWordContinuation
                             )
@@ -602,13 +511,13 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
                             // engine; only compute them when the confidence gate would actually
                             // read them. Re-assert per request: the floor is not part of the
                             // sampling fingerprint, so a reused sequence must not carry a stale flag.
-                            engine.setComputeLogprob(
+                            native.engine.setComputeLogprob(
                                 autocompleteSequenceID,
                                 options.confidenceFloor > -.infinity
                             )
                             setAbortTarget(autocompleteSequenceID)
                             var mutableRemaining = remaining
-                            let status = engine.decodePrompt(
+                            let status = native.engine.decodePrompt(
                                 autocompleteSequenceID,
                                 &mutableRemaining,
                                 Int32(mutableRemaining.count),
@@ -619,13 +528,13 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
                                 // fresh here: that would decode the full stale prompt right after
                                 // its cancellation. A partially decoded new prompt has no matching
                                 // Swift description yet, so discard it and surface cancellation.
-                                engine.destroySequence(autocompleteSequenceID)
+                                native.engine.destroySequence(autocompleteSequenceID)
                                 autocompleteSequenceID = -1
                                 throw CancellationError()
                             }
                             if status != .ok {
                                 // Reuse failed mid-decode; fall through to fresh build.
-                                engine.destroySequence(autocompleteSequenceID)
+                                native.engine.destroySequence(autocompleteSequenceID)
                                 autocompleteSequenceID = -1
                                 return try buildFreshSequence(promptTokens: promptTokens, healingPrefix: healingPrefix, options: options)
                             }
@@ -646,7 +555,7 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
         }
 
         if autocompleteSequenceID >= 0 {
-            engine.destroySequence(autocompleteSequenceID)
+            native.engine.destroySequence(autocompleteSequenceID)
             autocompleteSequenceID = -1
         }
         return try buildFreshSequence(promptTokens: promptTokens, healingPrefix: healingPrefix, options: options)
@@ -658,25 +567,25 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
         options: LlamaGenerationOptions
     ) throws -> Int32 {
         let config = Self.samplingConfig(from: options)
-        let seqID = engine.createSequence(config)
+        let seqID = native.engine.createSequence(config)
         guard seqID >= 0 else {
             throw LlamaRuntimeError.generationFailed("Unable to create inference sequence.")
         }
 
         // The engine samples the first (seed) token at the end of decodePrompt, so set the
         // word-continuation constraint here, before decoding.
-        engine.setForceWordContinuation(seqID, healingPrefix.isEmpty && options.forceWordContinuation)
+        native.engine.setForceWordContinuation(seqID, healingPrefix.isEmpty && options.forceWordContinuation)
         setCompletionPrefix(healingPrefix, sequenceID: seqID)
         // Skip the engine's per-token log-probability work (two O(vocab) passes per token)
         // whenever confidence suppression is disabled — the shipping default — since the value
         // would be summed and then discarded.
-        engine.setComputeLogprob(seqID, options.confidenceFloor > -.infinity)
+        native.engine.setComputeLogprob(seqID, options.confidenceFloor > -.infinity)
 
         setAbortTarget(seqID)
         var tokens = promptTokens
-        let status = engine.decodePrompt(seqID, &tokens, Int32(tokens.count), 0)
+        let status = native.engine.decodePrompt(seqID, &tokens, Int32(tokens.count), 0)
         guard status == .ok else {
-            engine.destroySequence(seqID)
+            native.engine.destroySequence(seqID)
             if status == .cancelled {
                 // Superseded between prompt batches; skip the remaining stale prompt so a new
                 // request can acquire the lock. Quiet cancellation, no runtime error.
@@ -711,7 +620,7 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
     }
 
     private func logCacheRestoration(sequenceID: Int32) {
-        let cache = engine.getCacheDiagnostics(sequenceID)
+        let cache = native.engine.getCacheDiagnostics(sequenceID)
         CotabbyLogger.runtime.debug(
             "Prompt cache restored",
             metadata: [
@@ -729,13 +638,13 @@ nonisolated final class LlamaRuntimeCore: @unchecked Sendable {
     private func tokenize(_ text: String) -> [Int32] {
         let utf8Count = text.utf8.count
         guard utf8Count > 0 else { return [] }
-        let vec = engine.tokenize(text, Int32(utf8Count))
+        let vec = native.engine.tokenize(text, Int32(utf8Count))
         return Array(vec)
     }
 
     private func setCompletionPrefix(_ bytes: [UInt8], sequenceID: Int32) {
         bytes.withUnsafeBufferPointer { buffer in
-            engine.setCompletionPrefix(sequenceID, buffer.baseAddress, Int32(buffer.count))
+            native.engine.setCompletionPrefix(sequenceID, buffer.baseAddress, Int32(buffer.count))
         }
     }
 

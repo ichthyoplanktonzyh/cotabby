@@ -6,91 +6,18 @@ import SwiftUI
 extension EngineAndModelPaneView {
 // MARK: - OpenAI-compatible endpoint
 
-    /// This shared connection stays available for learning features even when ordinary completion
-    /// uses a local engine. The connection model owns discovery, the settings model owns durable
+    /// The completion connection remains available even when completion uses a local engine.
+    /// The connection model owns discovery, the settings model owns durable
     /// values, and the key draft lives in this view until an explicit Connect saves it to Keychain.
     var endpointConnectionSection: some View {
-        Section("Connection") {
-            VStack(alignment: .leading, spacing: 10) {
-                SettingsRowLabel(
-                    title: "Server URL",
-                    description: "The OpenAI-compatible server address. Cotabby adds /v1 when the " +
-                        "address has no path; Ollama uses http://127.0.0.1:11434 by default.",
-                    systemImage: "network"
-                )
-
-                HStack(spacing: 8) {
-                    TextField(
-                        "",
-                        text: endpointBaseURLBinding,
-                        prompt: Text(OpenAICompatibleEndpointConfiguration.defaultBaseURLString)
-                    )
-                    .labelsHidden()
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit(refreshEndpointModels)
-
-                    Button(
-                        endpointConnectButtonTitle,
-                        action: refreshEndpointModels
-                    )
-                    .buttonStyle(.borderedProminent)
-                    .disabled(openAICompatibleConnectionModel.state == .connecting)
-                }
-
-                HStack(spacing: 8) {
-                    endpointConnectionStatus
-
-                    Spacer(minLength: 8)
-
-                    Button("Use Ollama Default", systemImage: "arrow.counterclockwise") {
-                        resetEndpointBaseURL()
-                    }
-                    .disabled(
-                        suggestionSettings.openAICompatibleBaseURL
-                            == OpenAICompatibleEndpointConfiguration.defaultBaseURLString
-                    )
-                }
-            }
-            .settingsItem(.endpointBaseURL)
-
-            LabeledContent {
-                HStack(spacing: 8) {
-                    SecureField("", text: $endpointAPIKeyDraft, prompt: Text("Paste API key"))
-                        .labelsHidden()
-                        .textFieldStyle(.roundedBorder)
-                        .frame(minWidth: 200, idealWidth: 260, maxWidth: 300)
-
-                    if !endpointAPIKeyDraft.isEmpty {
-                        Button("Clear") {
-                            endpointAPIKeyDraft = ""
-                            do {
-                                try suggestionSettings.saveOpenAICompatibleAPIKey(nil)
-                                endpointCredentialError = nil
-                            } catch {
-                                endpointCredentialError = error.localizedDescription
-                            }
-                        }
-                    }
-                }
-            } label: {
-                SettingsRowLabel(
-                    title: "API Key",
-                    description: "Optional bearer token stored in Keychain. Ollama does not require one.",
-                    systemImage: "key"
-                )
-            }
-            .settingsItem(.endpointAPIKey)
-
-            if let warning = endpointPrivacyWarning {
-                SettingsCalloutView(callout: SettingsPaneCallout(tone: .warning, message: warning))
-            }
-            if let endpointCredentialError {
-                SettingsCalloutView(
-                    callout: SettingsPaneCallout(tone: .warning, message: endpointCredentialError)
-                )
-            }
-        }
-
+        ModelEndpointConnectionSection(baseURL: endpointBaseURLBinding, keyDraft: $endpointAPIKeyDraft,
+            connection: openAICompatibleConnectionModel, credentialError: endpointCredentialError,
+            privacyWarning: endpointPrivacyWarning, connect: refreshEndpointModels, reset: resetEndpointBaseURL,
+            clearKey: {
+                endpointAPIKeyDraft = ""
+                do { try suggestionSettings.saveOpenAICompatibleAPIKey(nil); endpointCredentialError = nil }
+                catch { endpointCredentialError = error.localizedDescription }
+            })
     }
 
     /// These controls configure the ordinary endpoint completion engine only. Learning requests
@@ -146,33 +73,8 @@ extension EngineAndModelPaneView {
         }
     }
 
-    @ViewBuilder
     func installedModelRow(_ model: RuntimeModelOption) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(model.displayName)
-
-                if model.displayName != model.actualModelName {
-                    Text(model.actualModelName)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            if model.filename == runtimeModel.selectedModelFilename {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.tint)
-            } else if modelDownloadManager.canDeleteModel(filename: model.filename) {
-                Button {
-                    pendingDeletionModel = model
-                } label: {
-                    Image(systemName: "trash")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.borderless)
-            }
-        }
+        InstalledRuntimeModelRow(model: model, selected: model.filename == runtimeModel.selectedModelFilename,
+            downloads: modelDownloadManager, delete: { pendingDeletionModel = model })
     }
 }

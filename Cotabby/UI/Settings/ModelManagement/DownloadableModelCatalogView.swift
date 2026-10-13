@@ -11,15 +11,18 @@ struct DownloadableModelCatalogView: View {
     @ObservedObject var modelDownloadManager: ModelDownloadManager
 
     let onRefreshModels: () -> Void
+    var catalog: [DownloadableRuntimeModel]? = nil
 
     var body: some View {
         VStack(spacing: 8) {
-            Text("Recommended Models")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if !(catalog ?? modelDownloadManager.models).isEmpty {
+                Text("Recommended Models")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
 
-            ForEach(modelDownloadManager.models) { model in
+            ForEach(catalog ?? modelDownloadManager.models) { model in
                 DownloadableModelRow(
                     model: model,
                     state: modelDownloadManager.state(for: model),

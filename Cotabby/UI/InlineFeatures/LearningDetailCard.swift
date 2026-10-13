@@ -1,12 +1,11 @@
+import AppKit
 import SwiftUI
 
-/// Reads controller-owned state and emits word/back/close actions. Lookup work never starts in
-/// this view, and dictionary paragraphs stay out of the sentence pair's layout. One child window
-/// switches pages instead of stacking another popup for each word.
+/// Displays one meaning unit and emits native word-button actions. AppKit presents definitions
+/// separately; the explanation and its selected color remain visible while a word is inspected.
 struct LearningDetailCard: View {
     @ObservedObject var state: LearningDetailState
-    let selectWord: (String) -> Void
-    let back: () -> Void
+    let selectWord: (String, NSButton) -> Void
     let close: () -> Void
     let sizeChanged: (CGSize) -> Void
     @State private var contentHeight: CGFloat = 200
@@ -14,17 +13,14 @@ struct LearningDetailCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                if state.word != nil {
-                    Button(action: back) { Label("语块", systemImage: "chevron.left") }.buttonStyle(.plain)
-                }
-                Text(state.word == nil ? "语块说明" : "系统词典").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Text("语块说明").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 Spacer()
                 Button(action: close) { Image(systemName: "xmark") }.buttonStyle(.plain).help("关闭小窗 · Esc")
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     if let chunk = state.chunk {
-                        if let word = state.word { dictionary(word, chunk: chunk) } else { meaning(chunk) }
+                        meaning(chunk)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -36,7 +32,7 @@ struct LearningDetailCard: View {
             .onPreferenceChange(LearningScrollHeightPreference.self) { height in
                 if height.isFinite, height > 0 { contentHeight = height }
             }
-            Text(state.word == nil ? "继续输入时一起收起" : "滚动查看释义 · 继续输入时收起")
+            Text("点击单词查看系统词典 · 继续输入时收起")
                 .font(.caption2).foregroundStyle(.secondary)
         }
         .padding(12).frame(width: 320, alignment: .topLeading).fixedSize(horizontal: false, vertical: true)
@@ -45,7 +41,6 @@ struct LearningDetailCard: View {
         })
         .onPreferenceChange(LearningCardSizePreference.self, perform: sizeChanged)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
-        .onChange(of: state.word) { _, word in contentHeight = word == nil ? 200 : 140 }
     }
 
     private func meaning(_ chunk: LearningChunkDetail) -> some View {
@@ -61,29 +56,11 @@ struct LearningDetailCard: View {
                 Text("查看单词").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 LearningTextFlowLayout(spacing: 5, rowSpacing: 6, rightToLeft: chunk.language == .arabic) {
                     ForEach(chunk.words, id: \.self) { word in
-                        Button(word) { selectWord(word) }.buttonStyle(.bordered).controlSize(.small)
+                        LearningDictionaryButton(word: word, lookup: selectWord)
                     }
                 }
             }
         }
     }
 
-    private func dictionary(_ word: String, chunk: LearningChunkDetail) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(word).font(.title2.weight(.semibold))
-            Text("所在语块：\(chunk.target)").font(.caption).foregroundStyle(.secondary)
-            Divider()
-            if state.isLoading {
-                Text("正在查词…").font(.callout).foregroundStyle(.secondary)
-            } else if let entry = state.entry {
-                if entry.resolvedTerm != entry.requestedTerm {
-                    Text("查询原形：\(entry.resolvedTerm)").font(.caption).foregroundStyle(.secondary)
-                }
-                ForEach(Array(entry.paragraphs.enumerated()), id: \.offset) { _, paragraph in
-                    Text(paragraph).font(.callout).lineSpacing(5)
-                        .foregroundStyle(entry.isFound ? Color.primary : Color.secondary)
-                }
-            }
-        }
-    }
 }

@@ -13,7 +13,6 @@ import Foundation
 @MainActor
 final class InlineCommandCoordinator {
     private let learning: LanguageLearningCoordinator?
-    private let hints: LanguageLearningHintCoordinator?
     private let sentencePreview: LearningSentencePreviewCoordinator?
     private let emoji: EmojiPickerController
     private let macro: MacroController
@@ -24,11 +23,9 @@ final class InlineCommandCoordinator {
         macro: MacroController,
         inputMonitor: any EmojiInputIntercepting,
         learning: LanguageLearningCoordinator? = nil,
-        hints: LanguageLearningHintCoordinator? = nil,
         sentencePreview: LearningSentencePreviewCoordinator? = nil
     ) {
         self.learning = learning
-        self.hints = hints
         self.sentencePreview = sentencePreview
         self.emoji = emoji
         self.macro = macro
@@ -42,7 +39,6 @@ final class InlineCommandCoordinator {
             self?.decide(keyEvent) ?? .notHandled
         }
         learning?.start()
-        hints?.start()
         sentencePreview?.start()
         emoji.start()
         macro.start()
@@ -50,7 +46,6 @@ final class InlineCommandCoordinator {
 
     func stop() {
         learning?.stop()
-        hints?.stop()
         sentencePreview?.stop()
         emoji.stop()
         macro.stop()
@@ -63,7 +58,6 @@ final class InlineCommandCoordinator {
     @discardableResult
     func observe(_ event: CapturedInputEvent) -> Bool {
         let learningInvolved = learning?.observe(event) ?? false
-        hints?.observe(event)
         sentencePreview?.observe(event)
         let macroInvolved = macro.observe(event)
         let emojiInvolved = emoji.observe(event)

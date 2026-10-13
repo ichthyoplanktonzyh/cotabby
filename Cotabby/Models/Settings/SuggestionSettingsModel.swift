@@ -228,6 +228,7 @@ final class SuggestionSettingsModel: ObservableObject {
         endpointCredentialStore: OpenAICompatibleCredentialStoring
     ) {
         languageLearning = LanguageLearningSettings(defaults: userDefaults)
+        languageLearning.translation.migrateLegacyCredential(from: endpointCredentialStore)
         let store = SuggestionSettingsStore(userDefaults: userDefaults)
         let data = store.load(configuration: configuration)
         self.store = store

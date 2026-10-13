@@ -2,14 +2,14 @@ import AppKit
 import Testing
 @testable import Cotabby
 
-/// Controllable actor replies verify page changes and cancellation without installed dictionaries
-/// or model requests. Each test owns its nonactivating child and releases every held continuation.
+/// These fixtures exercise explanation geometry and the public window-family relationship;
+/// no real dictionary, editor, or generation service participates.
 @Suite(.serialized)
 @MainActor
 struct LearningDetailPanelTests {
     @Test
     func movingTheParentKeepsTheChildAttached() throws {
-        let panel = LearningDetailPanel(dictionary: HeldDictionary())
+        let panel = LearningDetailPanel()
         defer { panel.hide() }
         let original = try placement()
         panel.show(Self.chunk(), placement: original)
@@ -21,42 +21,72 @@ struct LearningDetailPanelTests {
     }
 
     @Test
-    func onlyTheLatestClickedWordCanPopulateTheSameChild() async throws {
-        let dictionary = HeldDictionary()
-        let panel = LearningDetailPanel(dictionary: dictionary)
+    func nativeLookupDescendantsArePartOfTheExplanationWindowFamily() throws {
+        let panel = LearningDetailPanel()
         defer { panel.hide() }
         panel.show(Self.chunk(), placement: try placement())
-        panel.selectWord("can")
-        await waitUntil { await dictionary.hasRequest("can") }
-        panel.selectWord("do")
-        await waitUntil { await dictionary.hasRequest("do") }
-        await dictionary.finish("do")
-        await waitUntil { panel.state.entry?.requestedTerm == "do" }
-        await dictionary.finish("can")
-        await Task.yield()
-        #expect(panel.state.word == "do")
-        #expect(panel.state.entry?.requestedTerm == "do")
-        panel.back()
-        #expect(panel.state.word == nil)
-        #expect(panel.state.chunk?.target == "can do it")
-        #expect(panel.state.entry == nil)
+        let source = try #require(NSApp.windows.first { panel.owns($0) && $0.parent == nil })
+        let anchor = NSPanel(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
+        let popup = NSPanel(contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: true)
+        anchor.isReleasedWhenClosed = false
+        popup.isReleasedWhenClosed = false
+        defer { popup.close(); anchor.close() }
+        source.addChildWindow(anchor, ordered: .above)
+        anchor.addChildWindow(popup, ordered: .above)
+        #expect(panel.owns(source))
+        #expect(panel.owns(anchor))
+        #expect(panel.owns(popup))
+        #expect(!panel.owns(nil))
     }
 
     @Test
-    func closingOrChangingThePhraseRejectsAnOldDictionaryReply() async throws {
-        let dictionary = HeldDictionary()
+    func replacingOrClosingTheExplanationClearsItsSelection() throws {
+        let panel = LearningDetailPanel()
+        panel.show(Self.chunk(), placement: try placement())
+        panel.show(Self.chunk(identifier: 1), placement: try placement())
+        #expect(panel.state.chunk?.chunkID == 1)
+        panel.hide()
+        #expect(panel.state.chunk == nil)
+        #expect(!panel.isVisible)
+    }
+
+    @Test
+    func lookupRejectsStaleChunksAndClosesBeforeTheExplanation() throws {
+        var calls = 0
+        let definition = NSPanel(contentRect: CGRect(x: 100, y: 220, width: 220, height: 140),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
+        definition.isReleasedWhenClosed = false
+        defer { definition.close() }
+        let dictionary = LearningSystemDictionaryPresenter { view, _, _ in
+            calls += 1
+            view.window?.addChildWindow(definition, ordered: .above)
+            definition.orderFrontRegardless()
+        }
         let panel = LearningDetailPanel(dictionary: dictionary)
         defer { panel.hide() }
-        panel.show(Self.chunk(), placement: try placement())
-        panel.selectWord("can")
-        await waitUntil { await dictionary.hasRequest("can") }
+        let original = Self.chunk()
+        panel.show(original, placement: try placement())
+        let source = try #require(NSApp.windows.first { panel.owns($0) && $0.parent == nil })
+        let button = NSButton(title: "can", target: nil, action: nil)
+        button.frame = CGRect(x: 20, y: 20, width: 80, height: 24)
+        source.contentView?.addSubview(button)
+        panel.selectWord("can", from: button, chunk: original)
+        #expect(calls == 1)
+        #expect(panel.dismissDictionary())
+        #expect(panel.isVisible)
+        #expect(panel.state.chunk == original)
+        #expect(!panel.dismissDictionary())
+        let next = Self.chunk(identifier: 1)
+        panel.show(next, placement: try placement())
+        source.contentView?.addSubview(button)
+        panel.selectWord("can", from: button, chunk: original)
+        button.title = "unlisted"
+        panel.selectWord("unlisted", from: button, chunk: next)
+        #expect(calls == 1)
         panel.hide()
-        panel.show(Self.chunk(identifier: 1), placement: try placement())
-        await dictionary.finish("can")
-        await Task.yield()
-        #expect(panel.state.chunk?.chunkID == 1)
-        #expect(panel.state.word == nil)
-        #expect(panel.state.entry == nil)
+        button.title = "can"
+        panel.selectWord("can", from: button, chunk: next)
+        #expect(calls == 1)
     }
 
     private static func chunk(identifier: Int = 0) -> LearningChunkDetail {
@@ -69,25 +99,5 @@ struct LearningDetailPanelTests {
         let parent = CGRect(x: screen.minX + 40, y: screen.midY, width: 480, height: 200)
         return .init(parent: parent, caret: CGRect(x: parent.minX, y: parent.minY - 30, width: 2, height: 20),
             reserved: nil, screen: screen, anchorY: parent.maxY)
-    }
-
-    private func waitUntil(_ condition: () async -> Bool) async {
-        for _ in 0..<100 {
-            if await condition() { return }
-            try? await Task.sleep(for: .milliseconds(5))
-        }
-        Issue.record("The controlled dictionary did not reach the expected state")
-    }
-
-    private actor HeldDictionary: LearningDictionaryProviding {
-        private var replies: [String: CheckedContinuation<LearningDictionaryEntry, Never>] = [:]
-        func entry(for term: String, language: LearningLanguage) async -> LearningDictionaryEntry {
-            await withCheckedContinuation { replies[term] = $0 }
-        }
-        func hasRequest(_ word: String) -> Bool { replies[word] != nil }
-        func finish(_ word: String) {
-            replies.removeValue(forKey: word)?.resume(returning: .init(requestedTerm: word, resolvedTerm: word,
-                paragraphs: ["A dictionary meaning.", "An example sentence."], isFound: true))
-        }
     }
 }

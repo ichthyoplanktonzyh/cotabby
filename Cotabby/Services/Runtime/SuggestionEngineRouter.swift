@@ -49,6 +49,34 @@ final class SuggestionEngineRouter {
         for request: SuggestionRequest,
         onPartial: (@MainActor (SuggestionResult) -> Void)?
     ) async throws -> SuggestionResult {
+        let began = ContinuousClock.now
+        let engine = suggestionSettings.selectedEngine
+        var modelName: String
+        switch engine {
+        case .appleIntelligence: modelName = "Apple Intelligence"
+        case .llamaOpenSource: modelName = llamaModelNameProvider() ?? "Open Source"
+        case .openAICompatible: modelName = endpointModelNameProvider() ?? "Endpoint"
+        }
+        do {
+            return try await generateRoutedSuggestion(for: request, onPartial: onPartial, onFallback: {
+                modelName = self.llamaModelNameProvider() ?? "Llama"
+            })
+        }
+        catch {
+            let duration = began.duration(to: .now).components
+            let ms = max(0, Int(duration.seconds * 1_000 + duration.attoseconds / 1_000_000_000_000_000))
+            if suggestionSettings.isPerformanceTrackingEnabled {
+                performanceMetricsStore.record(modelName: modelName, latencyMs: ms, source: .completion,
+                    outcome: requestOutcome(for: error), requestID: request.requestID)
+            }
+            throw error
+        }
+    }
+
+    private func generateRoutedSuggestion(
+        for request: SuggestionRequest,
+        onPartial: (@MainActor (SuggestionResult) -> Void)?, onFallback: () -> Void
+    ) async throws -> SuggestionResult {
         let metadata: Logger.Metadata = [
             "request_id": .string(request.requestID),
             "engine": .string(engineMetadataLabel(for: suggestionSettings.selectedEngine))
@@ -58,7 +86,7 @@ final class SuggestionEngineRouter {
             CotabbyLogger.suggestion.debug("Routing to Apple Intelligence engine", metadata: metadata)
             do {
                 let result = try await foundationModelEngine.generateSuggestion(for: request, onPartial: onPartial)
-                recordPerformanceMetric(modelName: "Apple Intelligence", latency: result.latency)
+                recordPerformanceMetric(modelName: "Apple Intelligence", latency: result.latency, requestID: request.requestID)
                 recordQualityOutcome(result)
                 return result
             } catch SuggestionClientError.unsupportedLanguageOrLocale(let message) {
@@ -85,6 +113,7 @@ final class SuggestionEngineRouter {
                         "reason": .string(message)
                     ]) { _, new in new }
                 )
+                onFallback()
                 return try await generateOpenSourceFallback(
                     for: request,
                     appleFailureMessage: message,
@@ -94,7 +123,7 @@ final class SuggestionEngineRouter {
         case .llamaOpenSource:
             CotabbyLogger.suggestion.debug("Routing to open-source llama engine", metadata: metadata)
             let result = try await llamaEngine.generateSuggestion(for: request, onPartial: onPartial)
-            recordPerformanceMetric(modelName: llamaModelNameProvider() ?? "Llama", latency: result.latency)
+            recordPerformanceMetric(modelName: llamaModelNameProvider() ?? "Llama", latency: result.latency, requestID: request.requestID)
             recordQualityOutcome(result)
             return result
         case .openAICompatible:
@@ -110,7 +139,7 @@ final class SuggestionEngineRouter {
             }
             CotabbyLogger.suggestion.debug("Routing to OpenAI-compatible endpoint", metadata: metadata)
             let result = try await openAICompatibleEngine.generateSuggestion(for: request, onPartial: onPartial)
-            recordPerformanceMetric(modelName: endpointModelNameProvider() ?? "Local Endpoint", latency: result.latency)
+            recordPerformanceMetric(modelName: endpointModelNameProvider() ?? "Local Endpoint", latency: result.latency, requestID: request.requestID)
             recordQualityOutcome(result)
             return result
         }
@@ -132,10 +161,17 @@ final class SuggestionEngineRouter {
     /// Performance pane toggle is on. The router is the right home for this seam because it is
     /// the single point that sees a finished `SuggestionResult` and knows which engine produced
     /// it — every backend would otherwise need to take a dependency on the metrics store.
-    private func recordPerformanceMetric(modelName: String, latency: TimeInterval) {
+    private func recordPerformanceMetric(modelName: String, latency: TimeInterval, requestID: String) {
         guard suggestionSettings.isPerformanceTrackingEnabled else { return }
         let latencyMs = Int((latency * 1000).rounded())
-        performanceMetricsStore.record(modelName: modelName, latencyMs: latencyMs)
+        performanceMetricsStore.record(modelName: modelName, latencyMs: latencyMs, requestID: requestID)
+    }
+
+    private func requestOutcome(for error: Error) -> ModelRequestOutcome {
+        if error is CancellationError { return .cancelled }
+        if let failure = error as? SuggestionClientError, case .cancelled = failure { return .cancelled }
+        if let transport = error as? URLError, transport.code == .cancelled { return .cancelled }
+        return .failed
     }
 
     private func engineMetadataLabel(for kind: SuggestionEngineKind) -> String {
@@ -182,11 +218,15 @@ final class SuggestionEngineRouter {
     ) async throws -> SuggestionResult {
         do {
             let result = try await llamaEngine.generateSuggestion(for: request, onPartial: onPartial)
-            recordPerformanceMetric(modelName: llamaModelNameProvider() ?? "Llama", latency: result.latency)
+            recordPerformanceMetric(modelName: llamaModelNameProvider() ?? "Llama", latency: result.latency, requestID: request.requestID)
             recordQualityOutcome(result)
             return result
         } catch SuggestionClientError.cancelled {
             throw SuggestionClientError.cancelled
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let transport as URLError where transport.code == .cancelled {
+            throw transport
         } catch {
             throw SuggestionClientError.unavailable(
                 "\(appleFailureMessage) Open Source fallback also failed: \(error.localizedDescription)"

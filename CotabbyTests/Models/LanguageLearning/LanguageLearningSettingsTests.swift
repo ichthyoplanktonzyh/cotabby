@@ -35,7 +35,6 @@ struct LanguageLearningSettingsTests {
         let settings = LanguageLearningSettings(defaults: defaults)
 
         #expect(!settings.translationEnabled)
-        #expect(!settings.hintsEnabled)
         #expect(settings.model.isEmpty)
         #expect(settings.sourceLanguages == [.chinese])
         #expect(settings.targetLanguage == .english)
@@ -58,7 +57,6 @@ struct LanguageLearningSettingsTests {
         let settings = LanguageLearningSettings(defaults: defaults)
 
         #expect(!settings.translationEnabled)
-        #expect(!settings.hintsEnabled)
         #expect(settings.model.isEmpty)
         #expect(defaults.bool(forKey: "learningVocabularyEnabled"))
         #expect(defaults.bool(forKey: "learningTranslationVocabularyEnabled"))
@@ -66,20 +64,16 @@ struct LanguageLearningSettingsTests {
         #expect(defaults.data(forKey: "learningVocabularyProfiles") == legacyProfile)
     }
 
-    @Test(arguments: [[false, false], [false, true], [true, false], [true, true]])
-    func persistsTranslationAndHintSwitchesIndependently(_ switches: [Bool]) async throws {
-        let (suiteName, defaults) = try makeIsolatedDefaults()
-        defer { defaults.removePersistentDomain(forName: suiteName) }
+    @Test(arguments: [false, true])
+    func translationSwitchPersistsAndLegacyHintCannotReactivate(_ enabled: Bool) throws {
+        let (name, defaults) = try makeIsolatedDefaults()
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(true, forKey: "learningHintsEnabled")
         let settings = LanguageLearningSettings(defaults: defaults)
-        settings.translationEnabled = switches[0]
-        settings.hintsEnabled = switches[1]
-
+        settings.translationEnabled = enabled
         let restored = LanguageLearningSettings(defaults: defaults)
-
-        #expect(restored.translationEnabled == switches[0])
-        #expect(restored.hintsEnabled == switches[1])
-        #expect(defaults.bool(forKey: "learningTranslationEnabled") == switches[0])
-        #expect(defaults.bool(forKey: "learningHintsEnabled") == switches[1])
+        #expect(restored.translationEnabled == enabled)
+        #expect(defaults.bool(forKey: "learningHintsEnabled"), "Retired preferences stay untouched")
     }
 
     @Test
@@ -88,7 +82,6 @@ struct LanguageLearningSettingsTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let settings = LanguageLearningSettings(defaults: defaults)
         settings.translationEnabled = true
-        settings.hintsEnabled = true
         settings.sourceLanguages = [.spanish, .chinese, .arabic]
         settings.targetLanguage = .japanese
         settings.model = "learning-instruction-model"
@@ -99,7 +92,6 @@ struct LanguageLearningSettingsTests {
         let restored = LanguageLearningSettings(defaults: defaults)
 
         #expect(restored.translationEnabled)
-        #expect(restored.hintsEnabled)
         #expect(restored.sourceLanguages == [.spanish, .chinese, .arabic])
         #expect(restored.targetLanguage == .japanese)
         #expect(restored.model == "learning-instruction-model")
@@ -116,7 +108,6 @@ struct LanguageLearningSettingsTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let owner = SuggestionSettingsModel(configuration: .standard, userDefaults: defaults)
         owner.languageLearning.translationEnabled = true
-        owner.languageLearning.hintsEnabled = true
         owner.languageLearning.sourceLanguages = [.spanish, .arabic]
         owner.languageLearning.targetLanguage = .japanese
         owner.languageLearning.model = "test-instruction-model"
@@ -128,7 +119,6 @@ struct LanguageLearningSettingsTests {
         let restored = LanguageLearningSettings(defaults: defaults)
 
         #expect(!restored.translationEnabled)
-        #expect(!restored.hintsEnabled)
         #expect(restored.sourceLanguages == [.chinese])
         #expect(restored.targetLanguage == .english)
         #expect(restored.model.isEmpty)
@@ -148,15 +138,12 @@ struct LanguageLearningSettingsTests {
 
         let first = LanguageLearningSettings(defaults: firstDefaults)
         first.translationEnabled = true
-        first.hintsEnabled = true
 
         let second = LanguageLearningSettings(defaults: secondDefaults)
         let restoredFirst = LanguageLearningSettings(defaults: firstDefaults)
 
         #expect(!second.translationEnabled)
-        #expect(!second.hintsEnabled)
         #expect(restoredFirst.translationEnabled)
-        #expect(restoredFirst.hintsEnabled)
     }
 
     @MainActor

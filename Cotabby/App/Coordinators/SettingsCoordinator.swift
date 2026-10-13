@@ -11,6 +11,7 @@ import SwiftUI
 /// Settings again from the menu.
 @MainActor
 final class SettingsCoordinator: NSObject, NSWindowDelegate {
+    private let learningModels: LearningModelCollection?
     private let appUpdateManager: AppUpdateManager
     private let permissionManager: PermissionManager
     private let permissionGuidanceController: PermissionGuidanceController
@@ -30,6 +31,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
     private var settingsWindowController: NSWindowController?
 
     init(
+        learningModels: LearningModelCollection? = nil,
         appUpdateManager: AppUpdateManager,
         permissionManager: PermissionManager,
         permissionGuidanceController: PermissionGuidanceController,
@@ -46,6 +48,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
         clearEmojiHistory: @escaping () -> Void,
         typingHistoryStore: TypingHistoryStore
     ) {
+        self.learningModels = learningModels
         self.appUpdateManager = appUpdateManager
         self.permissionManager = permissionManager
         self.permissionGuidanceController = permissionGuidanceController
@@ -81,6 +84,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
         let hostingController = NSHostingController(
             rootView: AnyView(
                 SettingsContainerView(
+                    learningModels: learningModels,
                     appUpdateManager: appUpdateManager,
                     permissionManager: permissionManager,
                     permissionGuidanceController: permissionGuidanceController,

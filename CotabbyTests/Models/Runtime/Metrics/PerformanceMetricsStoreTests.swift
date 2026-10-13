@@ -131,6 +131,53 @@ final class PerformanceMetricsStoreTests: XCTestCase {
         }
     }
 
+    func test_literalLegacyBlobKeepsOriginalHistoryAndDefaultsNewFields() throws {
+        let defaults = makeUserDefaults()
+        let blob = Data(#"[{"id":"00000000-0000-0000-0000-000000000001","timestamp":771692800,"modelName":"legacy-base","latencyMs":123}]"#.utf8)
+        defaults.set(blob, forKey: Self.entriesKey)
+        runOnMainActor {
+            let store = makeStore(userDefaults: defaults)
+            XCTAssertEqual(store.entries.count, 1)
+            XCTAssertEqual(store.entries[0].modelName, "legacy-base")
+            XCTAssertEqual(store.entries[0].latencyMs, 123)
+            XCTAssertEqual(store.entries[0].source, .completion)
+            XCTAssertEqual(store.entries[0].outcome, .completed)
+            XCTAssertNil(store.entries[0].firstOutputMs)
+            XCTAssertNil(store.entries[0].displayMs)
+            XCTAssertNil(store.entries[0].requestID)
+        }
+    }
+
+    func test_stageTimingsPersistAndLateDisplayCannotResurrectClearedHistory() {
+        let defaults = makeUserDefaults()
+        runOnMainActor {
+            let store = makeStore(userDefaults: defaults)
+            let id = store.record(modelName: "translator", latencyMs: 300, timestamp: exactDate(),
+                source: .translation, outcome: .completed, requestID: "req_fixture",
+                modelLoadMs: 0, firstOutputMs: 100, usableResultMs: 300)
+            store.recordDisplay(entryID: id, elapsedMs: 310)
+            store.recordDisplay(entryID: id, elapsedMs: 999)
+            XCTAssertEqual(store.entries[0].displayMs, 310)
+            XCTAssertEqual(store.entries[0].modelLoadMs, 0)
+            XCTAssertEqual(decodePersistedEntries(from: defaults), store.entries)
+            store.clear()
+            store.recordDisplay(entryID: id, elapsedMs: 500)
+            XCTAssertTrue(store.entries.isEmpty)
+            XCTAssertNil(defaults.data(forKey: Self.entriesKey))
+        }
+    }
+
+    func test_allTaskSourcesAndOutcomesRoundTrip() throws {
+        for source in ModelRequestSource.allCases {
+            for outcome in [ModelRequestOutcome.completed, .failed, .cancelled] {
+                let entry = PerformanceMetricEntry(timestamp: exactDate(), modelName: "model", latencyMs: 4,
+                    source: source, outcome: outcome, firstOutputMs: 1, usableResultMs: 3)
+                XCTAssertEqual(try JSONDecoder().decode(PerformanceMetricEntry.self,
+                    from: JSONEncoder().encode(entry)), entry)
+            }
+        }
+    }
+
     // MARK: - Clearing
 
     func test_clear_removesEntriesAndPersistedBlob() {

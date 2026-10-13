@@ -4,7 +4,7 @@ import Foundation
 /// Narrow task boundary lets coordinator tests supply delayed model responses without a server.
 /// The app environment owns the production service; a coordinator borrows it for each request.
 @MainActor
-protocol LearningExpressionGenerating: AnyObject {
+protocol LearningExpressionGenerating: LearningDisplayReporting {
     var settings: SuggestionSettingsModel { get }
     func generate(source: String, task: LearningExpressionTask) async throws -> String
 }

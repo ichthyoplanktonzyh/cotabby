@@ -142,7 +142,7 @@ index 1b2aca3..673e8de 100644
  ## Requirements
  
 diff --git a/Sources/CotabbyInferenceEngine/CotabbyInferenceEngine.cpp b/Sources/CotabbyInferenceEngine/CotabbyInferenceEngine.cpp
-index 5fc867f..b9b6aa6 100644
+index 5fc867f..c7a66d7 100644
 --- a/Sources/CotabbyInferenceEngine/CotabbyInferenceEngine.cpp
 +++ b/Sources/CotabbyInferenceEngine/CotabbyInferenceEngine.cpp
 @@ -1,4 +1,5 @@
@@ -151,7 +151,31 @@ index 5fc867f..b9b6aa6 100644
  
  #include <algorithm>
  #include <atomic>
-@@ -102,6 +103,23 @@ struct SequenceState {
+@@ -19,6 +20,23 @@
+ #endif
+ 
+ static void silenced_log_callback(ggml_log_level, const char*, void*) {}
++// Backend lifetime belongs to all live engine owners, not to one model role. Releasing an
++// analysis model must not run backend cleanup while autocomplete still owns a native context.
++static std::mutex backend_lifetime_mutex;
++static std::once_flag logger_once;
++static size_t backend_owner_count = 0;
++static void retain_backend() {
++    std::lock_guard<std::mutex> guard(backend_lifetime_mutex);
++    // llama's logger is global and not thread-safe. Install it before the first context runs;
++    // subsequent owners must never mutate it while another engine is decoding or loading.
++    std::call_once(logger_once, [] { llama_log_set(silenced_log_callback, nullptr); });
++    if (backend_owner_count++ == 0) llama_backend_init();
++}
++static void release_backend() {
++    std::lock_guard<std::mutex> guard(backend_lifetime_mutex);
++    if (backend_owner_count > 0 && --backend_owner_count == 0) llama_backend_free();
++}
++
+ 
+ // Single-token chat/instruct/FIM scaffolding that must never surface in autocomplete text.
+ // Most GGUFs flag these as control tokens (masked by the base rule); this catches vocabularies
+@@ -102,6 +120,23 @@ struct SequenceState {
      int kv_position_count = 0;
      std::atomic<bool> cancelled{false};
      std::string last_piece;
@@ -175,7 +199,7 @@ index 5fc867f..b9b6aa6 100644
  
      llama_token seed_token = 0;
      bool has_seed_token = false;
-@@ -147,6 +165,12 @@ struct CotabbyInferenceEngine::Impl {
+@@ -147,6 +182,12 @@ struct CotabbyInferenceEngine::Impl {
      int batch_size = 0;
      int thread_count = 0;
      int gpu_layer_count = 0;
@@ -188,7 +212,7 @@ index 5fc867f..b9b6aa6 100644
  
      // Token masks built once per model load (see buildTokenMasks). EOG tokens are deliberately
      // excluded so the stop check still fires; they are never emitted as text. `starts_new_word`
-@@ -154,6 +178,7 @@ struct CotabbyInferenceEngine::Impl {
+@@ -154,6 +195,7 @@ struct CotabbyInferenceEngine::Impl {
      std::vector<llama_logit_bias> nonprintable_bias;
      std::vector<llama_logit_bias> linebreak_bias;
      std::vector<bool> starts_new_word;
@@ -196,7 +220,7 @@ index 5fc867f..b9b6aa6 100644
  
      // One product sequence with a monotonically changing external identity. The mutex protects
      // create/destroy and lookup; callers still must not destroy the sequence while another method
-@@ -166,6 +191,104 @@ struct CotabbyInferenceEngine::Impl {
+@@ -166,6 +208,104 @@ struct CotabbyInferenceEngine::Impl {
      // prefill, trim, and reset, while cancellation only touches the sequence's atomic flag.
      std::mutex decode_mutex;
  
@@ -301,7 +325,7 @@ index 5fc867f..b9b6aa6 100644
      SequenceState* findSequence(int32_t id) {
          std::lock_guard<std::mutex> lock(sequence_mutex);
          return sequence && sequence->external_id == id ? sequence.get() : nullptr;
-@@ -246,6 +369,7 @@ struct CotabbyInferenceEngine::Impl {
+@@ -246,6 +386,7 @@ struct CotabbyInferenceEngine::Impl {
          nonprintable_bias.clear();
          linebreak_bias.clear();
          starts_new_word.clear();
@@ -309,7 +333,7 @@ index 5fc867f..b9b6aa6 100644
          if (!vocab) return;
  
          const int32_t n = llama_vocab_n_tokens(vocab);
-@@ -256,6 +380,7 @@ struct CotabbyInferenceEngine::Impl {
+@@ -256,6 +397,7 @@ struct CotabbyInferenceEngine::Impl {
          const llama_token bos_token = llama_vocab_bos(vocab);
  
          char piece[64];
@@ -317,7 +341,7 @@ index 5fc867f..b9b6aa6 100644
          for (llama_token t = 0; t < n; ++t) {
              const bool is_eog = llama_vocab_is_eog(vocab, t);
  
-@@ -282,6 +407,11 @@ struct CotabbyInferenceEngine::Impl {
+@@ -282,6 +424,11 @@ struct CotabbyInferenceEngine::Impl {
                  }
              }
  
@@ -329,7 +353,7 @@ index 5fc867f..b9b6aa6 100644
              const int written = llama_token_to_piece(vocab, t, piece, sizeof(piece), 0, false);
              if (written <= 0) {
                  continue;
-@@ -299,6 +429,7 @@ struct CotabbyInferenceEngine::Impl {
+@@ -299,6 +446,7 @@ struct CotabbyInferenceEngine::Impl {
                  }
              }
          }
@@ -337,7 +361,17 @@ index 5fc867f..b9b6aa6 100644
      }
  
      // Masks every "starts a new word" token (decoded text begins with whitespace) in the logits
-@@ -424,6 +555,8 @@ EngineStatus CotabbyInferenceEngine::loadModel(const char* path, int gpu_layers,
+@@ -398,8 +546,7 @@ EngineStatus CotabbyInferenceEngine::loadModel(const char* path, int gpu_layers,
+     }
+ 
+     if (!impl_->backend_initialized) {
+-        llama_log_set(silenced_log_callback, nullptr);
+-        llama_backend_init();
++        retain_backend();
+         impl_->backend_initialized = true;
+     }
+ 
+@@ -424,6 +571,8 @@ EngineStatus CotabbyInferenceEngine::loadModel(const char* path, int gpu_layers,
      impl_->context_window_tokens = context_window_tokens;
      impl_->batch_size = batch_size;
      impl_->gpu_layer_count = gpu_layers;
@@ -346,15 +380,19 @@ index 5fc867f..b9b6aa6 100644
      // Performance cores only — see resolveDecodeThreadCount. hardware_concurrency() counted
      // every logical core including efficiency cores, which both slows barriered matmuls and
      // burns extra package power for nothing when layers are Metal-offloaded anyway.
-@@ -471,6 +604,7 @@ void CotabbyInferenceEngine::unloadModel() {
+@@ -471,9 +620,10 @@ void CotabbyInferenceEngine::unloadModel() {
      }
      impl_->vocab = nullptr;
      impl_->model_path.clear();
 +    impl_->needs_prompt_checkpoint = false;
  
      if (impl_->backend_initialized) {
-         llama_backend_free();
-@@ -495,6 +629,7 @@ int32_t CotabbyInferenceEngine::createSequence(SamplingConfig config) {
+-        llama_backend_free();
++        release_backend();
+         impl_->backend_initialized = false;
+     }
+ }
+@@ -495,6 +645,7 @@ int32_t CotabbyInferenceEngine::createSequence(SamplingConfig config) {
      auto state = std::make_unique<SequenceState>();
      state->external_id = id;
      state->sampler = sampler;
@@ -362,7 +400,78 @@ index 5fc867f..b9b6aa6 100644
      impl_->sequence = std::move(state);
      return id;
  }
-@@ -574,6 +709,9 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
+@@ -553,6 +704,70 @@ std::vector<int32_t> CotabbyInferenceEngine::tokenize(const char* text,
+     }
+ }
+ 
++std::vector<int32_t> CotabbyInferenceEngine::tokenizeInstruction(const char* text,
++                                                     int text_length) const {
++    if (!impl_->vocab || !text || text_length <= 0) {
++        return {};
++    }
++
++    const bool add_bos = false;
++    int capacity = text_length + 8;
++
++    while (true) {
++        std::vector<int32_t> tokens(capacity);
++        int n = llama_tokenize(
++            impl_->vocab,
++            text,
++            static_cast<int32_t>(text_length),
++            tokens.data(),
++            static_cast<int32_t>(capacity),
++            add_bos,
++            true
++        );
++
++        if (n > 0) {
++            tokens.resize(n);
++            return tokens;
++        }
++        if (n == 0) {
++            return {};
++        }
++        capacity = std::max(capacity * 2, -n);
++    }
++}
++
++std::vector<int32_t> CotabbyInferenceEngine::tokenizeLiteral(const char* text,
++                                                     int text_length) const {
++    if (!impl_->vocab || !text || text_length <= 0) {
++        return {};
++    }
++
++    const bool add_bos = false;
++    int capacity = text_length + 8;
++
++    while (true) {
++        std::vector<int32_t> tokens(capacity);
++        int n = llama_tokenize(
++            impl_->vocab,
++            text,
++            static_cast<int32_t>(text_length),
++            tokens.data(),
++            static_cast<int32_t>(capacity),
++            add_bos,
++            false
++        );
++
++        if (n > 0) {
++            tokens.resize(n);
++            return tokens;
++        }
++        if (n == 0) {
++            return {};
++        }
++        capacity = std::max(capacity * 2, -n);
++    }
++}
++
+ // ---------------------------------------------------------------------------
+ // Prompt decoding
+ //
+@@ -574,6 +789,9 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
  
      SequenceState* seq = impl_->findSequence(sequence_id);
      if (!seq) return EngineStatus::error;
@@ -372,7 +481,7 @@ index 5fc867f..b9b6aa6 100644
  
      if (seq->cancelled.load(std::memory_order_acquire)) {
          return EngineStatus::cancelled;
-@@ -587,6 +725,12 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
+@@ -587,6 +805,12 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
      int cursor = 0;
      int end = token_count;
      int total_end_position = start_position + token_count;
@@ -385,7 +494,7 @@ index 5fc867f..b9b6aa6 100644
  
      while (cursor < end) {
          if (seq->cancelled.load(std::memory_order_acquire)) {
-@@ -595,6 +739,10 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
+@@ -595,6 +819,10 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
          }
  
          int chunk_end = std::min(cursor + batch_cap, end);
@@ -396,7 +505,7 @@ index 5fc867f..b9b6aa6 100644
          int chunk_size = chunk_end - cursor;
  
          batch.n_tokens = static_cast<int32_t>(chunk_size);
-@@ -612,20 +760,37 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
+@@ -612,20 +840,37 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
          }
  
          if (llama_decode(impl_->shared_ctx, batch) != 0) {
@@ -435,7 +544,7 @@ index 5fc867f..b9b6aa6 100644
          impl_->maskNewWordStarts(-1);
          seq->force_word_continuation = false;
      }
-@@ -633,10 +798,10 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
+@@ -633,10 +878,10 @@ EngineStatus CotabbyInferenceEngine::decodePrompt(int32_t sequence_id,
      // Seed sample: take one token from the prompt's final logits row. The seed will be returned by
      // the next sampleNext call as-is and feedback-decoded by the call after that.
      llama_token seed = llama_sampler_sample(seq->sampler, impl_->shared_ctx, -1);
@@ -448,7 +557,7 @@ index 5fc867f..b9b6aa6 100644
      seq->has_seed_token = true;
      seq->has_pending_input = false;
  
-@@ -668,6 +833,10 @@ SampleResult CotabbyInferenceEngine::sampleNext(int32_t sequence_id) {
+@@ -668,6 +913,10 @@ SampleResult CotabbyInferenceEngine::sampleNext(int32_t sequence_id) {
          result.is_eos = true;
          return result;
      }
@@ -459,7 +568,7 @@ index 5fc867f..b9b6aa6 100644
  
      if (seq->cancelled.load(std::memory_order_acquire)) {
          result.was_cancelled = true;
-@@ -732,20 +901,37 @@ SampleResult CotabbyInferenceEngine::sampleNext(int32_t sequence_id) {
+@@ -732,20 +981,37 @@ SampleResult CotabbyInferenceEngine::sampleNext(int32_t sequence_id) {
      batch.logits[0] = 1;
  
      const int status = llama_decode(impl_->shared_ctx, batch);
@@ -499,7 +608,7 @@ index 5fc867f..b9b6aa6 100644
              seq->last_piece.resize(64);
              while (true) {
                  const int written = llama_token_to_piece(
-@@ -775,7 +961,6 @@ SampleResult CotabbyInferenceEngine::sampleNext(int32_t sequence_id) {
+@@ -775,7 +1041,6 @@ SampleResult CotabbyInferenceEngine::sampleNext(int32_t sequence_id) {
  
      // Feedback decode advanced KV by one position; record the just-sampled
      // token as input for the next call.
@@ -507,7 +616,7 @@ index 5fc867f..b9b6aa6 100644
      seq->pending_input_token = result.token;
      seq->has_pending_input = true;
      return result;
-@@ -789,6 +974,10 @@ bool CotabbyInferenceEngine::trimKV(int32_t sequence_id, int keep_positions) {
+@@ -789,6 +1054,10 @@ bool CotabbyInferenceEngine::trimKV(int32_t sequence_id, int keep_positions) {
      if (!impl_->shared_ctx) return false;
      SequenceState* seq = impl_->findSequence(sequence_id);
      if (!seq) return false;
@@ -518,7 +627,7 @@ index 5fc867f..b9b6aa6 100644
  
      llama_memory_t memory = llama_get_memory(impl_->shared_ctx);
      if (!memory) return false;
-@@ -796,20 +985,34 @@ bool CotabbyInferenceEngine::trimKV(int32_t sequence_id, int keep_positions) {
+@@ -796,20 +1065,34 @@ bool CotabbyInferenceEngine::trimKV(int32_t sequence_id, int keep_positions) {
      // Serialize with prompt and feedback decode; never remove KV while llama is mutating it.
      std::lock_guard<std::mutex> lock(impl_->decode_mutex);
  
@@ -559,7 +668,7 @@ index 5fc867f..b9b6aa6 100644
      }
      return ok;
  }
-@@ -822,6 +1025,23 @@ void CotabbyInferenceEngine::setForceWordContinuation(int32_t sequence_id, bool
+@@ -822,6 +1105,23 @@ void CotabbyInferenceEngine::setForceWordContinuation(int32_t sequence_id, bool
      }
  }
  
@@ -583,7 +692,7 @@ index 5fc867f..b9b6aa6 100644
  void CotabbyInferenceEngine::setComputeLogprob(int32_t sequence_id, bool enabled) {
      if (!impl_) return;
      SequenceState* seq = impl_->findSequence(sequence_id);
-@@ -835,9 +1055,12 @@ void CotabbyInferenceEngine::setComputeLogprob(int32_t sequence_id, bool enabled
+@@ -835,9 +1135,12 @@ void CotabbyInferenceEngine::setComputeLogprob(int32_t sequence_id, bool enabled
  // ---------------------------------------------------------------------------
  
  void CotabbyInferenceEngine::cancelSequence(int32_t sequence_id) {
@@ -599,7 +708,7 @@ index 5fc867f..b9b6aa6 100644
      }
  }
  
-@@ -860,3 +1083,16 @@ int CotabbyInferenceEngine::getThreadCount() const {
+@@ -860,3 +1163,16 @@ int CotabbyInferenceEngine::getThreadCount() const {
  int CotabbyInferenceEngine::getGPULayerCount() const {
      return impl_->gpu_layer_count;
  }
@@ -772,7 +881,7 @@ index 0000000..15712fb
 +
 +} // namespace cotabby
 diff --git a/Sources/CotabbyInferenceEngine/include/CotabbyInferenceEngine.h b/Sources/CotabbyInferenceEngine/include/CotabbyInferenceEngine.h
-index 383bcaf..d15151e 100644
+index 383bcaf..539bd1e 100644
 --- a/Sources/CotabbyInferenceEngine/include/CotabbyInferenceEngine.h
 +++ b/Sources/CotabbyInferenceEngine/include/CotabbyInferenceEngine.h
 @@ -40,6 +40,15 @@ enum class EngineStatus : int {
@@ -791,10 +900,15 @@ index 383bcaf..d15151e 100644
  class CotabbyInferenceEngine {
  public:
      CotabbyInferenceEngine();
-@@ -64,6 +73,11 @@ public:
+@@ -64,6 +73,16 @@ public:
  
      // Tokenization (thread-safe, read-only on vocab)
      std::vector<int32_t> tokenize(const char* text, int text_length) const;
++    // Instruction prompts supply their own BOS/role markers. Preserve the base tokenizer above;
++    // this entry recognizes special tokens and does not prepend a duplicate BOS.
++    std::vector<int32_t> tokenizeInstruction(const char* text, int text_length) const;
++    // Literal user payload between instruction control-token segments, without extra BOS.
++    std::vector<int32_t> tokenizeLiteral(const char* text, int text_length) const;
 +    // Plain decoded bytes for one printable token; special/unknown tokens return empty.
 +    std::vector<uint8_t> tokenPiece(int32_t token) const;
 +    // The next continuation must reproduce these already-typed bytes before adding new text.
@@ -803,7 +917,7 @@ index 383bcaf..d15151e 100644
      // Prompt decoding
      EngineStatus decodePrompt(int32_t sequence_id,
                                const int32_t* tokens, int token_count,
-@@ -94,6 +108,7 @@ public:
+@@ -94,6 +113,7 @@ public:
      int getBatchSize() const;
      int getThreadCount() const;
      int getGPULayerCount() const;

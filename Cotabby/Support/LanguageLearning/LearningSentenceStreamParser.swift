@@ -9,8 +9,13 @@ nonisolated struct LearningSentenceStreamParser {
     private(set) var translation: String?
     private(set) var chunks: [LearningMeaningChunk] = []
     private var totalBytes = 0
+    private let fixedTranslation: Bool
 
-    init(source: String) { self.source = source }
+    init(source: String, translation: String? = nil) {
+        self.source = source
+        self.translation = translation
+        fixedTranslation = translation != nil
+    }
 
     mutating func append(_ delta: String) throws -> [LearningSentenceUpdate] {
         totalBytes += delta.utf8.count
@@ -45,7 +50,7 @@ nonisolated struct LearningSentenceStreamParser {
         }
         switch record.type {
         case "translation":
-            guard translation == nil, chunks.isEmpty, let rawText = record.text else {
+            guard !fixedTranslation, translation == nil, chunks.isEmpty, let rawText = record.text else {
                 throw LearningFailure.message("模型重复或改变了本次译文。")
             }
             let text = try LearningExpressionOutputPolicy.validatedText(rawText)

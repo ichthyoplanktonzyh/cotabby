@@ -52,6 +52,7 @@ final class LlamaRuntimeManager: ObservableObject {
     /// This is called after model downloads so selection UI updates without app restart.
     func refreshAvailableModels() {
         availableModels = runtimeLocator.availableModels(configuration: configuration)
+            .filter { LearningRuntimeCatalog.isCompletionCandidate(filename: $0.filename) }
         selectedModelFilename = normalizedModelFilename(selectedModelFilename)
         CotabbyLogger.runtime.info("Discovered \(self.availableModels.count) model(s)")
     }
@@ -217,12 +218,14 @@ final class LlamaRuntimeManager: ObservableObject {
         }
     }
 
-    /// Synchronously releases the llama runtime on the current thread, bounded by `timeoutSeconds`.
+    /// Synchronously releases the llama runtime on the current thread after closing work admission.
     /// This is the termination-time path: C++ static destructors during `exit()` tear down the Metal
     /// device, so llama contexts must be released first to avoid `ggml_metal_rsets_free`. Returning
-    /// quickly also keeps macOS's "Quit & Reopen" TCC handshake working after a permission grant —
+    /// promptly also keeps macOS's "Quit & Reopen" TCC handshake working after a permission grant —
     /// the previous `.terminateLater` approach delayed exit long enough that the relaunched process
     /// never picked up the new permission.
+    /// `timeoutSeconds` is a drain grace period. A live native load cannot be safely interrupted,
+    /// so the shared session still waits before freeing it instead of racing Metal teardown.
     func shutdownSync(timeoutSeconds: TimeInterval) {
         prepareForStop()
         core.shutdown(timeoutSeconds: timeoutSeconds)
@@ -286,6 +289,9 @@ final class LlamaRuntimeManager: ObservableObject {
     /// Resolves either the explicitly selected model or the default preferred model order.
     private func resolveSelectedRuntime() throws -> ResolvedLlamaRuntime {
         do {
+            guard let selectedModelFilename else {
+                throw LlamaRuntimeError.unavailable("No autocomplete GGUF model is available.")
+            }
             return try runtimeLocator.resolve(
                 configuration: configuration,
                 selectedModelFilename: selectedModelFilename

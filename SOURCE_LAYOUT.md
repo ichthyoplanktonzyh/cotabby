@@ -37,10 +37,10 @@ Cotabby/
 │   ├── Focus/                        focus snapshots and tracking state
 │   ├── History/                      typing-history records, archive, and preferences
 │   ├── Input/                        keyboard event values
-│   ├── LanguageLearning/             durable options, languages, streamed sentence/chunk and task/hint contracts
+│   ├── LanguageLearning/             role-specific model profiles, request traces, languages and sentence/chunk contracts
 │   ├── Onboarding/                   onboarding templates
 │   ├── Permissions/                  TCC permission values
-│   ├── Runtime/
+│   ├── Runtime/                      native allocation snapshots and runtime contracts
 │   │   └── Metrics/                  performance and system metric stores
 │   ├── Settings/                     durable and UI-facing settings values
 │   ├── Spelling/                     spelling catalog values
@@ -56,7 +56,7 @@ Cotabby/
 │   │   └── Resolution/               focus snapshots, geometry, bounded AX walks
 │   ├── History/                      typing-history store, recording, and encrypted vault
 │   ├── Input/                        event taps and input-source monitoring
-│   ├── LanguageLearning/             streaming instruction tasks, local dictionaries and verified editor captures
+│   ├── LanguageLearning/             independent native/Endpoint tasks, resource/telemetry owners and verified editor captures
 │   ├── ModelManagement/              model discovery, download, and validation
 │   ├── Permission/
 │   │   └── Guidance/                 permission overlay and System Settings guidance
@@ -64,7 +64,8 @@ Cotabby/
 │   ├── Presentation/                 process-level AppKit panels and indicators
 │   ├── Runtime/
 │   │   ├── AppleIntelligence/        Foundation Models availability and engine
-│   │   ├── Llama/                    llama engine, manager, and native core
+│   │   ├── Llama/                    autocomplete engine, manager, and KV/cache policy
+│   │   ├── Native/                   per-owner native sessions and serialized lifetime/cancellation
 │   │   └── OpenAICompatible/         endpoint transport, credentials, and engine
 │   ├── Spelling/                     live spell-checking services
 │   ├── Suggestion/
@@ -121,7 +122,7 @@ Cotabby/
         ├── Components/
         │   ├── Controls/              settings editors, pickers, and previews
         │   └── Structure/             pane scaffolds, rows, cards, and search results
-        ├── ModelManagement/           model catalog and browser views
+        ├── ModelManagement/           shared catalog, browser, folder, installed-file and connection views
         └── Panes/
             ├── About/                 product and acknowledgement panes
             └── Engine/                engine pane and backend-specific extensions

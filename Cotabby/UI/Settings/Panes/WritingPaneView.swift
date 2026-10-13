@@ -6,10 +6,12 @@ import SwiftUI
 /// style rules.
 struct WritingPaneView: View {
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
+    var configureLearningModel: (LearningModelRole) -> Void = { _ in }
 
     var body: some View {
         SettingsPaneScaffold {
-            LanguageLearningSection(settings: suggestionSettings.languageLearning, suggestionSettings: suggestionSettings)
+            LanguageLearningSection(settings: suggestionSettings.languageLearning, suggestionSettings: suggestionSettings,
+                configureModel: configureLearningModel)
             Section("Length") {
                 Picker(selection: lengthChoiceBinding) {
                     ForEach(SuggestionWordCountPreset.allCases) { preset in

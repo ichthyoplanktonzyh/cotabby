@@ -24,27 +24,10 @@ nonisolated struct LearningDetailPlacement {
     let anchorY: CGFloat
 }
 
-/// Dictionary Services supplies plain text, not tagged senses or phonetics. Preserve real
-/// paragraphs and the resolved headword without inventing semantic fields from that text.
-nonisolated struct LearningDictionaryEntry: Equatable, Sendable {
-    let requestedTerm: String
-    let resolvedTerm: String
-    let paragraphs: [String]
-    let isFound: Bool
-}
-
-/// The small detail window can use a deterministic dictionary in tests while production uses the
-/// local actor. No generation endpoint is part of this contract.
-nonisolated protocol LearningDictionaryProviding: Sendable {
-    func entry(for term: String, language: LearningLanguage) async -> LearningDictionaryEntry
-}
-
 /// Owned by LearningDetailPanel and observed by both cards. Publishing selection lets the main
-/// card highlight matching colors while the child changes between phrase and dictionary pages.
+/// card highlight matching colors. AppKit owns dictionary contents separately, so definitions
+/// and query tasks do not become a second page of this shared presentation state.
 @MainActor
 final class LearningDetailState: ObservableObject {
     @Published var chunk: LearningChunkDetail?
-    @Published var word: String?
-    @Published var entry: LearningDictionaryEntry?
-    @Published var isLoading = false
 }

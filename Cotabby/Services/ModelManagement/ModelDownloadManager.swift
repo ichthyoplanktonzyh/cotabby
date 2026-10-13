@@ -87,6 +87,8 @@ final class ModelDownloadManager: ObservableObject {
     /// or on-disk contents change. Cached so the per-catalog-model install check in
     /// `refreshModelStates` does not re-walk the (recursively scanned) directories once per model.
     private var installedModelFilenames: Set<String> = []
+    /// App wiring supplies all task references without making this file service own any runtime.
+    var protectedModelFilenames: () -> Set<String> = { [] }
     private var downloadTasks: [String: Task<Void, Never>] = [:]
     /// Metadata retained for dynamic Hugging Face rows after their task finishes. Transfer state is
     /// keyed by source URL rather than destination filename so equal leaf names never alias.
@@ -128,6 +130,7 @@ final class ModelDownloadManager: ObservableObject {
     func refreshSearchDirectories() {
         runtimeSearchDirectories = Self.resolveSearchDirectories(primary: runtimeDirectoryURL)
         refreshModelStates()
+        onModelDirectoryChanged?()
     }
 
     var models: [DownloadableRuntimeModel] {
@@ -224,14 +227,16 @@ final class ModelDownloadManager: ObservableObject {
 
     /// Returns `true` only when the model lives in Cotabby's user-writable model directory.
     func canDeleteModel(filename: String) -> Bool {
-        FileManager.default.fileExists(atPath: modelFileURL(filename: filename).path)
+        !isModelInUse(filename: filename) && FileManager.default.fileExists(atPath: modelFileURL(filename: filename).path)
     }
+
+    func isModelInUse(filename: String) -> Bool { protectedModelFilenames().contains(filename) }
 
     /// Removes one model from the user-managed runtime directory.
     func deleteModel(filename: String) {
         let targetURL = modelFileURL(filename: filename)
 
-        guard FileManager.default.fileExists(atPath: targetURL.path) else {
+        guard canDeleteModel(filename: filename) else {
             return
         }
 

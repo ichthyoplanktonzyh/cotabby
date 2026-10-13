@@ -25,6 +25,44 @@ final class SettingsNavigationModelTests: XCTestCase {
         XCTAssertEqual(model.selection, .home)
         XCTAssertNil(model.highlightedItem)
         XCTAssertFalse(model.pendingSearchFocus)
+        XCTAssertEqual(model.engineTask, .completion)
+    }
+
+    func test_writingLinksOpenEachRoleAndCancelAnOldSearchHighlight() {
+        let model = makeModel()
+        for role in [LearningModelRole.translation, .analysis] {
+            model.reveal(.batteryModel)
+            model.openLearningModel(role)
+            XCTAssertEqual(model.selection, .engineAndModel)
+            XCTAssertEqual(model.engineTask, SettingsEngineTask(role: role))
+            XCTAssertNil(model.highlightedItem)
+        }
+    }
+
+    func test_searchForCompletionReturnsFromALearningTabToItsOwnAnchors() {
+        let model = makeModel()
+        model.openLearningModel(.analysis)
+        model.reveal(.selectedModel)
+        XCTAssertEqual(model.selection, .engineAndModel)
+        XCTAssertEqual(model.engineTask, .completion)
+        XCTAssertEqual(model.highlightedItem, .selectedModel)
+    }
+
+    func test_homeEngineLinkReturnsToCompletionAfterInspectingAnalysis() {
+        let model = makeModel()
+        model.openLearningModel(.analysis)
+        model.open(.home)
+        model.openEngineTask(.completion)
+        XCTAssertEqual(model.selection, .engineAndModel)
+        XCTAssertEqual(model.engineTask, .completion)
+    }
+
+    func test_sidebarNavigationRetainsTaskSelectionWithinTheSettingsWindow() {
+        let model = makeModel()
+        model.openLearningModel(.translation)
+        model.open(.writing)
+        model.open(.engineAndModel)
+        XCTAssertEqual(model.engineTask, .translation)
     }
 
     func test_revealSelectsTheItemsPaneAndHighlightsIt() {

@@ -41,10 +41,10 @@ struct LearningLanguageTests {
     }
 
     @Test
-    func translationAndHintTasksKeepTheirTargetLanguage() {
+    func translationTasksKeepTheirTargetLanguage() {
         let tasks: [LearningExpressionTask] = [
             .translation(source: .chinese, target: .spanish),
-            .hint(source: .japanese, target: .arabic)
+            .translation(source: .japanese, target: .arabic)
         ]
 
         #expect(tasks.map(\.target) == [.spanish, .arabic])

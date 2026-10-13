@@ -48,8 +48,10 @@ final class LanguageLearningCoordinator {
         let learning = service.settings.languageLearning
         let changes: [AnyPublisher<Void, Never>] = [
             learning.changes,
-            service.settings.$endpointCredentialRevision.dropFirst().map { _ in () }.eraseToAnyPublisher(),
-            service.settings.snapshotPublisher.dropFirst().map { _ in () }.eraseToAnyPublisher()
+            service.settings.$isGloballyEnabled.dropFirst().map { _ in () }.eraseToAnyPublisher(),
+            service.settings.$pauseState.dropFirst().map { _ in () }.eraseToAnyPublisher(),
+            service.settings.snapshotPublisher.map(\.disabledAppBundleIdentifiers).removeDuplicates().dropFirst().map { _ in () }.eraseToAnyPublisher(),
+            service.settings.snapshotPublisher.map(\.isLowPowerModeAutoDisableEnabled).removeDuplicates().dropFirst().map { _ in () }.eraseToAnyPublisher()
         ]
         Publishers.MergeMany(changes).sink { [weak self] in self?.cancel() }.store(in: &subscriptions)
     }
@@ -150,31 +152,31 @@ final class LanguageLearningCoordinator {
             }
             sourceLanguage = language
             saved = capture
-            CotabbyLogger.app.info("Expression preview requested", metadata: [
-                "scope": .string(capture.originalSelection.length == 0 ? "sentence" : "selection"),
-                "replacement_available": .string(capture.supportsReplacement ? "true" : "false")
-            ])
+            let traceIdentifier = RequestID.generate()
             let task = LearningExpressionTask.translation(source: language, target: settings.targetLanguage)
             let identifier = requestID
             show(message: "正在生成目标语言表达；继续输入会关闭预览。", accept: nil)
             work = Task { [weak self] in
                 guard let self else { return }
-                do {
-                    let result = try await self.service.generate(source: capture.source, task: task)
-                    guard self.requestID == identifier, !Task.isCancelled else { return }
-                    self.work = nil
-                    guard self.replacement.isCurrent(capture) else { self.cancel(); return }
-                    self.english = result
-                    if capture.supportsReplacement {
-                        self.show(message: "你可以阅读或复制表达；点击替换前会重新核对原文。", accept: { [weak self] in self?.accept() })
-                    } else {
-                        self.show(message: capture.replacementUnavailableReason ??
-                            "可以阅读或复制表达；如需替换，请手动选择原文后再次预览。", accept: nil)
+                await LearningRequestTrace.$requestID.withValue(traceIdentifier) {
+                    do {
+                        let result = try await self.service.generate(source: capture.source, task: task)
+                        guard self.requestID == identifier, !Task.isCancelled else { return }
+                        self.work = nil
+                        guard self.replacement.isCurrent(capture) else { self.cancel(); return }
+                        self.english = result
+                        if capture.supportsReplacement {
+                            self.show(message: "你可以阅读或复制表达；点击替换前会重新核对原文。", accept: { [weak self] in self?.accept() })
+                        } else {
+                            self.show(message: capture.replacementUnavailableReason ??
+                                "可以阅读或复制表达；如需替换，请手动选择原文后再次预览。", accept: nil)
+                        }
+                        if self.panel.isVisible { self.service.recordDisplay(source: .translation, requestID: traceIdentifier) }
+                    } catch {
+                        guard self.requestID == identifier, !Task.isCancelled else { return }
+                        self.work = nil
+                        self.show(message: error.localizedDescription, accept: nil)
                     }
-                } catch {
-                    guard self.requestID == identifier, !Task.isCancelled else { return }
-                    self.work = nil
-                    self.show(message: error.localizedDescription, accept: nil)
                 }
             }
         } catch {

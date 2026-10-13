@@ -163,6 +163,17 @@ final class SuggestionEngineRouterRoutingTests: XCTestCase {
         XCTAssertTrue(rig.metrics.entries.isEmpty, "The default user must never pay the metrics write cost")
     }
 
+    func test_cancelledTransportIsRecordedAsCancellationAndOffTrackingStaysEmpty() async {
+        for enabled in [false, true] {
+            let rig = makeRig(engine: .openAICompatible, performanceTracking: enabled)
+            rig.endpoint.script = { _ in throw URLError(.cancelled) }
+            do { _ = try await rig.router.generateSuggestion(for: CotabbyTestFixtures.suggestionRequest()); XCTFail("Expected cancellation") }
+            catch {}
+            XCTAssertEqual(rig.metrics.entries.count, enabled ? 1 : 0)
+            if enabled { XCTAssertEqual(rig.metrics.entries[0].outcome, .cancelled) }
+        }
+    }
+
     func test_unsupportedLocale_fallsBackToLlamaAndReturnsItsResult() async throws {
         let rig = makeRig(engine: .appleIntelligence)
         rig.foundation.script = { _ in
@@ -227,6 +238,8 @@ final class SuggestionEngineRouterRoutingTests: XCTestCase {
             XCTFail("Unexpected error: \(error)")
         }
         XCTAssertEqual(rig.quality.counters.generated, 0, "A failed fallback produced no generation")
+        XCTAssertEqual(rig.metrics.entries.first?.modelName, "test-model.gguf")
+        XCTAssertEqual(rig.metrics.entries.first?.outcome, .failed)
     }
 
     /// Only the locale rejection is a fallback trigger. Any other Apple failure (model still
@@ -252,7 +265,8 @@ final class SuggestionEngineRouterRoutingTests: XCTestCase {
         }
 
         XCTAssertTrue(rig.llama.requests.isEmpty)
-        XCTAssertTrue(rig.metrics.entries.isEmpty)
+        XCTAssertEqual(rig.metrics.entries.map(\.outcome), [.failed, .failed, .cancelled])
+        XCTAssertTrue(rig.metrics.entries.allSatisfy { $0.source == .completion })
     }
 
     func test_qualityCounters_recordEveryFinishedGenerationEvenWithPerformanceTrackingOff() async throws {
@@ -312,7 +326,18 @@ final class SuggestionEngineRouterRoutingTests: XCTestCase {
         )
         Self.retained.append(labelRouter)
         _ = try await labelRouter.generateSuggestion(for: CotabbyTestFixtures.suggestionRequest())
-        XCTAssertEqual(metrics.entries.first?.modelName, "Local Endpoint")
+        XCTAssertEqual(metrics.entries.last?.modelName, "Local Endpoint")
+        XCTAssertEqual(metrics.entries.first?.outcome, .failed)
+    }
+
+    func test_swiftCancellationThroughFallbackRetainsOutcomeAndActualModel() async {
+        let rig = makeRig(engine: .appleIntelligence)
+        rig.foundation.script = { _ in throw SuggestionClientError.unsupportedLanguageOrLocale("unsupported") }
+        rig.llama.script = { _ in throw CancellationError() }
+        do { _ = try await rig.router.generateSuggestion(for: CotabbyTestFixtures.suggestionRequest()); XCTFail("Expected cancellation") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        XCTAssertEqual(rig.metrics.entries.first?.outcome, .cancelled)
+        XCTAssertEqual(rig.metrics.entries.first?.modelName, "test-model.gguf")
     }
 
     func test_unsupportedLocale_fallbackCancellationStaysCancellation() async {

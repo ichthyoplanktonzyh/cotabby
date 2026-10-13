@@ -188,16 +188,19 @@ If you want to understand the runtime and suggestion pipeline before contributin
 
 Cotabby keeps its existing inline autocomplete and offers cross-language expression learning as a
 separate, opt-in feature. In **Settings → Writing**, choose one or more source languages, a target
-language, the independent learning model name, and a detail shortcut (default **Option+T**).
+language and a detail shortcut (default **Option+T**). Model summaries link to their configuration
+in **Settings → Engine & Model**.
 The master feature is off by default; enabling it enables automatic sentence preview.
 
 Use your input method as usual: confirm the candidate and pause briefly. A read-only target-language
-expression appears beside the caret without stealing focus. One streaming model request delivers the
-translation first and then prepares meaning chunks for that exact translation. Option+T or the expand
+expression appears beside the caret without stealing focus. A dedicated translation model delivers the
+expression first. When optional analysis is enabled, its independently configured model prepares
+meaning chunks for that exact expression. Option+T or the expand
 button reveals the source and target as matching colored meaning units, with small gaps between target
 units. Clicking a chunk outlines both sides and opens a separate, nonactivating explanation window.
-Word buttons in that window switch it to a paragraph-based lookup from the Mac's enabled dictionaries,
-with no model request. Esc closes the small window first; continuing to type closes it with the details.
+Word buttons open the native macOS dictionary popover beside the clicked word, preserving the
+dictionary's own formatting without a model request. Available contents depend on the Mac's enabled
+dictionaries. Esc closes lookup first, then the explanation; continuing to type closes both.
 Tab and Return retain their ordinary behavior; Escape dismisses the learning card.
 
 Pauses trigger previews without ending a sentence. Extending an unfinished sentence updates that
@@ -211,19 +214,37 @@ Turning off automatic sentence preview restores the explicit selected-text/curre
 including its verified click-to-replace operation. Customized shortcuts are preserved; the old default
 Control+Command+T migrates to Option+T.
 
-When automatic sentence preview is off, an optional passive word hint appears after a committed text change pauses. It
-sends only that current word with the language choices; it does not send the surrounding sentence.
-Hints require positive evidence that the text was committed, so some editors skip them. Enabling hints
-only applies to text changes observed after the setting is turned on. Typing, navigation, focus or
-settings changes, and clicking outside dismiss a stale hint. Hints do not edit text or intercept
-Return, and Escape dismisses a visible hint.
+In Writing, enable cross-language translation. In Engine & Model, use the fixed **补全 / 翻译 /
+学习分析** tabs to select a task; each page uses the existing grouped settings layout. Writing
+provides direct links to the translation and analysis pages. Switching tabs changes navigation only,
+and the page shows the actual configured model or an explicit unconfigured state. Translation and
+optional meaning-chunk analysis each support **in-process GGUF** or an independent OpenAI-compatible
+**Endpoint**, with separate model/address/API-key settings. Local GGUF execution needs no Ollama
+service. Both pages mirror completion: recommended downloads, Hugging Face import, models folder,
+LM Studio source, installed model management, connection/key controls and power-source settings.
+The catalogs offer Hy-MT2 1.8B for translation and Qwen3.5 4B as an analysis candidate; both tasks
+also accept imported GGUFs or configured endpoints. Battery/AC selections belong to each task, and
+shared-file deletion protects all tasks’ saved model references. Original autocomplete model settings remain
+independent. Analysis defaults off: expansion still shows the source and translation, with direct
+native dictionary lookup. Changing or failing analysis keeps the displayed translation.
 
-Learning requests use the model name in Writing and the explicitly configured OpenAI-compatible
-**Endpoint** in Engine & Model. The endpoint may be a local service or a remote HTTPS service. An
-sentence preview sends only the selected text or current sentence, up to 6 KB; larger scopes are
-rejected without truncation. A passive hint sends only one word. Learning requests do not include
-screen contents, clipboard data, or typing history. Missing configuration and failed requests remain
-recoverable, and model capability determines translation quality.
+A sentence preview sends only the selected text or current sentence, up to 6 KB; larger scopes are
+rejected without truncation. Analysis additionally receives the exact displayed translation. Learning requests do not include screen contents, clipboard data or typing
+history. The settings disclose transmission to a configured LAN/HTTPS service, and the learning
+session rejects HTTP redirects. Existing learning endpoint selection migrates once into translation;
+analysis never inherits it. Missing configuration and failed requests remain recoverable, and model
+capability determines translation and explanation quality.
+
+Performance tracking uses the existing opt-in switch. Its request-type picker separates autocomplete,
+translation and analysis; old history remains autocomplete history. The shared ring retains the most
+recent 100 requests across all tasks. Learning rows show completed/failed/cancelled outcomes and
+observed load, first-output, first-usable and panel-publication durations. No text or credentials are
+stored in these metrics. Full model inputs/outputs use the existing `-cotabby-debug` LLM I/O sink.
+
+Learning follows the existing global pause and Low Power Mode setting: pausing releases its native
+contexts, and resuming keeps the eligible local translator warm. Local analysis loads on demand and
+releases after 60 seconds idle. Endpoint tasks keep their separate server/key configuration. The
+redundant passive word-hint workflow has been removed; legacy hint preferences are ignored.
 
 ## Contributing
 

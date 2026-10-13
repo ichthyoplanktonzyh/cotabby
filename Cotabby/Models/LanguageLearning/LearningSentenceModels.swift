@@ -26,12 +26,27 @@ nonisolated struct LearningSentenceResult: Equatable, Sendable {
 /// Separate from continuation generation: learning has its own model, prompt and output contract.
 /// The app environment owns the implementation; tests can supply a controllable event stream.
 @MainActor
-protocol LearningSentenceGenerating: AnyObject {
+protocol LearningSentenceGenerating: LearningDisplayReporting {
     var settings: SuggestionSettingsModel { get }
+    func translateSentence(source: String, sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage) async throws -> String
+    func analyzeSentence(source: String, translation: String, sourceLanguage: LearningLanguage,
+                         targetLanguage: LearningLanguage,
+                         onUpdate: @escaping @MainActor (LearningSentenceUpdate) -> Void) async throws -> LearningSentenceResult
     func generateSentence(
         source: String, sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage,
         onUpdate: @escaping @MainActor (LearningSentenceUpdate) -> Void
     ) async throws -> LearningSentenceResult
+}
+
+extension LearningSentenceGenerating {
+    func translateSentence(source: String, sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage) async throws -> String {
+        try await generateSentence(source: source, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage, onUpdate: { _ in }).translation
+    }
+    func analyzeSentence(source: String, translation: String, sourceLanguage: LearningLanguage,
+                         targetLanguage: LearningLanguage,
+                         onUpdate: @escaping @MainActor (LearningSentenceUpdate) -> Void) async throws -> LearningSentenceResult {
+        .init(translation: translation, chunks: [])
+    }
 }
 
 /// Memory-only learning display. The original editor capture never leaves the coordinator and

@@ -1,17 +1,15 @@
 import AppKit
 import SwiftUI
 
-/// Owned once by the sentence panel. This sibling window owns dictionary task identity and
-/// publishes selection to both SwiftUI cards. Its nonactivating AppKit boundary keeps editor focus
-/// intact; hiding or changing a phrase cancels lookup delivery independently of model generation.
+/// Owned once by the sentence panel. This nonactivating sibling publishes chunk selection to
+/// both SwiftUI cards and owns the native dictionary presenter. Definition windows stay attached
+/// to this panel, so closing or replacing the phrase also clears the system lookup UI.
 @MainActor
 final class LearningDetailPanel {
     let state = LearningDetailState()
-    private let dictionary: any LearningDictionaryProviding
+    private let dictionary: LearningSystemDictionaryPresenter
     private var panel: NSPanel?
     private var hosting: NSHostingView<LearningDetailCard>?
-    private var lookupTask: Task<Void, Never>?
-    private var lookupRevision = UUID()
     private var layoutRevision = UUID()
     private var measurementSequence: UInt64 = 0
     private var contentSize: CGSize?
@@ -23,22 +21,33 @@ final class LearningDetailPanel {
     private var anchorOffsetFromTop: CGFloat = 0
     private(set) var isVisible = false
 
-    init(dictionary: any LearningDictionaryProviding = LearningDictionaryService()) { self.dictionary = dictionary }
+    init(dictionary: LearningSystemDictionaryPresenter? = nil) {
+        self.dictionary = dictionary ?? LearningSystemDictionaryPresenter()
+    }
 
     var visibleFrame: CGRect? { isVisible ? panel?.frame : nil }
-    func owns(_ window: NSWindow?) -> Bool { window != nil && window === panel }
+    func owns(_ window: NSWindow?) -> Bool {
+        // Dictionary popovers can have nested child windows. An ancestor check makes clicking
+        // their content an internal interaction without depending on AppKit's private types.
+        var ancestor = window
+        while let current = ancestor {
+            if current === panel { return true }
+            ancestor = current.parent
+        }
+        return false
+    }
+
+    func dismissDictionary() -> Bool { dictionary.dismiss() }
 
     func show(_ chunk: LearningChunkDetail, placement: LearningDetailPlacement) {
-        cancelLookup()
+        dictionary.dismiss()
         state.chunk = chunk
-        state.word = nil
-        state.entry = nil
         anchorY = placement.anchorY
         anchorOffsetFromTop = placement.parent.maxY - placement.anchorY
         layoutRevision = UUID()
         let revision = layoutRevision
         let card = LearningDetailCard(state: state,
-            selectWord: { [weak self] in self?.selectWord($0) }, back: { [weak self] in self?.back() },
+            selectWord: { [weak self] word, button in self?.selectWord(word, from: button, chunk: chunk) },
             close: { [weak self] in self?.hide() }, sizeChanged: { [weak self] in self?.scheduleLayout($0, revision: revision) })
         let window = panel ?? LearningDetailWindow(contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
@@ -72,47 +81,19 @@ final class LearningDetailPanel {
         layout()
     }
 
-    func selectWord(_ word: String) {
-        guard let chunk = state.chunk, chunk.words.contains(word) else { return }
-        cancelLookup()
-        let revision = lookupRevision
-        state.word = word
-        state.entry = nil
-        state.isLoading = true
-        panel?.title = "系统词典 · \(word)"
-        lookupTask = Task { [weak self, dictionary] in
-            let entry = await dictionary.entry(for: word, language: chunk.language)
-            guard !Task.isCancelled, let self, self.lookupRevision == revision,
-                  self.state.chunk == chunk, self.state.word == word else { return }
-            self.state.entry = entry
-            self.state.isLoading = false
-        }
-    }
-
-    func back() {
-        cancelLookup()
-        state.word = nil
-        state.entry = nil
-        panel?.title = "语块说明"
+    func selectWord(_ word: String, from button: NSButton, chunk: LearningChunkDetail) {
+        guard isVisible, state.chunk == chunk, chunk.words.contains(word), button.window === panel else { return }
+        dictionary.show(word, from: button)
     }
 
     func hide() {
-        cancelLookup()
+        dictionary.dismiss()
         layoutRevision = UUID()
         state.chunk = nil
-        state.word = nil
-        state.entry = nil
         parentFrame = nil
         contentSize = nil
         isVisible = false
         panel?.orderOut(nil)
-    }
-
-    private func cancelLookup() {
-        lookupTask?.cancel()
-        lookupTask = nil
-        lookupRevision = UUID()
-        state.isLoading = false
     }
 
     /// Geometry preferences are delivered during view layout. Queue only the latest valid size
@@ -135,6 +116,7 @@ final class LearningDetailPanel {
               let frame = LearningDetailPanelLayout.frame(parent: parentFrame, anchorY: anchorY,
                 size: CGSize(width: ceil(size.width), height: ceil(size.height)), screen: screen,
                 obstacles: [caretRect] + (reservedFrame.map { [$0] } ?? [])) else {
+            dictionary.dismiss()
             panel?.orderOut(nil)
             isVisible = false
             return

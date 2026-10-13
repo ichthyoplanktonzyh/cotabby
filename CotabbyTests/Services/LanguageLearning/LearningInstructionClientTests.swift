@@ -9,6 +9,18 @@ import Testing
 @MainActor
 struct LearningInstructionClientTests {
     @Test
+    func specialistReceivesOnlyUserMessageWithoutChangingDefaultInstructionContract() async throws {
+        configureStub(body: try instructionResponse(reason: "stop", content: "Hello"))
+        defer { LearningInstructionStubURLProtocol.reset() }
+        _ = try await makeClient().generateInstruction(configuration: configuration(), apiKey: nil,
+            prompt: "Translate 你好", options: .init(maxPredictionTokens: 128, temperature: 0.7, topP: 0.6), userOnly: true)
+        let body = try requestBody(#require(LearningInstructionStubURLProtocol.requestBodies.first ?? nil))
+        let messages = try #require(body["messages"] as? [[String: Any]])
+        #expect(messages.count == 1)
+        #expect(messages.first?["role"] as? String == "user")
+        #expect(messages.first?["content"] as? String == "Translate 你好")
+    }
+    @Test
     func sentenceInstructionStreamsContentWithTheInstructionWireContract() async throws {
         configureStub(body: try sentenceStream(reason: "stop", includesDone: true))
         defer { LearningInstructionStubURLProtocol.reset() }

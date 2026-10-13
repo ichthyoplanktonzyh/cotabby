@@ -1,12 +1,15 @@
 import SwiftUI
 
 /// File overview:
-/// Single pane that hosts everything engine-and-model related. The dropdown at the top is both
-/// the active-engine selector and the in-pane switcher: picking Apple Intelligence shows the
+/// Fixed task tabs navigate among completion, translation and learning analysis. Each page uses
+/// the established grouped settings scaffold and the app-owned services for its own task.
+/// Within completion, the original engine dropdown selects the active engine: Apple Intelligence shows the
 /// availability section; picking Open Source shows the local-runtime stack (model picker,
 /// downloads, Hugging Face browser, folder controls, installed models). One pane keeps the
 /// settings sidebar flat and gives users a single place to manage everything model-related.
 struct EngineAndModelPaneView: View {
+    @ObservedObject var navigation: SettingsNavigationModel
+    var learningModels: LearningModelCollection?
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
     @ObservedObject var openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
     @ObservedObject var foundationModelAvailabilityService: FoundationModelAvailabilityService
@@ -17,15 +20,41 @@ struct EngineAndModelPaneView: View {
     @State var pendingDeletionModel: RuntimeModelOption?
     @State var endpointAPIKeyDraft = ""
     @State var endpointCredentialError: String?
-    /// The LM Studio models directory if it exists, probed once in `onAppear` so the filesystem
-    /// `fileExists` check never runs on the SwiftUI render path. Nil disables the LM Studio toggle.
-    @State var lmStudioModelsURL: URL?
-    /// Whether to also scan the user's LM Studio library. Persisted via the same key the locator
-    /// reads, so the toggle and the model scan stay in sync. LM Studio models are an additive,
-    /// read-only source; Cotabby's own folder is always scanned and is always the download target.
-    @AppStorage(BundledRuntimeLocator.lmStudioSourceEnabledKey) var lmStudioSourceEnabled = false
-
     var body: some View {
+        VStack(spacing: 0) {
+            Picker("模型配置任务", selection: $navigation.engineTask) {
+                ForEach(SettingsEngineTask.allCases) { task in Text(task.label).tag(task) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .accessibilityLabel("模型配置任务")
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 4)
+
+            switch navigation.engineTask {
+            case .completion:
+                completionPage
+            case .translation:
+                learningPage(role: .translation)
+            case .analysis:
+                learningPage(role: .analysis)
+            }
+        }
+        .onAppear {
+            // Optional sources must be reconciled even when only Endpoint/Apple sections are
+            // visible; reinstalling LM Studio must not silently revive a removed source.
+            if UserDefaults.standard.bool(forKey: BundledRuntimeLocator.lmStudioSourceEnabledKey),
+               BundledRuntimeLocator.lmStudioModelsDirectoryIfAvailable() == nil {
+                UserDefaults.standard.set(false, forKey: BundledRuntimeLocator.lmStudioSourceEnabledKey)
+                modelDownloadManager.refreshSearchDirectories()
+            }
+        }
+    }
+
+    /// The completion form retains its original sections, actions and callout. Navigation tabs
+    /// sit outside its scroll view so choosing another task cannot change the active engine.
+    private var completionPage: some View {
         SettingsPaneScaffold(callout: callout) {
             Section("Engine") {
                 Picker(selection: selectedEngineBinding) {
@@ -66,8 +95,6 @@ struct EngineAndModelPaneView: View {
                 endpointModelSection
             }
 
-            // Learning features share this connection while keeping their own instruction model.
-            // Configuring that server must not require changing the ordinary completion engine.
             endpointConnectionSection
         }
         .onAppear {
@@ -78,15 +105,6 @@ struct EngineAndModelPaneView: View {
                 currentModelFilename: runtimeModel.selectedModelFilename,
                 currentEndpointModelName: suggestionSettings.openAICompatibleModelName
             )
-
-            lmStudioModelsURL = BundledRuntimeLocator.lmStudioModelsDirectoryIfAvailable()
-
-            // If LM Studio was uninstalled while the source was enabled, clear the persisted flag so
-            // the toggle does not sit checked-but-disabled with no way to turn it off (and so the
-            // source does not silently reactivate if LM Studio is later reinstalled).
-            if lmStudioModelsURL == nil, lmStudioSourceEnabled {
-                lmStudioSourceEnabled = false
-            }
 
             loadEndpointAPIKey()
             if suggestionSettings.selectedEngine == .openAICompatible,
@@ -109,5 +127,20 @@ struct EngineAndModelPaneView: View {
         } message: { model in
             Text("Remove \(model.displayName) from Cotabby's local models folder?")
         }
+    }
+
+    private func learningPage(role: LearningModelRole) -> some View {
+        SettingsPaneScaffold {
+            if let learningModels {
+                let controller = role == .translation ? learningModels.translation : learningModels.analysis
+                LearningModelConfigurationView(controller: controller, profile: controller.profile,
+                    suggestionSettings: suggestionSettings, downloads: modelDownloadManager, searchService: huggingFaceSearchService)
+            } else {
+                Section("Runtime") { Text("学习模型服务不可用，请重新打开设置。") }
+            }
+        }
+        // Draft keys belong to a page's UI lifetime. Distinct identity prevents an unsaved
+        // translation key from appearing in the analysis form when switching between tasks.
+        .id(role)
     }
 }

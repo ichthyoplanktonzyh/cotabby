@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "provenance": "Self-authored synthetic fixtures for Cotabby cross-language learning; no private editor text.",
+  "qualityPolicy": "Expectations are reviewer notes, never sent to the model. Multiple natural translations are valid. Parsing and span coverage are structural evidence, not semantic accuracy.",
+  "cases": [
+    {
+      "id": "greeting",
+      "category": "daily-short",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "你好",
+      "expectations": [
+        "自然问候，不增加其他信息。"
+      ]
+    },
+    {
+      "id": "affection",
+      "category": "daily-short",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "我喜欢你。",
+      "expectations": [
+        "保持喜欢/好感，不无根据强化成深爱。"
+      ]
+    },
+    {
+      "id": "ability",
+      "category": "ability-tense",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "我能做到。",
+      "expectations": [
+        "表达现在的能力/信心，不能无根据改成过去已做到。"
+      ]
+    },
+    {
+      "id": "past-success",
+      "category": "ability-tense",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "我昨天终于做到了。",
+      "expectations": [
+        "昨天、终于、完成结果均应保留。"
+      ]
+    },
+    {
+      "id": "polite-reply",
+      "category": "tone",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "你方便的时候回复我就好。",
+      "expectations": [
+        "方便时回复即可，语气体贴而不催促。"
+      ]
+    },
+    {
+      "id": "soft-refusal",
+      "category": "tone",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "谢谢你想到我，不过这周我可能没办法参加，改天再约吧。",
+      "expectations": [
+        "感谢、这周可能无法参加、建议另约，保留不确定语气。"
+      ]
+    },
+    {
+      "id": "double-negation",
+      "category": "negation",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "我不是不想去，只是今天没时间。",
+      "expectations": [
+        "想去但今天无时间；不能说不想去。"
+      ]
+    },
+    {
+      "id": "condition",
+      "category": "negation",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "如果明天不下雨，我们就去散步。",
+      "expectations": [
+        "明天、不下雨的条件、我们散步。"
+      ]
+    },
+    {
+      "id": "meeting-time",
+      "category": "numbers",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "我们明天下午三点半见，会议大概持续45分钟。",
+      "expectations": [
+        "明天下午3:30，约45分钟。"
+      ]
+    },
+    {
+      "id": "price-correction",
+      "category": "numbers",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "这件衣服不是300元，而是180元。",
+      "expectations": [
+        "否认300元，实际180元，保留货币语义。"
+      ]
+    },
+    {
+      "id": "idiom",
+      "category": "idiom",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "这件事我心里有数，你不用担心。",
+      "expectations": [
+        "说话人了解/能掌握情况，安慰对方；避免字面心里有数字。"
+      ]
+    },
+    {
+      "id": "as-soon-as",
+      "category": "discontinuous",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "我一到家就给你打电话。",
+      "expectations": [
+        "一到家就打电话；语块可对应as soon as等不连续结构。"
+      ]
+    },
+    {
+      "id": "repeated-phrase",
+      "category": "repetition",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "我觉得这个方法很好，也觉得那个方法值得试试。",
+      "expectations": [
+        "这个方法很好，那个方法值得尝试；两次觉得对应不同位置。"
+      ]
+    },
+    {
+      "id": "eaten",
+      "category": "daily-short",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "你吃饭了吗？",
+      "expectations": [
+        "询问是否已经吃过饭，不能无根据添加午饭/晚饭。"
+      ]
+    },
+    {
+      "id": "technical",
+      "category": "terminology",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "请把这个函数的返回值改成 Optional，这样调用方才能处理空值。",
+      "expectations": [
+        "函数返回值、Optional、调用方处理空值之间的关系。"
+      ]
+    },
+    {
+      "id": "long-report",
+      "category": "long",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "en",
+      "source": "我原本想今天把报告发给你，但还需要确认两个数字，所以可能要等到明天上午。",
+      "expectations": [
+        "原计划今天发送；两个数字待核实；可能延迟到明天上午。"
+      ]
+    },
+    {
+      "id": "late-message",
+      "category": "daily",
+      "sourceLanguage": "en",
+      "targetLanguage": "zh-Hans",
+      "source": "I may be a few minutes late, but I will message you when I arrive.",
+      "expectations": [
+        "可能晚到几分钟；到达后会发消息。"
+      ]
+    },
+    {
+      "id": "past-and-present",
+      "category": "ability-tense",
+      "sourceLanguage": "en",
+      "targetLanguage": "zh-Hans",
+      "source": "I was able to finish it yesterday, but I can't promise I can do it again today.",
+      "expectations": [
+        "昨天完成，但无法保证今天再做到；不能把否定附到昨天完成。"
+      ]
+    },
+    {
+      "id": "japanese-apology",
+      "category": "multilingual",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "ja",
+      "source": "不好意思，我可能会晚到十分钟。",
+      "expectations": [
+        "日语自然致歉；可能晚到十分钟，保留不确定性。"
+      ]
+    },
+    {
+      "id": "korean-call",
+      "category": "multilingual",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "ko",
+      "source": "你方便的时候给我回个电话就好。",
+      "expectations": [
+        "韩语自然表达方便时回电即可，保留体贴语气。"
+      ]
+    },
+    {
+      "id": "japanese-condition",
+      "category": "multilingual",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "ja",
+      "source": "如果明天不下雨，我们就去散步。",
+      "expectations": [
+        "保留明天、不下雨的条件、我们散步；自然日语。"
+      ]
+    },
+    {
+      "id": "japanese-refusal",
+      "category": "multilingual",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "ja",
+      "source": "谢谢你邀请我，不过这周我可能没办法参加。",
+      "expectations": [
+        "自然感谢和婉拒，保留这周与可能。"
+      ]
+    },
+    {
+      "id": "korean-time",
+      "category": "multilingual",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "ko",
+      "source": "我们明天下午三点半见，会议大概持续45分钟。",
+      "expectations": [
+        "明天下午3:30、会议约45分钟，韩语自然。"
+      ]
+    },
+    {
+      "id": "korean-negation",
+      "category": "multilingual",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "ko",
+      "source": "我不是不想去，只是今天没时间。",
+      "expectations": [
+        "想去但今天无时间，不能反转双重否定。"
+      ]
+    },
+    {
+      "id": "japanese-source",
+      "category": "multilingual",
+      "sourceLanguage": "ja",
+      "targetLanguage": "zh-Hans",
+      "source": "明日は少し遅れるかもしれませんが、着いたら連絡します。",
+      "expectations": [
+        "明天可能稍微晚到，到达后联系。"
+      ]
+    },
+    {
+      "id": "korean-source",
+      "category": "multilingual",
+      "sourceLanguage": "ko",
+      "targetLanguage": "zh-Hans",
+      "source": "시간이 괜찮을 때 답장해 주시면 돼요.",
+      "expectations": [
+        "方便的时候回复即可，语气体贴。"
+      ]
+    },
+    {
+      "id": "german-condition",
+      "category": "multilingual",
+      "sourceLanguage": "zh-Hans",
+      "targetLanguage": "de",
+      "source": "如果明天不下雨，我们就去散步。",
+      "expectations": [
+        "德语条件句保留明天、不下雨和我们散步。"
+      ]
+    },
+    {
+      "id": "spanish-polite",
+      "category": "multilingual",
+      "sourceLanguage": "en",
+      "targetLanguage": "es",
+      "source": "Please reply whenever you have time; there is no rush.",
+      "expectations": [
+        "西班牙语自然表达有空回复，不着急。"
+      ]
+    }
+  ]
+}

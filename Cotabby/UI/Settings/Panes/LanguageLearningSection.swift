@@ -2,31 +2,39 @@ import SwiftUI
 
 /// Presents the cross-language learning controls from the app-owned settings model.
 /// The shared settings object owns persistence; this section only edits language choices,
-/// the endpoint model name, the shortcut, and the opt-in passive word hint.
+/// the two independent model profiles, and the detail shortcut.
 struct LanguageLearningSection: View {
     @ObservedObject var settings: LanguageLearningSettings
     let suggestionSettings: SuggestionSettingsModel
+    var configureModel: (LearningModelRole) -> Void = { _ in }
     @State private var recording = false
-    @State private var hintsExpanded = false
 
     var body: some View {
         Section("跨语言表达学习") {
-            Toggle("启用跨语言表达学习", isOn: $settings.translationEnabled)
+            Toggle("启用跨语言翻译", isOn: $settings.translationEnabled)
             Toggle("输入停顿后自动显示整句表达", isOn: $settings.sentencePreviewEnabled)
                 .disabled(!settings.translationEnabled)
             translationControls
             Text(
                 "照常输入并确认候选词上屏，停顿后会在旁边显示目标表达；" +
-                "语块对应随后准备，按快捷键展开同色对应的原文与译文；" +
-                "点击语块打开说明小窗，再选择单词查询系统词典。" +
+                "开启学习分析后，语块对应随后准备；按快捷键展开原文与译文；" +
+                "点击语块打开说明小窗，再点击单词打开系统词典浮窗。" +
                 "不要求特定品牌输入法，也不需要切换到 ABC 键盘。" +
-                "学习请求使用此处指定的模型和 Engine & Model 中配置的 Endpoint；" +
-                "它可以连接本机服务或 HTTPS 远程服务。"
+                "翻译与学习分析分别配置模型，支持内置 GGUF 或独立 Endpoint。"
             )
                 .font(.caption).foregroundStyle(.secondary)
             Text("学习请求不包含屏幕、剪贴板或输入历史。")
                 .font(.caption).foregroundStyle(.secondary)
-            TextField("学习模型名称（独立模型，需要 Chat API）", text: $settings.model)
+            LearningModelSummaryRow(title: "翻译模型", profile: settings.translation) {
+                configureModel(.translation)
+            }
+            Toggle("启用语块对应与解释", isOn: $settings.analysisEnabled)
+                .disabled(!settings.translationEnabled)
+            Text("关闭学习分析后仍可阅读译文、对照原文和查词。分析不会重新翻译或修改已显示的译文。")
+                .font(.caption).foregroundStyle(.secondary)
+            LearningModelSummaryRow(title: "学习分析模型", profile: settings.analysis) {
+                configureModel(.analysis)
+            }
             HStack {
                 Text("展开学习详情：\(settings.keyLabel)")
                 if recording {
@@ -73,13 +81,7 @@ struct LanguageLearningSection: View {
                      "选择多个时，会根据本次原文自动判断，判断不确定时请调整设置或选择更长文本。")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            DisclosureGroup("可选：被动词语轻提示（关闭整句预览时）", isExpanded: $hintsExpanded) {
-                Toggle("输入后显示词语轻提示", isOn: $settings.hintsEnabled)
-                    .disabled(!settings.translationEnabled || settings.sentencePreviewEnabled)
-                Text("默认关闭。只有编辑器能确认新文字已提交时，停顿后才会提示当前词语；有些编辑器无法提供这种证据，因此会跳过提示。" +
-                     "开启后只处理之后观察到的提交变化，不会追溯提示此前输入的词。继续输入、切换焦点或按 Esc 会收起提示；Enter 保持正常输入。")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
+
         }
     }
 
@@ -99,5 +101,33 @@ struct LanguageLearningSection: View {
             ) { return conflict }
         }
         return nil
+    }
+}
+
+/// Writing shows the role's current selection and a route into Engine & Model. It observes the
+/// app-owned profile, while the navigation owner performs the jump. No model services or editable
+/// server/key fields live in this summary, so there is one configuration surface per task.
+private struct LearningModelSummaryRow: View {
+    let title: String
+    @ObservedObject var profile: LearningModelSettings
+    let configure: () -> Void
+
+    var body: some View {
+        LabeledContent {
+            Button("配置模型", action: configure)
+                .help("在 Engine & Model 中配置\(title)")
+                .accessibilityLabel("配置\(title)")
+        } label: {
+            SettingsRowLabel(title: title, description: summary, systemImage: "shippingbox")
+        }
+    }
+
+    private var summary: String {
+        switch profile.backend {
+        case .local:
+            "内置 GGUF · \(profile.localModel.isEmpty ? "尚未选择模型" : profile.localModel)"
+        case .endpoint:
+            "Endpoint · \(profile.endpointModel.isEmpty ? "尚未填写模型" : profile.endpointModel)"
+        }
     }
 }

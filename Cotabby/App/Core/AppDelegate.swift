@@ -229,11 +229,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// not propagate the new grant to the relaunched process, leaving users stuck on the
     /// permission reminder forever.
     ///
-    /// The compromise: stop new work synchronously, then call `shutdownSync` which blocks up to
-    /// ~1.5s for in-flight `generate()` calls to drain before forcing `engine.unloadModel()`.
-    /// In the common case (no autocomplete mid-flight) this returns in milliseconds. If a
-    /// generation is genuinely stuck, we accept the small risk of the original ggml crash over
-    /// the larger UX bug of a broken permission flow.
+    /// Stop new work synchronously, then cancel native decoding and drain each independent session
+    /// before Metal teardown. The 1.5s autocomplete grace period never permits freeing live native
+    /// work. Ordinary decoding exits promptly; already-started model loading can delay termination.
     func applicationWillTerminate(_ notification: Notification) {
         guard didStartServices else {
             return
@@ -249,6 +247,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         inputMonitor.stop()
         focusModel.stop()
 
+        // All roles now use the same native ownership rule with independent sessions: cancel
+        // decoding, close admission, and wait for a non-interruptible loader before releasing it.
+        environment.learningModels.shutdownSync()
         runtimeModel.shutdownSync(timeoutSeconds: 1.5)
     }
 
@@ -299,6 +300,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// warm the runtime only if the current engine choice needs it.
     private func handleModelDirectoryChange() {
         runtimeModel.refreshAvailableModels()
+        environment.learningModels.refreshModels()
         startRuntimeIfPreferredEngineRequiresIt()
     }
 

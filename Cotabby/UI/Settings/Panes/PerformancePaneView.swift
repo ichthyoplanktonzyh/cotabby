@@ -14,6 +14,9 @@ struct PerformancePaneView: View {
     @ObservedObject var qualityMetricsStore: SuggestionQualityMetricsStore
     @ObservedObject var systemMetricsStore: SystemMetricsStore
 
+    @State private var source: ModelRequestSource = .completion
+    private var visibleEntries: [PerformanceMetricEntry] { performanceMetricsStore.entries.filter { $0.source == source } }
+
     var body: some View {
         SettingsPaneScaffold {
             liveResourceSection
@@ -25,18 +28,23 @@ struct PerformancePaneView: View {
                     SettingsRowLabel(
                         title: "Enable Performance Tracking",
                         description: "Record the timestamp, model, and elapsed time of every LLM " +
-                            "request. Only the most recent " +
+                            "request across completion, translation and analysis. Only the most recent " +
                             "\(PerformanceMetricsStore.maximumEntries) requests are retained.",
                         systemImage: "stopwatch"
                     )
                 }
                 .settingsItem(.performanceTracking)
+                Picker("Request Type", selection: $source) {
+                    ForEach(ModelRequestSource.allCases) { Text($0.label).tag($0) }
+                }.pickerStyle(.menu)
+                Text("Durations are shown separately for each task. The shared history retains up to 100 requests across all tasks.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section {
                 // Both branches carry the anchor; only one exists at a time, so the scroll target
                 // stays unique whichever state the log is in.
-                if performanceMetricsStore.entries.isEmpty {
+                if visibleEntries.isEmpty {
                     Text(emptyStateMessage)
                         .font(.callout)
                         .foregroundStyle(.secondary)
@@ -52,7 +60,7 @@ struct PerformancePaneView: View {
                     Text(historyHeaderLabel)
                     Spacer()
                     if !performanceMetricsStore.entries.isEmpty {
-                        Button("Clear") {
+                        Button("Clear All") {
                             performanceMetricsStore.clear()
                         }
                         .buttonStyle(.borderless)
@@ -276,7 +284,7 @@ struct PerformancePaneView: View {
     }
 
     private var latencyPoints: [MetricSparkline.Point] {
-        performanceMetricsStore.entries.map {
+        visibleEntries.map {
             MetricSparkline.Point(
                 id: $0.id.uuidString,
                 date: $0.timestamp,
@@ -286,12 +294,12 @@ struct PerformancePaneView: View {
     }
 
     private var latencyDomainUpper: Double {
-        let peak = performanceMetricsStore.entries.map { Double($0.latencyMs) }.max() ?? 0
+        let peak = visibleEntries.map { Double($0.latencyMs) }.max() ?? 0
         return max(100, peak * 1.2)
     }
 
     private var latencyCurrentLabel: String {
-        guard let latest = performanceMetricsStore.entries.last else { return "—" }
+        guard let latest = visibleEntries.last else { return "—" }
         return "\(latest.latencyMs) ms"
     }
 
@@ -300,7 +308,7 @@ struct PerformancePaneView: View {
     private var metricsTable: some View {
         // Newest-first reads more naturally for the "what just happened" use case. The underlying
         // store keeps insertion order so we reverse here without mutating the source of truth.
-        let reversed = Array(performanceMetricsStore.entries.reversed())
+        let reversed = Array(visibleEntries.reversed())
         return VStack(spacing: 0) {
             tableHeader
             Divider()
@@ -332,16 +340,27 @@ struct PerformancePaneView: View {
             Text(Self.timestampFormatter.string(from: entry.timestamp))
                 .frame(width: 130, alignment: .leading)
                 .monospacedDigit()
-            Text(entry.modelName)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .lineLimit(1)
-                .truncationMode(.middle)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(entry.modelName).lineLimit(1).truncationMode(.middle)
+                Text("\(entry.source.label) · \(entry.outcome.label)")
+                    .font(.caption).foregroundStyle(entry.outcome == .failed ? .orange : .secondary)
+                if !stageSummary(entry).isEmpty {
+                    Text(stageSummary(entry)).font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }.frame(maxWidth: .infinity, alignment: .leading)
             Text("\(entry.latencyMs) ms")
                 .frame(width: 90, alignment: .trailing)
                 .monospacedDigit()
         }
         .font(.callout)
         .padding(.vertical, 4)
+    }
+
+    private func stageSummary(_ entry: PerformanceMetricEntry) -> String {
+        [("Load", entry.modelLoadMs), ("First output", entry.firstOutputMs),
+         ("First usable", entry.usableResultMs), ("Displayed", entry.displayMs)]
+            .compactMap { name, time in time.map { "\(name) \($0) ms" } }.joined(separator: " · ")
     }
 
     // MARK: - Bindings
@@ -356,17 +375,17 @@ struct PerformancePaneView: View {
     // MARK: - Helpers
 
     private var historyHeaderLabel: String {
-        let count = performanceMetricsStore.entries.count
+        let count = visibleEntries.count
         let cap = PerformanceMetricsStore.maximumEntries
         if count == 0 {
-            return "Recent Requests"
+            return "Recent Requests · \(source.label)"
         }
-        return "Recent Requests (\(count) of \(cap))"
+        return "Recent Requests · \(source.label) (\(count), shared cap \(cap))"
     }
 
     private var emptyStateMessage: String {
         if suggestionSettings.isPerformanceTrackingEnabled {
-            return "No requests recorded yet. Trigger a suggestion to start populating this list."
+            return "No \(source.label.lowercased()) requests recorded yet. Use that feature to populate this list."
         }
         return "Performance tracking is off. Enable the toggle above to start recording requests."
     }

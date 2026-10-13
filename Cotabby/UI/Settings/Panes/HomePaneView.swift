@@ -272,7 +272,7 @@ struct HomePaneView: View {
 
     private var engineCard: some View {
         Button {
-            navigation.open(.engineAndModel)
+            navigation.openEngineTask(.completion)
         } label: {
             HomeStatusCard(
                 systemImage: engineSystemImage,

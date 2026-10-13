@@ -44,6 +44,13 @@ final class BrowserAppDetectorTests: XCTestCase {
         // editor's web-AX tree stays dormant and no focused field ever resolves.
         XCTAssertTrue(BrowserAppDetector.isElectronEditor(bundleIdentifier: "md.obsidian"))
         XCTAssertTrue(BrowserAppDetector.isElectronEditor(bundleIdentifier: "MD.Obsidian"))
+        // Antigravity: two Electron apps under stable Google ids. Both report
+        // AXManualAccessibility = 0 and answer the focus query with nil until primed.
+        XCTAssertTrue(BrowserAppDetector.isElectronEditor(bundleIdentifier: "com.google.antigravity"))
+        XCTAssertTrue(BrowserAppDetector.isElectronEditor(bundleIdentifier: "com.google.antigravity-ide"))
+        // The editor allowlist is exact-match: helper/subprocess ids must not inherit priming.
+        XCTAssertFalse(BrowserAppDetector.isElectronEditor(bundleIdentifier: "com.google.antigravity.helper"))
+        XCTAssertFalse(BrowserAppDetector.isElectronEditor(bundleIdentifier: "com.google.antigravity-ide.helper"))
         // Electron, but not a text-editing surface we cover: must stay out of the priming allowlist.
         XCTAssertFalse(BrowserAppDetector.isElectronEditor(bundleIdentifier: "com.hnc.Discord"))
         XCTAssertFalse(BrowserAppDetector.isElectronEditor(bundleIdentifier: nil))

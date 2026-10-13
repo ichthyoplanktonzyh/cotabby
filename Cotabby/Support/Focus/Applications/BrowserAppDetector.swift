@@ -65,7 +65,16 @@ nonisolated enum BrowserAppDetector {
         "com.microsoft.vscode",          // Visual Studio Code
         "com.microsoft.vscodeinsiders",  // VS Code - Insiders
         "com.vscodium",                  // VSCodium (FOSS VS Code build)
-        "md.obsidian"                    // Obsidian (Electron, CodeMirror 6 editor) — #791
+        "md.obsidian",                    // Obsidian (Electron, CodeMirror 6 editor) — #791
+        // Google's Antigravity ships as two Electron apps under stable bundle ids: the agent app
+        // (com.google.antigravity, whose chat composer is the typing surface) and the IDE itself
+        // (com.google.antigravity-ide, a VS Code fork). Same dormant-tree failure as #791: measured
+        // live, both report AXManualAccessibility = 0 and answer the system focus query with nil
+        // until an assistive client flips that switch, after which the composer resolves as a fully
+        // capable AXTextArea. Unlike Cursor's opaque ToDesktop ids, these are stable Google ids,
+        // so both belong in the allowlist.
+        "com.google.antigravity",        // Antigravity agent app (chat composer)
+        "com.google.antigravity-ide"     // Antigravity IDE (VS Code fork)
     ]
 
     /// Broad check: is the user typing inside any web browser? Used for prompt tone hints.

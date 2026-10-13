@@ -1,0 +1,1445 @@
+{
+  "evaluatedOn": "2026-10-12",
+  "hardware": "Apple M1 Max, 32 GB",
+  "runtime": "Ollama 0.40.3",
+  "scope": "Translation-only, synthetic corpus. No UI test or selected-model change. General models use production nonstreaming prompt/client; Hy uses vendor user-only translation prompt. All Q4_K_M; different vendor sampling is recorded.",
+  "caveats": [
+    "28 cases, one pass per pure-translation profile; exploratory evidence, not accuracy benchmark.",
+    "Reported latency is Release CLI complete translation availability; excludes 600 ms debounce, AX and rendering.",
+    "Cold calibration means model unloaded, not cold OS/disk cache.",
+    "Format/output-policy success does not prove translation correctness.",
+    "Multilingual directions beyond Chinese-English contain only a few exploratory examples."
+  ],
+  "models": [
+    {
+      "profile": "qwen-chat-plain",
+      "alias": "cotabby-eval-qwen35:chat",
+      "digest": "ab611957a5b12e1002091f19f034890bec84aeb97967ad1c4e4951ff429096f4",
+      "sampling": {
+        "temperature": 0.3,
+        "topP": 0.9,
+        "maxTokens": 2048
+      },
+      "sourceEvidence": "/Users/shadow/cotabby/build/LanguageLearning/ModelEval/20261012T075258Z-formal-qwen-chat-plain-f4a636",
+      "observedTrials": 28,
+      "completeOutputPolicySuccess": 28,
+      "coldCalibrationMs": 3722.7286249999997,
+      "languages": {
+        "zh-Hans→en": {
+          "uniqueCases": 16,
+          "observedTrials": 16,
+          "expectedTrials": 16,
+          "missingTrials": 0,
+          "protocolSucceeded": 16,
+          "failedTrials": 0,
+          "translationAvailable": 16,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 16,
+            "p50": 499.5872705,
+            "p95": 847.4243855
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 16,
+            "p50": 499.5872705,
+            "p95": 847.4243855
+          }
+        },
+        "en→zh-Hans": {
+          "uniqueCases": 2,
+          "observedTrials": 2,
+          "expectedTrials": 2,
+          "missingTrials": 0,
+          "protocolSucceeded": 2,
+          "failedTrials": 0,
+          "translationAvailable": 2,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 2,
+            "p50": 503.1116875,
+            "p95": 509.60573155
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 2,
+            "p50": 503.1116875,
+            "p95": 509.60573155
+          }
+        },
+        "zh-Hans→ja": {
+          "uniqueCases": 3,
+          "observedTrials": 3,
+          "expectedTrials": 3,
+          "missingTrials": 0,
+          "protocolSucceeded": 3,
+          "failedTrials": 0,
+          "translationAvailable": 3,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 3,
+            "p50": 463.251833,
+            "p95": 484.7759333
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 3,
+            "p50": 463.251833,
+            "p95": 484.7759333
+          }
+        },
+        "zh-Hans→ko": {
+          "uniqueCases": 3,
+          "observedTrials": 3,
+          "expectedTrials": 3,
+          "missingTrials": 0,
+          "protocolSucceeded": 3,
+          "failedTrials": 0,
+          "translationAvailable": 3,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 3,
+            "p50": 436.958,
+            "p95": 748.7295875
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 3,
+            "p50": 436.958,
+            "p95": 748.7295875
+          }
+        },
+        "ja→zh-Hans": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 466.62025,
+            "p95": 466.62025
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 466.62025,
+            "p95": 466.62025
+          }
+        },
+        "ko→zh-Hans": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 339.6525,
+            "p95": 339.6525
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 339.6525,
+            "p95": 339.6525
+          }
+        },
+        "zh-Hans→de": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 494.864,
+            "p95": 494.864
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 494.864,
+            "p95": 494.864
+          }
+        },
+        "en→es": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 489.925542,
+            "p95": 489.925542
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 489.925542,
+            "p95": 489.925542
+          }
+        }
+      }
+    },
+    {
+      "profile": "gemma-chat-plain",
+      "alias": "cotabby-eval-gemma4:chat",
+      "digest": "61f32bb053138549c87cf50bbdbe4f449edf5fbf3653b4bd2fd96fca23598b80",
+      "sampling": {
+        "temperature": 0.3,
+        "topP": 0.9,
+        "maxTokens": 2048
+      },
+      "sourceEvidence": "/Users/shadow/cotabby/build/LanguageLearning/ModelEval/20261012T075316Z-formal-gemma-chat-plain-99cfdf",
+      "observedTrials": 28,
+      "completeOutputPolicySuccess": 28,
+      "coldCalibrationMs": 5527.64275,
+      "languages": {
+        "zh-Hans→en": {
+          "uniqueCases": 16,
+          "observedTrials": 16,
+          "expectedTrials": 16,
+          "missingTrials": 0,
+          "protocolSucceeded": 16,
+          "failedTrials": 0,
+          "translationAvailable": 16,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 16,
+            "p50": 869.4810625,
+            "p95": 1245.95027075
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 16,
+            "p50": 869.4810625,
+            "p95": 1245.95027075
+          }
+        },
+        "en→zh-Hans": {
+          "uniqueCases": 2,
+          "observedTrials": 2,
+          "expectedTrials": 2,
+          "missingTrials": 0,
+          "protocolSucceeded": 2,
+          "failedTrials": 0,
+          "translationAvailable": 2,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 2,
+            "p50": 942.984375,
+            "p95": 996.54225
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 2,
+            "p50": 942.984375,
+            "p95": 996.54225
+          }
+        },
+        "zh-Hans→ja": {
+          "uniqueCases": 3,
+          "observedTrials": 3,
+          "expectedTrials": 3,
+          "missingTrials": 0,
+          "protocolSucceeded": 3,
+          "failedTrials": 0,
+          "translationAvailable": 3,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 3,
+            "p50": 858.158333,
+            "p95": 976.7888333
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 3,
+            "p50": 858.158333,
+            "p95": 976.7888333
+          }
+        },
+        "zh-Hans→ko": {
+          "uniqueCases": 3,
+          "observedTrials": 3,
+          "expectedTrials": 3,
+          "missingTrials": 0,
+          "protocolSucceeded": 3,
+          "failedTrials": 0,
+          "translationAvailable": 3,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 3,
+            "p50": 946.420958,
+            "p95": 1279.8566336
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 3,
+            "p50": 946.420958,
+            "p95": 1279.8566336
+          }
+        },
+        "ja→zh-Hans": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 819.562917,
+            "p95": 819.562917
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 819.562917,
+            "p95": 819.562917
+          }
+        },
+        "ko→zh-Hans": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 655.957375,
+            "p95": 655.957375
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 655.957375,
+            "p95": 655.957375
+          }
+        },
+        "zh-Hans→de": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 784.634709,
+            "p95": 784.634709
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 784.634709,
+            "p95": 784.634709
+          }
+        },
+        "en→es": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 1009.869542,
+            "p95": 1009.869542
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 1009.869542,
+            "p95": 1009.869542
+          }
+        }
+      }
+    },
+    {
+      "profile": "hy-translation",
+      "alias": "cotabby-eval-hymt:1.8b",
+      "digest": "1379f5ca0b74c7bef9e3ef87ed978166c3a1475065c5d2fd50b252a37f46c366",
+      "sampling": {
+        "temperature": 0.7,
+        "topP": 0.6,
+        "maxTokens": 4096
+      },
+      "sourceEvidence": "/Users/shadow/cotabby/build/LanguageLearning/ModelEval/20261012T075346Z-formal-hy-translation-b800c9",
+      "observedTrials": 28,
+      "completeOutputPolicySuccess": 28,
+      "coldCalibrationMs": 1794.811834,
+      "languages": {
+        "zh-Hans→en": {
+          "uniqueCases": 16,
+          "observedTrials": 16,
+          "expectedTrials": 16,
+          "missingTrials": 0,
+          "protocolSucceeded": 16,
+          "failedTrials": 0,
+          "translationAvailable": 16,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 16,
+            "p50": 333.897875,
+            "p95": 557.08151075
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 16,
+            "p50": 333.897875,
+            "p95": 557.08151075
+          }
+        },
+        "en→zh-Hans": {
+          "uniqueCases": 2,
+          "observedTrials": 2,
+          "expectedTrials": 2,
+          "missingTrials": 0,
+          "protocolSucceeded": 2,
+          "failedTrials": 0,
+          "translationAvailable": 2,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 2,
+            "p50": 333.2146255,
+            "p95": 408.08851315
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 2,
+            "p50": 333.2146255,
+            "p95": 408.08851315
+          }
+        },
+        "zh-Hans→ja": {
+          "uniqueCases": 3,
+          "observedTrials": 3,
+          "expectedTrials": 3,
+          "missingTrials": 0,
+          "protocolSucceeded": 3,
+          "failedTrials": 0,
+          "translationAvailable": 3,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 3,
+            "p50": 455.650458,
+            "p95": 506.7452211
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 3,
+            "p50": 455.650458,
+            "p95": 506.7452211
+          }
+        },
+        "zh-Hans→ko": {
+          "uniqueCases": 3,
+          "observedTrials": 3,
+          "expectedTrials": 3,
+          "missingTrials": 0,
+          "protocolSucceeded": 3,
+          "failedTrials": 0,
+          "translationAvailable": 3,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 3,
+            "p50": 374.102375,
+            "p95": 663.0029374999999
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 3,
+            "p50": 374.102375,
+            "p95": 663.0029374999999
+          }
+        },
+        "ja→zh-Hans": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 252.426875,
+            "p95": 252.426875
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 252.426875,
+            "p95": 252.426875
+          }
+        },
+        "ko→zh-Hans": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 209.523834,
+            "p95": 209.523834
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 209.523834,
+            "p95": 209.523834
+          }
+        },
+        "zh-Hans→de": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 391.037667,
+            "p95": 391.037667
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 391.037667,
+            "p95": 391.037667
+          }
+        },
+        "en→es": {
+          "uniqueCases": 1,
+          "observedTrials": 1,
+          "expectedTrials": 1,
+          "missingTrials": 0,
+          "protocolSucceeded": 1,
+          "failedTrials": 0,
+          "translationAvailable": 1,
+          "translationOnlyPartial": 0,
+          "finishVerifiedButParserFailed": 0,
+          "translationAcceptedMilliseconds": {
+            "observed": 1,
+            "p50": 409.341875,
+            "p95": 409.341875
+          },
+          "firstChunkMilliseconds": {
+            "observed": 0,
+            "p50": null,
+            "p95": null
+          },
+          "completionMilliseconds": {
+            "observed": 1,
+            "p50": 409.341875,
+            "p95": 409.341875
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "case": {
+        "id": "greeting",
+        "category": "daily-short",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "你好",
+        "expectations": [
+          "自然问候，不增加其他信息。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "Hello",
+          "milliseconds": 213.436958
+        },
+        "gemma-chat-plain": {
+          "translation": "Hello",
+          "milliseconds": 306.289125
+        },
+        "hy-translation": {
+          "translation": "Hello",
+          "milliseconds": 56.654333
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "affection",
+        "category": "daily-short",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "我喜欢你。",
+        "expectations": [
+          "保持喜欢/好感，不无根据强化成深爱。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "I like you.",
+          "milliseconds": 270.706875
+        },
+        "gemma-chat-plain": {
+          "translation": "I like you.",
+          "milliseconds": 393.43975
+        },
+        "hy-translation": {
+          "translation": "I like you.",
+          "milliseconds": 119.226125
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "ability",
+        "category": "ability-tense",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "我能做到。",
+        "expectations": [
+          "表达现在的能力/信心，不能无根据改成过去已做到。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "I can do it.",
+          "milliseconds": 286.19875
+        },
+        "gemma-chat-plain": {
+          "translation": "I can do it.",
+          "milliseconds": 441.200083
+        },
+        "hy-translation": {
+          "translation": "I can do it.",
+          "milliseconds": 142.257208
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "past-success",
+        "category": "ability-tense",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "我昨天终于做到了。",
+        "expectations": [
+          "昨天、终于、完成结果均应保留。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "I finally did it yesterday.",
+          "milliseconds": 315.729291
+        },
+        "gemma-chat-plain": {
+          "translation": "I finally did it yesterday.",
+          "milliseconds": 492.124209
+        },
+        "hy-translation": {
+          "translation": "I finally managed it yesterday.",
+          "milliseconds": 174.090291
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "polite-reply",
+        "category": "tone",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "你方便的时候回复我就好。",
+        "expectations": [
+          "方便时回复即可，语气体贴而不催促。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "Just reply when you're convenient.",
+          "milliseconds": 337.245417
+        },
+        "gemma-chat-plain": {
+          "translation": "Reply to me when you are available.",
+          "milliseconds": 557.727833
+        },
+        "hy-translation": {
+          "translation": "Just reply when you're available.",
+          "milliseconds": 154.925292
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "soft-refusal",
+        "category": "tone",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "谢谢你想到我，不过这周我可能没办法参加，改天再约吧。",
+        "expectations": [
+          "感谢、这周可能无法参加、建议另约，保留不确定语气。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "Thank you for thinking of me, but I may not be able to make it this week. Let's reschedule for another time.",
+          "milliseconds": 871.494542
+        },
+        "gemma-chat-plain": {
+          "translation": "Thank you for thinking of me, but I might not be able to attend this week. Let's make plans another day.",
+          "milliseconds": 1175.266375
+        },
+        "hy-translation": {
+          "translation": "Thank you for thinking of me, but I might not be able to attend this week. Let’s make another plan some other time.",
+          "milliseconds": 590.435042
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "double-negation",
+        "category": "negation",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "我不是不想去，只是今天没时间。",
+        "expectations": [
+          "想去但今天无时间；不能说不想去。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "I'm not refusing to go; I just don't have time today.",
+          "milliseconds": 516.993167
+        },
+        "gemma-chat-plain": {
+          "translation": "It's not that I don't want to go, it's just that I don't have time today.",
+          "milliseconds": 1168.154
+        },
+        "hy-translation": {
+          "translation": "I don’t really don’t want to go, it’s just that I don’t have time today.",
+          "milliseconds": 522.307041
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "condition",
+        "category": "negation",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "如果明天不下雨，我们就去散步。",
+        "expectations": [
+          "明天、不下雨的条件、我们散步。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "If it doesn't rain tomorrow, we'll go for a walk.",
+          "milliseconds": 501.15625
+        },
+        "gemma-chat-plain": {
+          "translation": "If it doesn't rain tomorrow, we will go for a walk.",
+          "milliseconds": 820.415625
+        },
+        "hy-translation": {
+          "translation": "If it doesn’t rain tomorrow, we’ll go for a walk.",
+          "milliseconds": 398.418792
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "meeting-time",
+        "category": "numbers",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "我们明天下午三点半见，会议大概持续45分钟。",
+        "expectations": [
+          "明天下午3:30，约45分钟。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "Let's meet tomorrow at 3:30 PM. The meeting will last about 45 minutes.",
+          "milliseconds": 693.707583
+        },
+        "gemma-chat-plain": {
+          "translation": "We'll meet tomorrow at 3:30 PM; the meeting will last about 45 minutes.",
+          "milliseconds": 1148.461666
+        },
+        "hy-translation": {
+          "translation": "We’ll meet at 3:30 pm tomorrow afternoon. The meeting will last about 45 minutes.",
+          "milliseconds": 545.963667
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "price-correction",
+        "category": "numbers",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "这件衣服不是300元，而是180元。",
+        "expectations": [
+          "否认300元，实际180元，保留货币语义。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "This shirt is not 300 yuan, but 180 yuan.",
+          "milliseconds": 553.68525
+        },
+        "gemma-chat-plain": {
+          "translation": "This piece of clothing is not 300 yuan, but 180 yuan.",
+          "milliseconds": 957.571334
+        },
+        "hy-translation": {
+          "translation": "This piece of clothing is not 300 yuan, but 180 yuan.",
+          "milliseconds": 336.162625
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "idiom",
+        "category": "idiom",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "这件事我心里有数，你不用担心。",
+        "expectations": [
+          "说话人了解/能掌握情况，安慰对方；避免字面心里有数字。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "I've got this under control; you don't need to worry.",
+          "milliseconds": 498.018291
+        },
+        "gemma-chat-plain": {
+          "translation": "I know about this matter, you don't need to worry.",
+          "milliseconds": 897.86475
+        },
+        "hy-translation": {
+          "translation": "I know what to do about this, so you don’t need to worry.",
+          "milliseconds": 331.633125
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "as-soon-as",
+        "category": "discontinuous",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "我一到家就给你打电话。",
+        "expectations": [
+          "一到家就打电话；语块可对应as soon as等不连续结构。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "I'll call you as soon as I get home.",
+          "milliseconds": 425.6685
+        },
+        "gemma-chat-plain": {
+          "translation": "I will call you as soon as I get home.",
+          "milliseconds": 841.097375
+        },
+        "hy-translation": {
+          "translation": "I’ll call you as soon as I get home.",
+          "milliseconds": 232.335417
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "repeated-phrase",
+        "category": "repetition",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "我觉得这个方法很好，也觉得那个方法值得试试。",
+        "expectations": [
+          "这个方法很好，那个方法值得尝试；两次觉得对应不同位置。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "I think this method is great, and I also think that method is worth trying.",
+          "milliseconds": 556.491709
+        },
+        "gemma-chat-plain": {
+          "translation": "I think this method is very good, and I also think that method is worth trying.",
+          "milliseconds": 1013.480166
+        },
+        "hy-translation": {
+          "translation": "I think this method is great, and I also think that method is worth trying.",
+          "milliseconds": 396.286333
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "eaten",
+        "category": "daily-short",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "你吃饭了吗？",
+        "expectations": [
+          "询问是否已经吃过饭，不能无根据添加午饭/晚饭。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "Have you eaten?",
+          "milliseconds": 273.597333
+        },
+        "gemma-chat-plain": {
+          "translation": "Have you eaten?",
+          "milliseconds": 456.568083
+        },
+        "hy-translation": {
+          "translation": "Have you eaten?",
+          "milliseconds": 289.684166
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "technical",
+        "category": "terminology",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "请把这个函数的返回值改成 Optional，这样调用方才能处理空值。",
+        "expectations": [
+          "函数返回值、Optional、调用方处理空值之间的关系。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "Change the return type of this function to Optional so that callers can handle null values.",
+          "milliseconds": 583.918042
+        },
+        "gemma-chat-plain": {
+          "translation": "Please change the return value of this function to Optional so that the caller can handle null values.",
+          "milliseconds": 1099.117708
+        },
+        "hy-translation": {
+          "translation": "Please change the return type of this function to Optional, so that the caller can handle null values.",
+          "milliseconds": 482.005125
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "long-report",
+        "category": "long",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "en",
+        "source": "我原本想今天把报告发给你，但还需要确认两个数字，所以可能要等到明天上午。",
+        "expectations": [
+          "原计划今天发送；两个数字待核实；可能延迟到明天上午。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "I originally intended to send you the report today, but I still need to verify two figures, so I may have to wait until tomorrow morning.",
+          "milliseconds": 839.401
+        },
+        "gemma-chat-plain": {
+          "translation": "I originally intended to send you the report today, but I still need to confirm two numbers, so it might have to wait until tomorrow morning.",
+          "milliseconds": 1458.001958
+        },
+        "hy-translation": {
+          "translation": "I originally wanted to send you the report today, but I still need to confirm two numbers, so it might wait until tomorrow morning.",
+          "milliseconds": 498.410083
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "late-message",
+        "category": "daily",
+        "sourceLanguage": "en",
+        "targetLanguage": "zh-Hans",
+        "source": "I may be a few minutes late, but I will message you when I arrive.",
+        "expectations": [
+          "可能晚到几分钟；到达后会发消息。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "我可能会晚几分钟，但一到我会给你发信息。",
+          "milliseconds": 510.327292
+        },
+        "gemma-chat-plain": {
+          "translation": "我可能会晚几分钟到，但我到的时候会给你发消息。",
+          "milliseconds": 883.475625
+        },
+        "hy-translation": {
+          "translation": "我可能会晚几分钟到，但我会在到达时给你发消息。",
+          "milliseconds": 416.407834
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "past-and-present",
+        "category": "ability-tense",
+        "sourceLanguage": "en",
+        "targetLanguage": "zh-Hans",
+        "source": "I was able to finish it yesterday, but I can't promise I can do it again today.",
+        "expectations": [
+          "昨天完成，但无法保证今天再做到；不能把否定附到昨天完成。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "我昨天已经完成了，但我不能保证今天还能再做一遍。",
+          "milliseconds": 495.896083
+        },
+        "gemma-chat-plain": {
+          "translation": "我昨天完成了它，但我不能保证我今天能再做一次。",
+          "milliseconds": 1002.493125
+        },
+        "hy-translation": {
+          "translation": "昨天我完成了它，但无法保证今天还能完成。",
+          "milliseconds": 250.021417
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "japanese-apology",
+        "category": "multilingual",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "ja",
+        "source": "不好意思，我可能会晚到十分钟。",
+        "expectations": [
+          "日语自然致歉；可能晚到十分钟，保留不确定性。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "ごめんね、十分遅れるかもしれない。",
+          "milliseconds": 438.501
+        },
+        "gemma-chat-plain": {
+          "translation": "すみません、10分ほど遅れるかもしれません。",
+          "milliseconds": 765.471917
+        },
+        "hy-translation": {
+          "translation": "ごめんですが、10分遅れて到着するかもしれません。",
+          "milliseconds": 398.291375
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "korean-call",
+        "category": "multilingual",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "ko",
+        "source": "你方便的时候给我回个电话就好。",
+        "expectations": [
+          "韩语自然表达方便时回电即可，保留体贴语气。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "편한 시간에 전화해 주시면 됩니다.",
+          "milliseconds": 400.329792
+        },
+        "gemma-chat-plain": {
+          "translation": "편하실 때 전화 주세요.",
+          "milliseconds": 613.174875
+        },
+        "hy-translation": {
+          "translation": "편한 시간에 전화해 주면 됩니다.",
+          "milliseconds": 268.081625
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "japanese-condition",
+        "category": "multilingual",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "ja",
+        "source": "如果明天不下雨，我们就去散步。",
+        "expectations": [
+          "保留明天、不下雨的条件、我们散步；自然日语。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "もし明日雨が降らなければ、私たちは散歩に行きます。",
+          "milliseconds": 487.1675
+        },
+        "gemma-chat-plain": {
+          "translation": "もし明日雨が降らなければ、私たちは散歩に行きます。",
+          "milliseconds": 858.158333
+        },
+        "hy-translation": {
+          "translation": "もし明日雨が降らなければ、散歩に行きましょう。",
+          "milliseconds": 455.650458
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "japanese-refusal",
+        "category": "multilingual",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "ja",
+        "source": "谢谢你邀请我，不过这周我可能没办法参加。",
+        "expectations": [
+          "自然感谢和婉拒，保留这周与可能。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "ご招待ありがとうございます。ただし、今週は参加できないかもしれません。",
+          "milliseconds": 463.251833
+        },
+        "gemma-chat-plain": {
+          "translation": "お誘いありがとうございます。ただ、今週は参加できそうにありません。",
+          "milliseconds": 989.97
+        },
+        "hy-translation": {
+          "translation": "招待してくれてありがとう。でも、今週は参加できないかもしれません。",
+          "milliseconds": 512.422417
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "korean-time",
+        "category": "multilingual",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "ko",
+        "source": "我们明天下午三点半见，会议大概持续45分钟。",
+        "expectations": [
+          "明天下午3:30、会议约45分钟，韩语自然。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "내일 오후 3 시 30 분에 만나요. 회의는 약 45 분 정도 걸립니다.",
+          "milliseconds": 783.370875
+        },
+        "gemma-chat-plain": {
+          "translation": "우리 내일 오후 세 시 반에 만나요, 회의는 대략 45분 정도 걸릴 거예요.",
+          "milliseconds": 1316.9050419999999
+        },
+        "hy-translation": {
+          "translation": "우리는 내일 오후 3시 30분에 만나요. 회의는 약 45분 정도 지속될 예정입니다.",
+          "milliseconds": 695.103
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "korean-negation",
+        "category": "multilingual",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "ko",
+        "source": "我不是不想去，只是今天没时间。",
+        "expectations": [
+          "想去但今天无时间，不能反转双重否定。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "나도 가고 싶지는 않지만, 오늘 시간이 없어요.",
+          "milliseconds": 436.958
+        },
+        "gemma-chat-plain": {
+          "translation": "가고 싶지 않은 게 아니라, 오늘 시간이 없어요.",
+          "milliseconds": 946.420958
+        },
+        "hy-translation": {
+          "translation": "가고 싶은 마음은 있지만, 오늘 시간이 없어요.",
+          "milliseconds": 374.102375
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "japanese-source",
+        "category": "multilingual",
+        "sourceLanguage": "ja",
+        "targetLanguage": "zh-Hans",
+        "source": "明日は少し遅れるかもしれませんが、着いたら連絡します。",
+        "expectations": [
+          "明天可能稍微晚到，到达后联系。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "明天可能会稍微晚一点，但到了会联系您。",
+          "milliseconds": 466.62025
+        },
+        "gemma-chat-plain": {
+          "translation": "明天可能会稍微晚一点，到了我再联系你。",
+          "milliseconds": 819.562917
+        },
+        "hy-translation": {
+          "translation": "明天可能会稍微晚一些，到达后我会联系你。",
+          "milliseconds": 252.426875
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "korean-source",
+        "category": "multilingual",
+        "sourceLanguage": "ko",
+        "targetLanguage": "zh-Hans",
+        "source": "시간이 괜찮을 때 답장해 주시면 돼요.",
+        "expectations": [
+          "方便的时候回复即可，语气体贴。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "有时间再回复我即可。",
+          "milliseconds": 339.6525
+        },
+        "gemma-chat-plain": {
+          "translation": "您有时间的时候回复我就可以了。",
+          "milliseconds": 655.957375
+        },
+        "hy-translation": {
+          "translation": "有空的时候请回复一下吧。",
+          "milliseconds": 209.523834
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "german-condition",
+        "category": "multilingual",
+        "sourceLanguage": "zh-Hans",
+        "targetLanguage": "de",
+        "source": "如果明天不下雨，我们就去散步。",
+        "expectations": [
+          "德语条件句保留明天、不下雨和我们散步。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "Wenn es morgen nicht regnet, gehen wir spazieren.",
+          "milliseconds": 494.864
+        },
+        "gemma-chat-plain": {
+          "translation": "Wenn morgen nicht regnet, gehen wir spazieren.",
+          "milliseconds": 784.634709
+        },
+        "hy-translation": {
+          "translation": "Wenn es morgen nicht regnet, gehen wir spazieren.",
+          "milliseconds": 391.037667
+        }
+      }
+    },
+    {
+      "case": {
+        "id": "spanish-polite",
+        "category": "multilingual",
+        "sourceLanguage": "en",
+        "targetLanguage": "es",
+        "source": "Please reply whenever you have time; there is no rush.",
+        "expectations": [
+          "西班牙语自然表达有空回复，不着急。"
+        ]
+      },
+      "translations": {
+        "qwen-chat-plain": {
+          "translation": "Por favor, responda cuando tenga tiempo; no hay prisa.",
+          "milliseconds": 489.925542
+        },
+        "gemma-chat-plain": {
+          "translation": "Por favor, responde cuando tengas tiempo; no hay prisa.",
+          "milliseconds": 1009.869542
+        },
+        "hy-translation": {
+          "translation": "Por favor, responde cuando tengas tiempo; no hay prisa.",
+          "milliseconds": 409.341875
+        }
+      }
+    }
+  ],
+  "reviewFindings": [
+    {
+      "model": "Qwen3.5-4B",
+      "case": "polite-reply",
+      "finding": "Just reply when you are convenient is unnatural; convenience should refer to the time/situation rather than the person."
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "case": "price-correction",
+      "finding": "Adds shirt although source says clothing without specifying the garment."
+    },
+    {
+      "model": "Qwen3.5-4B",
+      "case": "korean-negation",
+      "finding": "Korean translation expresses not wanting to go, reversing the source intent."
+    },
+    {
+      "model": "Gemma 4 E4B",
+      "case": "idiom",
+      "finding": "I know about this matter is readable but weaker and more literal than having a handle on the situation."
+    },
+    {
+      "model": "Hy-MT2-1.8B",
+      "case": "double-negation",
+      "finding": "I do not really do not want to go contains broken English negation; exact raw output is preserved."
+    }
+  ],
+  "decision": "Do not infer a quality winner from this first pass. Hy is the fastest candidate for further translation-specific validation. General models remain candidates; chunk ability is evaluated separately."
+}

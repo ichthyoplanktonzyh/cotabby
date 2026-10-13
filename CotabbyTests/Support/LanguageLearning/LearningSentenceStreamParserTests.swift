@@ -4,6 +4,17 @@ import Testing
 
 struct LearningSentenceStreamParserTests {
     @Test
+    func seededAnalysisPreservesExactTranslationAndRejectsRetranslation() throws {
+        var parser = LearningSentenceStreamParser(source: "我能做到", translation: "I can do it.")
+        #expect(throws: (any Error).self) {
+            _ = try parser.append("{\"type\":\"translation\",\"text\":\"I can do it.\"}\n")
+        }
+        _ = try parser.append("{\"type\":\"chunk\",\"source\":[\"能\"],\"target\":[\"can\"],\"explanation\":\"能力\"}\n")
+        let result = try parser.result()
+        #expect(result.translation == "I can do it.")
+        #expect(result.chunks.first?.targetRanges == [NSRange(location: 2, length: 3)])
+    }
+    @Test
     func translationIsAvailableBeforeAnalysisAcrossArbitraryFragments() throws {
         var parser = LearningSentenceStreamParser(source: "我能做到 😀")
         #expect(try parser.append(#"{"type":"trans"#).isEmpty)

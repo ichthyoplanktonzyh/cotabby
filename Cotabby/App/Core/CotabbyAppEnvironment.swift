@@ -13,6 +13,7 @@ import Logging
 final class CotabbyAppEnvironment {
     let permissionManager: PermissionManager
     let runtimeModel: RuntimeBootstrapModel
+    let learningModels: LearningModelCollection
     let modelDownloadManager: ModelDownloadManager
     let focusModel: FocusTrackingModel
     let inputMonitor: InputMonitor
@@ -235,9 +236,21 @@ final class CotabbyAppEnvironment {
             history: typingHistoryStore,
             engineKind: { [weak suggestionSettings] in suggestionSettings?.selectedEngine ?? .openAICompatible }
         )
+        let learningClient = OpenAICompatibleAPIClient(session: LearningEndpointSession.makeSession())
+        let learningModels = LearningModelCollection(settings: suggestionSettings.languageLearning, client: learningClient,
+            powerSource: powerSourceMonitor, appSettings: suggestionSettings, lowPower: lowPowerModeMonitor)
+        modelDownloadManager.protectedModelFilenames = { [weak runtimeModel, weak suggestionSettings] in
+            guard let suggestionSettings else { return [] }
+            return ModelUsagePolicy.protectedFilenames(completion: runtimeModel?.selectedModelFilename,
+                completionPower: [suggestionSettings.batteryProfile, suggestionSettings.pluggedInProfile],
+                learning: [suggestionSettings.languageLearning.translation.referencedLocalModels,
+                           suggestionSettings.languageLearning.analysis.referencedLocalModels])
+        }
         let learningService = LearningExpressionService(
             settings: suggestionSettings,
-            client: openAICompatibleClient
+            client: learningClient, models: learningModels,
+            telemetry: LearningRequestTelemetry(metrics: performanceMetricsStore,
+                trackingEnabled: { [weak suggestionSettings] in suggestionSettings?.isPerformanceTrackingEnabled == true })
         )
         let suggestionEngine: any SuggestionGenerating = DebugForcedSuggestionEngine.isConfigured()
             ? DebugForcedSuggestionEngine(wrapping: historyAwareEngine)
@@ -248,6 +261,7 @@ final class CotabbyAppEnvironment {
         let emojiUsageStore = EmojiUsageStore()
 
         let settingsCoordinator = SettingsCoordinator(
+            learningModels: learningModels,
             appUpdateManager: appUpdateManager,
             permissionManager: permissionManager,
             permissionGuidanceController: permissionGuidanceController,
@@ -365,25 +379,15 @@ final class CotabbyAppEnvironment {
             panel: LearningSentencePanel(reservedFramePublisher: overlayController.$visiblePanelFrame.eraseToAnyPublisher()),
             availability: learningAvailability
         )
-        let hintCoordinator = LanguageLearningHintCoordinator(
-            service: learningService,
-            reader: LearningHintSourceReader(focus: focusModel, inputSource: keyboardInputSourceMonitor,
-                settings: suggestionSettings.languageLearning),
-            panel: LearningHintPanel(), focus: focusModel,
-            availability: {
-                learningAvailability() == nil && !learningCoordinator.isActive &&
-                    !suggestionSettings.languageLearning.sentencePreviewEnabled
-            }
-        )
-        inputMonitor.learningKeyDecider = { [weak learningCoordinator, weak hintCoordinator, weak sentencePreview] event in
+        inputMonitor.learningKeyDecider = { [weak learningCoordinator, weak sentencePreview] event in
             Self.learningKeyDecision(event, automatic: suggestionSettings.languageLearning.sentencePreviewEnabled,
-                preview: sentencePreview, manual: learningCoordinator, hints: hintCoordinator)
+                preview: sentencePreview, manual: learningCoordinator)
         }
         let inlineCommandCoordinator = InlineCommandCoordinator(
             emoji: emojiPickerController,
             macro: macroController,
             inputMonitor: inputMonitor,
-            learning: learningCoordinator, hints: hintCoordinator, sentencePreview: sentencePreview
+            learning: learningCoordinator, sentencePreview: sentencePreview
         )
         suggestionCoordinator.emojiInputObserver = { [weak inlineCommandCoordinator] event in
             inlineCommandCoordinator?.observe(event) ?? false
@@ -391,6 +395,7 @@ final class CotabbyAppEnvironment {
 
         self.permissionManager = permissionManager
         self.runtimeModel = runtimeModel
+        self.learningModels = learningModels
         self.modelDownloadManager = modelDownloadManager
         self.focusModel = focusModel
         self.inputMonitor = inputMonitor
@@ -421,6 +426,19 @@ final class CotabbyAppEnvironment {
             : nil
 
         observeLanguageLearning(coordinator: learningCoordinator)
+        // Low Power Mode is shared with completion. Clear current learning work immediately when
+        // pausing, rather than waiting for another edit or a model response to reach its guard.
+        Publishers.Merge(lowPowerModeMonitor.$isLowPowerModeEnabled.map { _ in () },
+            suggestionSettings.$isLowPowerModeAutoDisableEnabled.map { _ in () })
+            .sink { [weak lowPowerModeMonitor, weak suggestionSettings, weak learningCoordinator,
+                     weak sentencePreview] _ in
+                Task { @MainActor in
+                    guard lowPowerModeMonitor?.isLowPowerModeEnabled == true,
+                          suggestionSettings?.isLowPowerModeAutoDisableEnabled == true else { return }
+                    learningCoordinator?.cancel()
+                    sentencePreview?.availabilityChanged()
+                }
+            }.store(in: &cancellables)
 
         // Recording reads every focus snapshot; the store ignores them unless recording is on and
         // the text changed. The same rule that decides whether Cotabby suggests (on, not paused,
@@ -608,11 +626,10 @@ final class CotabbyAppEnvironment {
     /// disabling automatic preview restores the explicit selection path without duplicate taps.
     private static func learningKeyDecision(
         _ event: InputMonitorKeyEvent, automatic: Bool, preview: LearningSentencePreviewCoordinator?,
-        manual: LanguageLearningCoordinator?, hints: LanguageLearningHintCoordinator?
+        manual: LanguageLearningCoordinator?
     ) -> InputMonitorAcceptTapDecision {
         if automatic { return preview?.decide(event) ?? .notHandled }
-        let decision = manual?.decide(event) ?? .notHandled
-        return decision == .notHandled ? hints?.decide(event) ?? .notHandled : decision
+        return manual?.decide(event) ?? .notHandled
     }
 }
 

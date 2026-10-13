@@ -4,23 +4,18 @@ import Testing
 import Vision
 @testable import Cotabby
 
-/// Hidden-window rendering verifies both pages without using a installed dictionary or editor.
+/// Hidden-window rendering verifies the explanation and native word controls without a dictionary or editor.
 /// The generated PNGs contain only these explicit fixtures and help review the presentation.
 @Suite(.serialized)
 @MainActor
 struct LearningDetailCardTests {
-    @Test(arguments: [false, true])
-    func phraseAndWordPagesPaintTheirOwnContent(_ dictionaryPage: Bool) async throws {
+    @Test
+    func explanationAndWordControlsRemainReadable() async throws {
         let state = LearningDetailState()
         state.chunk = .init(documentID: UUID(), chunkID: 1, source: "能做到", target: "can do it",
             explanation: "Ability to perform this action.", language: .english, words: ["can", "do", "it"])
-        if dictionaryPage {
-            state.word = "can"
-            state.entry = .init(requestedTerm: "can", resolvedTerm: "can",
-                paragraphs: ["Dictionary meaning remains readable.", "Example: I can do it."], isFound: true)
-        }
         let hosting = NSHostingView(rootView: LearningDetailCard(state: state,
-            selectWord: { _ in }, back: {}, close: {}, sizeChanged: { _ in }))
+            selectWord: { _, _ in }, close: {}, sizeChanged: { _ in }))
         let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 320, height: 200),
             styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
@@ -35,6 +30,9 @@ struct LearningDetailCardTests {
         }
         #expect(hosting.fittingSize.width == 320)
         #expect(hosting.fittingSize.height < 350)
+        let buttons = wordButtons(in: hosting)
+        #expect(Set(buttons.map(\.title)) == Set(["can", "do", "it"]))
+        #expect(buttons.allSatisfy { $0.refusesFirstResponder && $0.frame.width > 0 })
         let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
         hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
         let recognition = VNRecognizeTextRequest()
@@ -42,10 +40,14 @@ struct LearningDetailCardTests {
         recognition.recognitionLanguages = ["en-US"]
         try VNImageRequestHandler(cgImage: try #require(bitmap.cgImage)).perform([recognition])
         let text = (recognition.results?.compactMap { $0.topCandidates(1).first?.string } ?? []).joined(separator: " ")
-        #expect(text.contains(dictionaryPage ? "Dictionary meaning remains readable" : "Ability to perform this action"))
+        #expect(text.contains("Ability to perform this action"))
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent()
-        let output = root.appendingPathComponent("build/LanguageLearning/Validation/meaning-popup-\(dictionaryPage ? "word" : "phrase")-test.png")
+        let output = root.appendingPathComponent("build/LanguageLearning/Validation/native-dictionary-phrase-test.png")
         if let data = bitmap.representation(using: .png, properties: [:]) { try data.write(to: output) }
+    }
+
+    private func wordButtons(in view: NSView) -> [NSButton] {
+        (view as? NSButton).map { [$0] } ?? view.subviews.flatMap { wordButtons(in: $0) }
     }
 }

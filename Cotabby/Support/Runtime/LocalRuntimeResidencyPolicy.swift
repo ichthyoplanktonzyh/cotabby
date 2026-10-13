@@ -20,14 +20,20 @@ enum LocalRuntimeResidencyPolicy {
     ) -> Bool {
         switch engine {
         case .llamaOpenSource:
-            return true
+            return residency(usesLocalModel: true, enabled: true, paused: false, keepWarm: true) == .warm
         case .appleIntelligence:
-            // Both switches must be on: a kept-loaded model is useless when the fallback that
-            // would use it is turned off.
-            return isAppleLanguageFallbackEnabled && keepsFallbackModelLoaded
+            return residency(usesLocalModel: true, enabled: isAppleLanguageFallbackEnabled,
+                paused: false, keepWarm: keepsFallbackModelLoaded) == .warm
         case .openAICompatible:
-            // The endpoint runs its own model, so a resident GGUF would only double memory use.
             return false
         }
     }
+
+    /// The same pure decision serves completion fallback and independent learning tasks. Callers
+    /// supply their own eligibility; the rule does not read UI settings or own an inference engine.
+    static func residency(usesLocalModel: Bool, enabled: Bool, paused: Bool, keepWarm: Bool) -> LocalRuntimeResidency {
+        guard usesLocalModel, enabled, !paused else { return .released }
+        return keepWarm ? .warm : .onDemand
+    }
+
 }
