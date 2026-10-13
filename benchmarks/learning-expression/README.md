@@ -155,7 +155,15 @@ and [machine-readable summary](alignment-results-2026-10-13.json). The full 756-
 182 deduplicated blind-review items are complete. Removing explanations helped both general
 models; the compact-pair proposal improved Qwen availability but caused overly large chunks
 in Gemma. Later local follow-ups selected GE as the product baseline. The exporter also emits
-the current GE renderer, so adopting it does not silently alter historical A/B/C requests.
+the frozen GE renderer. The current product renderer is exported separately as `Learning` (now
+restored to the complete GE instructions), so
+learning-unit changes do not silently alter historical A/B/C or compact experiment requests.
+
+Learning-unit recognition, same-window expression/word lookup and observed unit/correspondence
+paint latency: [2026-10-13 implementation and Release report](learning-units-2026-10-13.md).
+
+Complete GE restored at the user's request, with a native before/after comparison and new painted
+latency measurements: [2026-10-13 GE restoration report](ge-restoration-2026-10-13.md).
 
 Quantity-only D and authorized cloud follow-up: [2026-10-13 report](alignment-quantity-results-2026-10-13.md)
 and [JSON summary](alignment-quantity-results-2026-10-13.json). It contains 168 local Gemma C/D

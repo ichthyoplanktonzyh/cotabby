@@ -15,12 +15,16 @@ final class LearningSentencePreviewCoordinator {
     private let panel: any LearningSentencePresenting
     private let availability: () -> String?
     private let debounce: Duration
+    private let unitRecognizer: (any LearningUnitRecognizing)?
     private let waitForPause: @MainActor (Duration) async throws -> Void
     private let isFrontmost: @MainActor (Int32) -> Bool
     private var subscriptions = Set<AnyCancellable>()
     private var work: Task<Void, Never>?
     private var analysisWork: Task<Void, Never>?
     private var analysisID = UUID()
+    private var unitWork: Task<Void, Never>?
+    private var unitID = UUID()
+    private var unitCache: [String: [LearningUnit]] = [:]
     private var analysisCache: [AnalysisKey: LearningSentenceResult] = [:]
     private var requestID = UUID()
     private var previousContext: FocusedInputSnapshot?
@@ -46,8 +50,11 @@ final class LearningSentencePreviewCoordinator {
         let targetLanguage: LearningLanguage
         var translation = ""
         var chunks: [LearningMeaningChunk] = []
+        var units: [LearningUnit] = []
+        var unitStage: LearningUnitStage = .pending
         var generating = true
-        var message = "正在生成目标表达…"
+        var message = String(localized: "Generating expression…", table: "Learning",
+            comment: "Status shown in the sentence card while a translation is being generated.")
         var previousSentence: PreviousSentence?
         var isStale = false
     }
@@ -65,6 +72,7 @@ final class LearningSentencePreviewCoordinator {
         reader: any LearningSelectionReplacing,
         focus: any SuggestionFocusProviding,
         panel: any LearningSentencePresenting,
+        unitRecognizer: (any LearningUnitRecognizing)? = nil,
         debounce: Duration = .milliseconds(600),
         waitForPause: @escaping @MainActor (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
         isFrontmost: @escaping @MainActor (Int32) -> Bool = {
@@ -77,6 +85,7 @@ final class LearningSentencePreviewCoordinator {
         self.focus = focus
         self.panel = panel
         self.debounce = debounce
+        self.unitRecognizer = unitRecognizer
         self.waitForPause = waitForPause
         self.isFrontmost = isFrontmost
         self.availability = availability
@@ -241,6 +250,7 @@ final class LearningSentencePreviewCoordinator {
             document?.generating = false
             document?.message = ""
             render()
+            startUnits()
             startAnalysis()
             return
         }
@@ -260,6 +270,7 @@ final class LearningSentencePreviewCoordinator {
                     if self.cache.count >= 64 { self.cache.removeAll() }
                     self.cache[key] = .init(translation: translation, chunks: [])
                     self.render()
+                    self.startUnits()
                     self.startAnalysis()
                 } catch {
                     guard self.isCurrent(identifier, capture: capture), !(error is CancellationError) else { return }
@@ -268,6 +279,38 @@ final class LearningSentencePreviewCoordinator {
                     self.document?.message = error.localizedDescription
                     self.render()
                 }
+            }
+        }
+    }
+
+    /// Translation is already visible when these independent lexical tasks begin. Model analysis
+    /// settings never participate in unit identity; failing/turning off alignment keeps units.
+    private func startUnits() {
+        unitID = UUID()
+        unitWork?.cancel(); unitWork = nil
+        guard let current = document, !current.translation.isEmpty, !current.isStale else { return }
+        guard let unitRecognizer else { document?.unitStage = .ready; return }
+        let key = current.targetLanguage.rawValue + ":" + current.translation
+        if let units = unitCache[key] {
+            document?.units = units; document?.unitStage = .ready; render(); return
+        }
+        let id = unitID
+        unitWork = Task { [weak self] in
+            do {
+                let units = try await unitRecognizer.recognize(current.translation, language: current.targetLanguage)
+                guard let self, self.unitID == id, self.isCurrent(current.id, capture: current.capture),
+                      self.document?.translation == current.translation else { return }
+                self.unitWork = nil
+                self.document?.units = units; self.document?.unitStage = .ready
+                if self.unitCache.count >= 64 { self.unitCache.removeAll() }
+                self.unitCache[key] = units
+                self.render()
+            } catch {
+                guard let self, self.unitID == id, self.isCurrent(current.id, capture: current.capture),
+                      !(error is CancellationError) else { return }
+                self.unitWork = nil
+                self.document?.unitStage = .failed
+                self.render()
             }
         }
     }
@@ -283,7 +326,8 @@ final class LearningSentencePreviewCoordinator {
         document?.chunks = []
         guard service.settings.languageLearning.analysisEnabled else {
             document?.generating = false
-            document?.message = "语块分析已关闭，可直接查词。"
+            document?.message = String(localized: "Phrase matching is off; dictionary lookup is still available.",
+                table: "Learning", comment: "Status shown when phrase matching is disabled while the translation remains available.")
             render()
             return
         }
@@ -295,12 +339,18 @@ final class LearningSentencePreviewCoordinator {
                 "request_id": .string(current.traceID), "source": .string("analysis"), "phase": .string("cache_hit")])
             document?.chunks = result.chunks
             document?.generating = false
-            document?.message = result.unresolvedChunkCount > 0 ? "部分语块无法可靠定位，已保留确定对应。" : ""
+            document?.message = result.unresolvedChunkCount > 0
+                ? String(localized: "Some phrase matches could not be located reliably; confirmed matches are kept.",
+                    table: "Learning", comment: """
+                    Status when uncertain alignments are omitted while verified phrase matches remain visible.
+                    """)
+                : ""
             render()
             return
         }
         document?.generating = true
-        document?.message = "正在准备语块对应…"
+        document?.message = String(localized: "Preparing phrase matches…", table: "Learning",
+            comment: "Status while the separate model aligns source and translated phrases.")
         render()
         let id = analysisID
         analysisWork = Task { [weak self] in
@@ -325,7 +375,12 @@ final class LearningSentencePreviewCoordinator {
                     self.analysisWork = nil
                     self.document?.chunks = result.chunks
                     self.document?.generating = false
-                    self.document?.message = result.unresolvedChunkCount > 0 ? "部分语块无法可靠定位，已保留确定对应。" : ""
+                    self.document?.message = result.unresolvedChunkCount > 0
+                        ? String(localized: "Some phrase matches could not be located reliably; confirmed matches are kept.",
+                            table: "Learning", comment: """
+                            Status when uncertain alignments are omitted while verified phrase matches remain visible.
+                            """)
+                        : ""
                     if self.analysisCache.count >= 64 { self.analysisCache.removeAll() }
                     self.analysisCache[key] = result
                     self.render()
@@ -379,7 +434,7 @@ final class LearningSentencePreviewCoordinator {
             caret: focus.snapshot.context?.caretRect ?? document.capture.context.caretRect,
             isExpanded: expanded, isGenerating: document.generating, message: document.message,
             previousTranslation: document.previousSentence?.translation, shortcutLabel: service.settings.languageLearning.keyLabel,
-            isStale: document.isStale),
+            isStale: document.isStale, units: document.units, unitStage: document.unitStage),
             expand: { [weak self] in self?.expandOrRequest() }, dismiss: { [weak self] in self?.dismiss() })
         if panel.isVisible, !document.isStale, !document.translation.isEmpty {
             service.recordDisplay(source: .translation, requestID: document.traceID)
@@ -399,6 +454,7 @@ final class LearningSentencePreviewCoordinator {
     private func cancelWork() {
         requestID = UUID(); work?.cancel(); work = nil
         analysisID = UUID(); analysisWork?.cancel(); analysisWork = nil
+        unitID = UUID(); unitWork?.cancel(); unitWork = nil
     }
-    private func clear() { cancelWork(); document = nil; expanded = false; dismissedSource = nil; cache.removeAll(); analysisCache.removeAll(); panel.hide() }
+    private func clear() { cancelWork(); document = nil; expanded = false; dismissedSource = nil; cache.removeAll(); analysisCache.removeAll(); unitCache.removeAll(); panel.hide() }
 }

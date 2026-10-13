@@ -8,7 +8,7 @@ import SwiftUI
 /// focus in the host editor. Its position follows the existing caret geometry policy.
 @MainActor
 final class LearningSentencePanel: LearningSentencePresenting {
-    private let detailPanel = LearningDetailPanel()
+    private let detailPanel: LearningDetailPanel
     private let sentenceDictionary: LearningSystemDictionaryPresenter
     private var panel: NSPanel?
     private var hosting: NSHostingView<LearningSentenceCard>?
@@ -28,10 +28,12 @@ final class LearningSentencePanel: LearningSentencePresenting {
     /// App composition supplies only geometry, keeping translation independent of completion
     /// generation. A later completion can move this panel even when no new translation arrives.
     init(reservedFramePublisher: AnyPublisher<CGRect?, Never>? = nil,
-         dictionary: LearningSystemDictionaryPresenter? = nil) {
+         dictionary: LearningSystemDictionaryPresenter? = nil,
+         dictionaryProvider: (any LearningDictionaryProviding)? = nil) {
         // Default arguments are evaluated by the caller, outside this actor-isolated body.
         // Construct the AppKit collaborator here so its initialization always stays on MainActor.
         sentenceDictionary = dictionary ?? LearningSystemDictionaryPresenter()
+        detailPanel = LearningDetailPanel(provider: dictionaryProvider)
         reservationSubscription = reservedFramePublisher?.removeDuplicates().sink { [weak self] frame in
             guard let self else { return }
             self.reservedFrame = frame
@@ -47,7 +49,7 @@ final class LearningSentencePanel: LearningSentencePresenting {
     func dismissDetail() -> Bool {
         if sentenceDictionary.dismiss() { return true }
         if detailPanel.dismissDictionary() { return true }
-        guard detailPanel.state.chunk != nil else { return false }
+        guard detailPanel.isVisible else { return false }
         detailPanel.hide()
         sentenceDictionary.dismiss()
         return true
@@ -76,6 +78,11 @@ final class LearningSentencePanel: LearningSentencePresenting {
             (presentation.isExpanded && currentPresentation?.chunks.count != presentation.chunks.count) {
             sentenceDictionary.dismiss()
         }
+        if detailPanel.dictionarySession.documentID != nil,
+           detailPanel.dictionarySession.documentID != presentation.id || presentation.isStale ||
+            currentPresentation?.translation != presentation.translation || currentPresentation?.isExpanded != presentation.isExpanded {
+            detailPanel.hide()
+        }
         if let selection = detailPanel.state.chunk,
            selection.documentID != presentation.id || !presentation.isExpanded || presentation.isStale ||
             !presentation.chunks.contains(where: { chunk in
@@ -83,17 +90,21 @@ final class LearningSentencePanel: LearningSentencePresenting {
                 LearningChunkDisplay.quote(presentation.source, ranges: chunk.sourceRanges) == selection.source &&
                 LearningChunkDisplay.quote(presentation.translation, ranges: chunk.targetRanges) == selection.target
             }) {
-            detailPanel.hide()
+            // Background alignment updates do not discard an open dictionary for the same text.
+            detailPanel.state.chunk = nil
         }
         currentPresentation = presentation
         let revision = UUID()
         layoutRevision = revision
         let card = LearningSentenceCard(
             presentation: presentation, detailState: detailPanel.state,
-            inspect: { [weak self] in self?.inspectChunk($0, documentID: presentation.id) }, expand: expand, dismiss: dismiss,
+            inspect: { [weak self] in self?.selectCorrespondence($0, documentID: presentation.id) }, expand: expand, dismiss: dismiss,
             lookup: { [weak self] word, button in self?.inspectWord(word, documentID: presentation.id, button: button) },
             lookupText: { [weak self] anchor, view in
                 self?.inspectInlineWord(anchor, documentID: presentation.id, view: view)
+            },
+            lookupUnit: { [weak self] anchor, view in
+                self?.inspectUnit(anchor, documentID: presentation.id, view: view)
             },
             sizeChanged: { [weak self] size in
                 self?.scheduleLayout(size: size, revision: revision)
@@ -110,7 +121,8 @@ final class LearningSentencePanel: LearningSentencePresenting {
             window.contentView = view
         }
         panel = window
-        window.title = "表达学习"
+        window.title = String(localized: "Expression Learning", table: "Learning",
+            comment: "Accessibility and window title for the read-only sentence-learning panel.")
         dismissAction = dismiss
         window.isReleasedWhenClosed = false
         window.level = .floating
@@ -122,6 +134,38 @@ final class LearningSentencePanel: LearningSentencePresenting {
         hosting?.layoutSubtreeIfNeeded()
         if let size = hosting?.fittingSize { layout(size: size) }
         installClickMonitors()
+    }
+
+    private func selectCorrespondence(_ identifier: Int, documentID: UUID) {
+        guard let current = currentPresentation, current.id == documentID, !current.isStale,
+              let chunk = LearningUnitPolicy.correspondence(current.chunks, respecting: current.units).first(where: { $0.id == identifier }) else { return }
+        detailPanel.selectCorrespondence(detail(chunk, presentation: current))
+    }
+
+    /// Unit identity, source geometry and the fixed sentence are validated together. A fallback
+    /// word click remains useful while recognition is pending; later alignment cannot change it.
+    private func inspectUnit(_ anchor: LearningUnitTextAnchor, documentID: UUID, view: NSTextView) {
+        guard let current = currentPresentation, current.id == documentID, !current.isStale,
+              view.window === panel, view.string == current.translation,
+              let parent = visibleFrame else { return }
+        let units = current.units.isEmpty ? LearningUnitPolicy.fallback(in: current.translation, language: current.targetLanguage) : current.units
+        guard units.contains(anchor.unit) else { return }
+        let alignment = LearningUnitPolicy.correspondence(current.chunks, respecting: units).first { chunk in
+            anchor.unit.ranges.contains { range in chunk.targetRanges.contains { NSIntersectionRange(range, $0).length > 0 } }
+        }
+        let anchorFrame = view.window!.convertToScreen(view.convert(anchor.bounds, to: nil))
+        let screen = NSScreen.screens.first { $0.frame.intersects(parent) } ?? NSScreen.main
+        detailPanel.show(anchor.unit, documentID: current.id, language: current.targetLanguage,
+            correspondence: alignment.map { detail($0, presentation: current) },
+            placement: .init(parent: parent, caret: current.caret, reserved: reservedFrame,
+                screen: screen?.visibleFrame ?? CGRect(x: 0, y: 0, width: 800, height: 600), anchorY: anchorFrame.maxY + 12))
+    }
+
+    private func detail(_ chunk: LearningMeaningChunk, presentation: LearningSentencePresentation) -> LearningChunkDetail {
+        let target = LearningChunkDisplay.quote(presentation.translation, ranges: chunk.targetRanges)
+        return .init(documentID: presentation.id, chunkID: chunk.id,
+            source: LearningChunkDisplay.quote(presentation.source, ranges: chunk.sourceRanges), target: target,
+            language: presentation.targetLanguage, words: LearningChunkDisplay.words(in: target, language: presentation.targetLanguage))
     }
 
     /// Lookup needs only the fixed target sentence. It works while analysis is disabled, pending

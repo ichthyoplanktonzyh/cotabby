@@ -11,6 +11,59 @@ import Testing
 @MainActor
 struct LearningSentencePreviewCoordinatorTests {
     @Test
+    func translationAndWordLookupSurviveIndependentUnitRecognitionAndDisabledAnalysis() async throws {
+        let gate = UnitGate(), rig = try Rig(unitRecognizer: gate)
+        defer { rig.cleanup() }
+        rig.settings.languageLearning.analysisEnabled = false
+        rig.coordinator.start()
+        try rig.edit("我期待见到你")
+        await waitUntil { rig.service.requests.count == 1 }
+        let text = "I look forward to seeing you."
+        rig.service.emit(.translation(text))
+        await gate.waitFor(text)
+        #expect(rig.panel.last?.translation == text && rig.panel.isVisible)
+        #expect(rig.panel.last?.unitStage == .pending)
+        #expect(rig.service.analysisCalls == 0)
+        let unit = LearningUnit(id: 2, surface: "look forward to", query: "look forward to", kind: .expression,
+            ranges: [.init(location: 2, length: 15)], words: [])
+        await gate.finish(text, units: [unit])
+        await waitUntil { rig.panel.last?.unitStage == .ready }
+        #expect(rig.panel.last?.units == [unit] && rig.panel.last?.chunks.isEmpty == true)
+        #expect(rig.reader.replaceCount == 0)
+    }
+
+    @Test
+    func staleRecognitionCannotReopenAPreviewAfterTyping() async throws {
+        let gate = UnitGate(), rig = try Rig(unitRecognizer: gate)
+        defer { rig.cleanup() }
+        rig.settings.languageLearning.analysisEnabled = false
+        rig.coordinator.start()
+        try rig.edit("我期待见到你")
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I look forward to seeing you."))
+        await gate.waitFor("I look forward to seeing you.")
+        _ = rig.coordinator.observe(.init(kind: .textMutation, keyCode: 1, characters: "s", flags: []))
+        #expect(!rig.panel.isVisible)
+        await gate.finish("I look forward to seeing you.", units: [])
+        for _ in 0..<20 { await Task.yield() }
+        #expect(!rig.panel.isVisible)
+    }
+
+    @Test
+    func failedUnitResourceKeepsTheFixedTranslationAvailable() async throws {
+        let rig = try Rig(unitRecognizer: LearningLexiconService(resourceURL: nil))
+        defer { rig.cleanup() }
+        rig.settings.languageLearning.analysisEnabled = false
+        rig.coordinator.start()
+        try rig.edit("我期待见到你")
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I look forward to seeing you."))
+        await waitUntil { rig.panel.last?.unitStage == .failed }
+        #expect(rig.panel.isVisible && rig.panel.last?.translation == "I look forward to seeing you.")
+        #expect(rig.panel.last?.units.isEmpty == true)
+    }
+
+    @Test
     func typingHidesImmediatelyAndOnlyTheLatestPauseCanPresent() async throws {
         let pause = PauseGate(), rig = try Rig(pause: pause)
         defer { rig.cleanup() }
@@ -389,7 +442,8 @@ struct LearningSentencePreviewCoordinatorTests {
         rig.service.finish(unresolvedChunkCount: 1)
         await waitUntil { rig.panel.last?.isGenerating == false }
         #expect(rig.panel.last?.translation == "I can do it.")
-        #expect(rig.panel.last?.message.contains("部分语块无法可靠定位") == true)
+        #expect(rig.panel.last?.message == String(localized: "Some phrase matches could not be located reliably; confirmed matches are kept.",
+            table: "Learning"))
     }
 
     /// Hold debounce completion explicitly so assertions never depend on machine speed. Obsolete
@@ -422,7 +476,8 @@ struct LearningSentencePreviewCoordinatorTests {
         let pause: PauseGate?
 
         init(initial: String = "", isFrontmost: @escaping @MainActor () -> Bool = { true },
-             availability: @escaping @MainActor () -> String? = { nil }, pause: PauseGate? = nil) throws {
+             availability: @escaping @MainActor () -> String? = { nil }, pause: PauseGate? = nil,
+             unitRecognizer: (any LearningUnitRecognizing)? = nil) throws {
             self.pause = pause
             defaults = try #require(UserDefaults(suiteName: suite))
             settings = SuggestionSettingsModel(configuration: .standard, userDefaults: defaults)
@@ -438,7 +493,7 @@ struct LearningSentencePreviewCoordinatorTests {
                 bundleIdentifier: context.bundleIdentifier, capability: .supported, context: context))
             reader = SentenceReader(focus: focus)
             coordinator = LearningSentencePreviewCoordinator(service: service, reader: reader, focus: focus,
-                panel: panel, debounce: pause == nil ? .zero : .milliseconds(600),
+                panel: panel, unitRecognizer: unitRecognizer, debounce: pause == nil ? .zero : .milliseconds(600),
                 waitForPause: { delay in
                     if let pause { await pause.wait(delay) }
                     else { try await Task.sleep(for: delay) }
@@ -568,4 +623,20 @@ struct LearningSentencePreviewCoordinatorTests {
             last = presentation
         }
     }
+}
+
+private actor UnitGate: LearningUnitRecognizing {
+    var pending: [String: CheckedContinuation<[LearningUnit], Never>] = [:]
+    var waiters: [String: CheckedContinuation<Void, Never>] = [:]
+    func recognize(_ translation: String, language: LearningLanguage) async throws -> [LearningUnit] {
+        await withCheckedContinuation {
+            pending[translation] = $0
+            waiters.removeValue(forKey: translation)?.resume()
+        }
+    }
+    func waitFor(_ text: String) async {
+        if pending[text] != nil { return }
+        await withCheckedContinuation { waiters[text] = $0 }
+    }
+    func finish(_ text: String, units: [LearningUnit]) { pending.removeValue(forKey: text)?.resume(returning: units) }
 }

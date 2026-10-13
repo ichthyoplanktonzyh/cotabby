@@ -1,0 +1,237 @@
+{
+  "date": "2026-10-13",
+  "hardware": {
+    "cpu": "Apple M1 Max",
+    "memoryGiB": 32,
+    "model": "MacBookPro18,2"
+  },
+  "resource": {
+    "version": "kaikki-2026-10-03-v1",
+    "sha256": "ff66f9835d9cf8f586d0618c09ad3e2b091269bc15bcdac1502660dd0e4c7984",
+    "bytes": 11543088,
+    "entriesByLanguage": {
+      "en": 18366,
+      "es": 1012,
+      "fr": 1069,
+      "de": 632,
+      "it": 861,
+      "pt": 488,
+      "nl": 653,
+      "ru": 457,
+      "zh": 9704,
+      "ja": 706,
+      "ko": 107,
+      "hi": 189,
+      "ar": 153
+    },
+    "licenseURL": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  "analysisWeights": {
+    "name": "Gemma 4 E4B Q4_K_M",
+    "sha256": "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c"
+  },
+  "runs": [
+    {
+      "alignmentOutputs": [
+        {
+          "pairs": [
+            [
+              [
+                "我期待见到你。"
+              ],
+              [
+                "I look forward to seeing you."
+              ]
+            ]
+          ],
+          "source": "我期待见到你。",
+          "translation": "I look forward to seeing you."
+        },
+        {
+          "pairs": [
+            [
+              [
+                "你可以慢慢来。"
+              ],
+              [
+                "You can take your time."
+              ]
+            ]
+          ],
+          "source": "你可以慢慢来。",
+          "translation": "You can take your time."
+        },
+        {
+          "pairs": [
+            [
+              [
+                "我会照顾你。"
+              ],
+              [
+                "I will take care of you."
+              ]
+            ]
+          ],
+          "source": "我会照顾你。",
+          "translation": "I will take care of you."
+        }
+      ],
+      "analysisModel": "sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "configuration": "Release",
+      "measurement": "production NSView bitmap paint; polling up to 5ms",
+      "origin": "first painted complete translation",
+      "rows": [
+        {
+          "alignmentCount": 1,
+          "alignmentPaintMS": 9364.527708,
+          "message": "",
+          "mode": "cold",
+          "source": "我期待见到你。",
+          "translation": "I look forward to seeing you.",
+          "unitCount": 4,
+          "unitPaintMS": 672.943458,
+          "unitsPresentAtFirstPaint": false
+        },
+        {
+          "alignmentCount": 1,
+          "alignmentPaintMS": 740.768709,
+          "message": "",
+          "mode": "warm",
+          "source": "你可以慢慢来。",
+          "translation": "You can take your time.",
+          "unitCount": 4,
+          "unitPaintMS": 18.649167,
+          "unitsPresentAtFirstPaint": false
+        },
+        {
+          "alignmentCount": 1,
+          "alignmentPaintMS": 737.153084,
+          "message": "",
+          "mode": "warm",
+          "source": "我会照顾你。",
+          "translation": "I will take care of you.",
+          "unitCount": 4,
+          "unitPaintMS": 12.957709,
+          "unitsPresentAtFirstPaint": false
+        },
+        {
+          "alignmentCount": 1,
+          "alignmentPaintMS": 0,
+          "message": "",
+          "mode": "cached",
+          "source": "我期待见到你。",
+          "translation": "I look forward to seeing you.",
+          "unitCount": 4,
+          "unitPaintMS": 0,
+          "unitsPresentAtFirstPaint": true
+        }
+      ],
+      "translation": "fixed synthetic sentence pairs; translation latency excluded"
+    },
+    {
+      "alignmentOutputs": [
+        {
+          "pairs": [
+            [
+              [
+                "我期待见到你。"
+              ],
+              [
+                "I look forward to seeing you."
+              ]
+            ]
+          ],
+          "source": "我期待见到你。",
+          "translation": "I look forward to seeing you."
+        },
+        {
+          "pairs": [
+            [
+              [
+                "你可以慢慢来。"
+              ],
+              [
+                "You can take your time."
+              ]
+            ]
+          ],
+          "source": "你可以慢慢来。",
+          "translation": "You can take your time."
+        },
+        {
+          "pairs": [
+            [
+              [
+                "我会照顾你。"
+              ],
+              [
+                "I will take care of you."
+              ]
+            ]
+          ],
+          "source": "我会照顾你。",
+          "translation": "I will take care of you."
+        }
+      ],
+      "analysisModel": "sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+      "configuration": "Release",
+      "measurement": "production NSView bitmap paint; polling up to 5ms",
+      "origin": "first painted complete translation",
+      "rows": [
+        {
+          "alignmentCount": 1,
+          "alignmentPaintMS": 6510.160042,
+          "message": "",
+          "mode": "cold",
+          "source": "我期待见到你。",
+          "translation": "I look forward to seeing you.",
+          "unitCount": 4,
+          "unitPaintMS": 635.462375,
+          "unitsPresentAtFirstPaint": false
+        },
+        {
+          "alignmentCount": 1,
+          "alignmentPaintMS": 759.099375,
+          "message": "",
+          "mode": "warm",
+          "source": "你可以慢慢来。",
+          "translation": "You can take your time.",
+          "unitCount": 4,
+          "unitPaintMS": 12.943542,
+          "unitsPresentAtFirstPaint": false
+        },
+        {
+          "alignmentCount": 1,
+          "alignmentPaintMS": 784.398792,
+          "message": "",
+          "mode": "warm",
+          "source": "我会照顾你。",
+          "translation": "I will take care of you.",
+          "unitCount": 4,
+          "unitPaintMS": 12.400084,
+          "unitsPresentAtFirstPaint": false
+        },
+        {
+          "alignmentCount": 1,
+          "alignmentPaintMS": 0,
+          "message": "",
+          "mode": "cached",
+          "source": "我期待见到你。",
+          "translation": "I look forward to seeing you.",
+          "unitCount": 4,
+          "unitPaintMS": 0,
+          "unitsPresentAtFirstPaint": true
+        }
+      ],
+      "translation": "fixed synthetic sentence pairs; translation latency excluded"
+    }
+  ],
+  "limitations": [
+    "Synthetic fixed translations; input debounce, AX capture and translation generation excluded.",
+    "Nominal 5ms polling; no bounded scheduling or screen-paint precision guarantee.",
+    "Cold native context is not a purged OS file cache.",
+    "Both prompts yielded one whole-sentence group on all three short cases; alignment quality is unresolved.",
+    "Cached 0ms means included at the first observed paint.",
+    "Lexical recognition uses dictionary forms and conservative pronominal slots; coverage and definition language vary."
+  ]
+}

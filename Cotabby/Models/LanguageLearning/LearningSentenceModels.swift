@@ -67,6 +67,8 @@ struct LearningSentencePresentation {
     let previousTranslation: String?
     let shortcutLabel: String
     var isStale: Bool = false
+    var units: [LearningUnit] = []
+    var unitStage: LearningUnitStage = .pending
 }
 
 @MainActor

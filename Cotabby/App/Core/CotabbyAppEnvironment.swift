@@ -369,6 +369,9 @@ final class CotabbyAppEnvironment {
         let learningReader = LearningSelectionReplacement(
             focus: focusModel, inputSource: keyboardInputSourceMonitor, inserter: suggestionInserter
         )
+        // One offline resource/index owner serves both asynchronous unit recognition and lookup.
+        // Panels borrow it; none creates a second dictionary or recognition worker in a view.
+        let learningLexicon = LearningLexiconService(resourceURL: Bundle.main.url(forResource: "learning-expressions", withExtension: "json"))
         let learningCoordinator = LanguageLearningCoordinator(
             service: learningService, focus: focusModel,
             replacement: learningReader,
@@ -376,7 +379,9 @@ final class CotabbyAppEnvironment {
         )
         let sentencePreview = LearningSentencePreviewCoordinator(
             service: learningService, reader: learningReader, focus: focusModel,
-            panel: LearningSentencePanel(reservedFramePublisher: overlayController.$visiblePanelFrame.eraseToAnyPublisher()),
+            panel: LearningSentencePanel(reservedFramePublisher: overlayController.$visiblePanelFrame.eraseToAnyPublisher(),
+                                         dictionaryProvider: learningLexicon),
+            unitRecognizer: learningLexicon,
             availability: learningAvailability
         )
         inputMonitor.learningKeyDecider = { [weak learningCoordinator, weak sentencePreview] event in

@@ -1,13 +1,14 @@
 import Foundation
 
-/// The GE experiment baseline asks only for continuous quoted pairs. This pure renderer owns
-/// task instructions; LearningAlignmentParser owns positions and the UI owns IDs/colors. The
+/// The restored GE baseline asks only for continuous quoted pairs. This renderer owns task
+/// instructions; LearningAlignmentParser owns positions and the UI owns IDs/colors. The
 /// analysis service supplies the already displayed translation, which must never be rewritten.
 nonisolated enum LearningAnalysisPrompt {
     static func render(source: String, translation: String, sourceLanguage: LearningLanguage,
                        targetLanguage: LearningLanguage) throws -> String {
         guard source.utf8.count <= 6_000, source.contains(where: \.isLetter) else {
-            throw LearningFailure.message("当前句子为空或超过 6 KB。")
+            throw LearningFailure.message(String(localized: "The current sentence is empty or exceeds 6 KB.",
+                table: "Learning", comment: "Error shown when phrase matching receives an empty or oversized source sentence."))
         }
         let translation = try LearningExpressionOutputPolicy.validatedText(translation)
         let evidence = try JSONSerialization.data(withJSONObject: ["source": source, "translation": translation], options: [.sortedKeys])

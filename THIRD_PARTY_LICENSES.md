@@ -100,3 +100,13 @@ SymSpell published the derived multilingual files.
 Chinese is intentionally not bundled: SymSpell's generation notes do not identify
 the source word list and license for that file, and Cotabby's current typo gate does
 not yet provide reliable word segmentation for languages without whitespace.
+
+## Learning expression dictionary
+
+The independent `Cotabby/Resources/learning-expressions.json` data resource is an expression
+subset of Wiktionary, extracted by Wiktextract / Kaikki and packaged by Cotabby. It is
+licensed under CC BY-SA 4.0. This data license is distinct from the extraction program's MIT
+license. Source links, attribution, transformation details and download checksums are bundled
+in `learning-expressions.NOTICE.md` and `learning-expressions.provenance.json`; the expression
+window also exposes entry source and license links. No quotations, usage examples or media
+are included. Full license: https://creativecommons.org/licenses/by-sa/4.0/legalcode.en

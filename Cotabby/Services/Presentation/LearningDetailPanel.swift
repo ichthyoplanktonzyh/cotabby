@@ -1,12 +1,13 @@
 import AppKit
 import SwiftUI
 
-/// Owned once by the sentence panel. This nonactivating sibling publishes chunk selection to
-/// both SwiftUI cards and owns the native dictionary presenter. Definition windows stay attached
-/// to this panel, so closing or replacing the phrase also clears the system lookup UI.
+/// Owned once by the sentence panel. This nonactivating sibling owns one expression/word dictionary
+/// session and shares correspondence selection with the sentence card. Closing or replacing the
+/// document invalidates lookup work; the native presenter remains for compatibility callers.
 @MainActor
 final class LearningDetailPanel {
     let state = LearningDetailState()
+    let dictionarySession: LearningDictionarySession
     private let dictionary: LearningSystemDictionaryPresenter
     private var panel: NSPanel?
     private var hosting: NSHostingView<LearningDetailCard>?
@@ -21,8 +22,10 @@ final class LearningDetailPanel {
     private var anchorOffsetFromTop: CGFloat = 0
     private(set) var isVisible = false
 
-    init(dictionary: LearningSystemDictionaryPresenter? = nil) {
+    init(dictionary: LearningSystemDictionaryPresenter? = nil, provider: (any LearningDictionaryProviding)? = nil) {
         self.dictionary = dictionary ?? LearningSystemDictionaryPresenter()
+        dictionarySession = LearningDictionarySession(provider: provider ?? LearningLexiconService(
+            resourceURL: Bundle.main.url(forResource: "learning-expressions", withExtension: "json")))
     }
 
     var visibleFrame: CGRect? { isVisible ? panel?.frame : nil }
@@ -40,15 +43,29 @@ final class LearningDetailPanel {
     func dismissDictionary() -> Bool { dictionary.dismiss() }
 
     func show(_ chunk: LearningChunkDetail, placement: LearningDetailPlacement) {
+        // Retain the correspondence entry point for existing callers. Product unit clicks pass
+        // an independently recognized unit, rather than using alignment grain for dictionary grain.
+        let range = NSRange(location: 0, length: chunk.target.utf16.count)
+        let unit = LearningUnit(id: 0, surface: chunk.target, query: chunk.target, kind: .expression,
+            ranges: [range], words: LearningUnitPolicy.words(in: chunk.target, language: chunk.language))
+        show(unit, documentID: chunk.documentID, language: chunk.language, correspondence: chunk, placement: placement)
+    }
+
+    func selectCorrespondence(_ chunk: LearningChunkDetail) { state.chunk = chunk }
+
+    func show(_ unit: LearningUnit, documentID: UUID, language: LearningLanguage,
+              correspondence: LearningChunkDetail?, placement: LearningDetailPlacement) {
         dictionary.dismiss()
-        state.chunk = chunk
+        state.chunk = correspondence
+        dictionarySession.open(unit, documentID: documentID, language: language)
         anchorY = placement.anchorY
         anchorOffsetFromTop = placement.parent.maxY - placement.anchorY
         layoutRevision = UUID()
         let revision = layoutRevision
         let card = LearningDetailCard(state: state,
-            selectWord: { [weak self] word, button in self?.selectWord(word, from: button, chunk: chunk) },
-            close: { [weak self] in self?.hide() }, sizeChanged: { [weak self] in self?.scheduleLayout($0, revision: revision) })
+            selectWord: { _, _ in },
+            close: { [weak self] in self?.hide() }, sizeChanged: { [weak self] in self?.scheduleLayout($0, revision: revision) },
+            session: dictionarySession)
         let window = panel ?? LearningDetailWindow(contentRect: .zero,
             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
         if let hosting { hosting.rootView = card } else {
@@ -57,7 +74,8 @@ final class LearningDetailPanel {
             window.contentView = view
         }
         panel = window
-        window.title = "语块对应"
+        window.title = String(localized: "Expression Dictionary", table: "Learning",
+            comment: "Window title for the learning dictionary panel.")
         window.isReleasedWhenClosed = false
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -88,6 +106,7 @@ final class LearningDetailPanel {
 
     func hide() {
         dictionary.dismiss()
+        dictionarySession.close()
         layoutRevision = UUID()
         state.chunk = nil
         parentFrame = nil
@@ -105,14 +124,14 @@ final class LearningDetailPanel {
         let sequence = measurementSequence
         Task { @MainActor [weak self] in
             guard let self, self.layoutRevision == revision, self.measurementSequence == sequence,
-                  self.state.chunk != nil else { return }
+                  self.dictionarySession.unit != nil else { return }
             self.contentSize = size
             self.layout()
         }
     }
 
     private func layout() {
-        guard state.chunk != nil, let panel, let parentFrame, let size = contentSize,
+        guard dictionarySession.unit != nil, let panel, let parentFrame, let size = contentSize,
               let frame = LearningDetailPanelLayout.frame(parent: parentFrame, anchorY: anchorY,
                 size: CGSize(width: ceil(size.width), height: ceil(size.height)), screen: screen,
                 obstacles: [caretRect] + (reservedFrame.map { [$0] } ?? [])) else {

@@ -37,7 +37,7 @@ Cotabby/
 │   ├── Focus/                        focus snapshots and tracking state
 │   ├── History/                      typing-history records, archive, and preferences
 │   ├── Input/                        keyboard event values
-│   ├── LanguageLearning/             role-specific model profiles, request traces, languages and sentence/chunk contracts
+│   ├── LanguageLearning/             model profiles, traces, languages, sentence/chunk/unit and dictionary contracts
 │   ├── Onboarding/                   onboarding templates
 │   ├── Permissions/                  TCC permission values
 │   ├── Runtime/                      native allocation snapshots and runtime contracts
@@ -56,7 +56,7 @@ Cotabby/
 │   │   └── Resolution/               focus snapshots, geometry, bounded AX walks
 │   ├── History/                      typing-history store, recording, and encrypted vault
 │   ├── Input/                        event taps and input-source monitoring
-│   ├── LanguageLearning/             independent native/Endpoint tasks, resource/telemetry owners and verified editor captures
+│   ├── LanguageLearning/             native/Endpoint tasks, offline lexicon, dictionary sessions, telemetry and editor captures
 │   ├── ModelManagement/              model discovery, download, and validation
 │   ├── Permission/
 │   │   └── Guidance/                 permission overlay and System Settings guidance
@@ -84,7 +84,7 @@ Cotabby/
 │   │   └── Capability/               supported-field capability resolution
 │   ├── History/                      history retrieval, phrase prediction, scrubbing, import
 │   ├── Input/                        composition, key-label, and selection helpers
-│   ├── LanguageLearning/             atomic pair alignment, historical stream decoding, prompts, scopes and preview/write policies
+│   ├── LanguageLearning/             exact unit recognition, correspondence projection, pair parsing, prompts and preview/write rules
 │   ├── Logging/                      debug options, request IDs, and JSONL handlers
 │   ├── Macros/
 │   │   └── Evaluators/               deterministic arithmetic/date/unit evaluators

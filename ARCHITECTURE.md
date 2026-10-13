@@ -614,8 +614,11 @@ retains its source and range; only a verified adjacent predecessor can be carrie
 `LearningExpressionService` is an app-owned facade over `LearningTranslationService` and
 `LearningAnalysisService`. `LearningSentenceGenerating` exposes the two stages explicitly. The
 translator returns only the natural expression; the coordinator displays and caches it before
-starting optional analysis. `LearningAnalysisPrompt` sends the source plus that exact translation,
-and uses the compact GE baseline to request only `[[source fragment, translation fragment]]`.
+starting independent offline unit recognition and optional analysis. `LearningAnalysisPrompt` sends
+the source plus that exact translation, using the complete restored GE baseline to request
+`[[source fragment, translation fragment]]`: reusable phrases/grammar constructions, clause-level
+long-sentence splits and a suggested 3–6 pairs with short/long-sentence exceptions. Pair count is
+prompt guidance; the parser and presentation do not require a fixed count or complete coverage.
 `LearningAlignmentParser` validates the complete array before one batch reaches the UI, resolves
 exact continuous quotations to grapheme-safe UTF-16 spans and rejects rewrites or overlaps. Unique
 pairs can disambiguate remaining repeated occurrences; still ambiguous pairs stay uncolored and
@@ -624,7 +627,22 @@ explanations, model-generated IDs, positions or colors. `LearningSentenceStreamP
 historical NDJSON experiment protocol but is not used by product analysis. Analysis failures preserve
 the expression, and changing an analysis model, credential, or switch restarts only analysis. Its
 cache includes the fixed sentence pair, languages and analysis model snapshot. With analysis off,
-expansion still shows the sentence pair and native dictionary word buttons.
+expansion still shows the sentence pair, learning units and dictionary interaction.
+
+`LearningUnit` owns click ranges independently of `LearningMeaningChunk` correspondence ranges.
+`LearningUnitRecognizer` is a pure per-language index of exact dictionary headwords/recorded forms
+and conservative single-word slots in explicitly recorded patterns. UTF-16 ranges always reference
+the untouched translation; normalized keys never become display text. Pattern fixed parts may be
+separated, and their slot words stay individually clickable. It does not infer arbitrary morphology
+or grammatical phrases. `LearningUnitPolicy` provides fallback word occurrences and filters out any
+correspondence that intersects only part of a unit; a correspondence may contain several units.
+
+`CotabbyAppEnvironment` owns one `LearningLexiconService` actor, shared by recognition and lookup.
+It lazily loads the independent CC BY-SA expression resource and builds language indices away from
+MainActor. The coordinator owns a separately cancelled recognition task and a bounded memory cache
+keyed by fixed translation/language. Recognition and analysis can finish in either order; changing
+analysis settings restarts only analysis. Their request identities prevent late units or colors
+attaching to a new sentence, and each failed stage preserves the translation.
 
 `LanguageLearningSettings` owns two `LearningModelSettings` profiles and separate translation and
 analysis switches. `CotabbyAppEnvironment` constructs one `LearningModelCollection`; settings views,
@@ -713,27 +731,29 @@ valid chunks. No screen OCR, clipboard, history or autocomplete prompt is includ
 The coordinator rejects stale request IDs, keyboard edits, changed focus snapshots and a different
 frontmost application. Full AX recapture happens before the first translation and at completion,
 rather than on every analysis update. `LearningSentencePanel` remains nonactivating, preserves view
-selection within a request and dismisses on outside clicks. `LearningChunkDisplay` preserves exact
-characters and orders quoted spans by sentence position. `LearningSentenceCard` renders matching
-meaning IDs as colored chips; its wrapping layout also respects right-to-left targets.
-`LearningDetailPanel`, owned by the sentence panel, shares `LearningDetailState` for selected borders
-and keeps the selected source/target correspondence visible while native word lookup opens. `LearningDictionaryButton`
-bridges a native button's text and view geometry to the controller, which validates the immutable
-chunk and source window. Compact translation text also supports double-click word lookup through
-`LearningSentenceDictionaryText`: a read-only TextKit view keeps the sentence's original formatting,
-rejects whitespace and truncated glyph hits, and cannot take first-responder focus. The word policy
-uses the configured target language and returns the exact UTF-16 occurrence for document validation.
-Single clicks do not trigger lookup; background chunk updates preserve an open compact lookup for
-the same fixed translation. `LearningSystemDictionaryPresenter` calls the public AppKit `showDefinition`
-overlay API. Each lookup uses a separate transparent, nonactivating source panel anchored to the
-clicked title or inline word. That source is a child of the containing learning window and has no rendered content or mouse
-handling. Its public child-window hook rejects delayed AppKit windows after cancellation; a later
-lookup cannot revive an older source. The parent's click monitor treats the complete ancestor chain
-as one family. Esc closes lookup, then the correspondence detail, then the main pair, even if generation
-eligibility has changed. Hiding, replacing, or losing placement closes the lookup source. Dictionary
-formatting and contents belong to the system's enabled dictionaries, with no plain-text reparsing,
-private API, hosted lookup service, or model request. All sentence caches are
-bounded, memory-only, and cleared on field or configuration changes.
+selection within a request and dismisses on outside clicks. `LearningSentenceCard` uses the same
+read-only TextKit sentence view for compact and expanded translation, and for source correspondence
+highlights. Text remains a natural continuous sentence: neutral underlines mark expressions, and
+validated correspondence ranges add matching colors. The explicit TextKit 1 ownership graph avoids
+migration-time layout graph replacement. Double-click hit testing rejects whitespace/truncated
+glyphs and validates the unit against the current document and source view. Single clicks select
+a correspondence within the expanded pair; they do not open another window or query a dictionary.
+
+`LearningDetailPanel` owns one `LearningDictionarySession`, whose home page is the clicked unit.
+Internal word selection and return-to-expression change the query within the same nonactivating
+window. Query revisions, cancellation and a per-open-unit cache reject stale results after word
+changes, return or dismissal. `LearningDictionaryCard` separately renders structured offline senses,
+one raw system definition, missing entries and unavailable resources. Entry-level source,
+English-definition and license labels remain visible. Offline phrase lookup preserves multiple
+exact candidates; the system fallback requires the detected term range to cover the entire query,
+so a constituent definition cannot masquerade as a phrase entry. The public `DCSCopyTextDefinition`
+copy transfers Core Foundation ownership exactly once. No app HTTP dictionary client or additional
+model request exists. The older native dictionary presenter remains for compatibility callers,
+but the sentence-learning path uses the shared session. Background unit/alignment updates preserve
+an open dictionary for the same fixed translation. Esc dismisses this window before the sentence;
+typing and changed documents close it; unavailable placement hides it until space returns.
+Sentence caches are bounded, memory-only,
+and cleared on field or configuration changes.
 
 Learning cards reserve space independently from completion. `OverlayController` publishes its actual
 window rectangle after rendering or acceptance, without changing its ghost positioning or the

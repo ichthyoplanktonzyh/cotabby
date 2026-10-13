@@ -1,0 +1,312 @@
+{
+  "date": "2026-10-13",
+  "configuration": "Release",
+  "hardware": "Apple M1 Max / 32 GiB",
+  "restoredCheckpoint": "97835f78",
+  "instructionsMatchCheckpoint": true,
+  "promptBodySHA256": "07078c3452c3518c03e46beedb2a4c892bf620202622b72fe4ec7fad3b7cd03e",
+  "comparison": {
+    "Learning": {
+      "requests": 22,
+      "protocolSucceeded": 22,
+      "groupDistribution": {
+        "1": 12,
+        "2": 8,
+        "3": 2
+      },
+      "wholeSentencePairs": 12,
+      "requestMSMedianAll": 828.59085383825,
+      "requestMSMedianValid": 828.59085383825,
+      "filteredGroups": 0,
+      "visibleGroupDistribution": {
+        "1": 12,
+        "2": 8,
+        "3": 2
+      }
+    },
+    "GE": {
+      "requests": 22,
+      "protocolSucceeded": 22,
+      "groupDistribution": {
+        "1": 14,
+        "2": 8
+      },
+      "wholeSentencePairs": 14,
+      "requestMSMedianAll": 827.6653126813471,
+      "requestMSMedianValid": 827.6653126813471,
+      "filteredGroups": 0,
+      "visibleGroupDistribution": {
+        "1": 14,
+        "2": 8
+      }
+    }
+  },
+  "displayLatency": {
+    "alignmentOutputs": [
+      {
+        "pairs": [
+          [
+            [
+              "我期待见到你。"
+            ],
+            [
+              "I look forward to seeing you."
+            ]
+          ]
+        ],
+        "source": "我期待见到你。",
+        "translation": "I look forward to seeing you."
+      },
+      {
+        "pairs": [
+          [
+            [
+              "你可以慢慢来。"
+            ],
+            [
+              "You can take your time."
+            ]
+          ]
+        ],
+        "source": "你可以慢慢来。",
+        "translation": "You can take your time."
+      },
+      {
+        "pairs": [
+          [
+            [
+              "我会照顾你。"
+            ],
+            [
+              "I will take care of you."
+            ]
+          ]
+        ],
+        "source": "我会照顾你。",
+        "translation": "I will take care of you."
+      }
+    ],
+    "analysisModel": "sha256-370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c",
+    "configuration": "Release",
+    "measurement": "production NSView bitmap paint; nominal 5ms polling",
+    "origin": "first painted complete translation",
+    "rows": [
+      {
+        "alignmentCount": 1,
+        "alignmentPaintMS": 5967.69125,
+        "message": "",
+        "mode": "cold",
+        "source": "我期待见到你。",
+        "translation": "I look forward to seeing you.",
+        "unitCount": 4,
+        "unitPaintMS": 637.213917,
+        "unitsPresentAtFirstPaint": false,
+        "visibleAlignmentCount": 1
+      },
+      {
+        "alignmentCount": 1,
+        "alignmentPaintMS": 757.861833,
+        "message": "",
+        "mode": "warm",
+        "source": "你可以慢慢来。",
+        "translation": "You can take your time.",
+        "unitCount": 4,
+        "unitPaintMS": 13.807792,
+        "unitsPresentAtFirstPaint": false,
+        "visibleAlignmentCount": 1
+      },
+      {
+        "alignmentCount": 1,
+        "alignmentPaintMS": 765.254625,
+        "message": "",
+        "mode": "warm",
+        "source": "我会照顾你。",
+        "translation": "I will take care of you.",
+        "unitCount": 4,
+        "unitPaintMS": 13.887458,
+        "unitsPresentAtFirstPaint": false,
+        "visibleAlignmentCount": 1
+      },
+      {
+        "alignmentCount": 1,
+        "alignmentPaintMS": 0,
+        "message": "",
+        "mode": "cached",
+        "source": "我期待见到你。",
+        "translation": "I look forward to seeing you.",
+        "unitCount": 4,
+        "unitPaintMS": 0,
+        "unitsPresentAtFirstPaint": true,
+        "visibleAlignmentCount": 1
+      }
+    ],
+    "translation": "fixed synthetic sentence pairs; translation latency excluded"
+  },
+  "blindReview": {
+    "deduplicatedItemCount": 14,
+    "scores": {
+      "review1": {
+        "item-00": [
+          2,
+          1,
+          2
+        ],
+        "item-01": [
+          2,
+          2,
+          2
+        ],
+        "item-02": [
+          2,
+          2,
+          2
+        ],
+        "item-03": [
+          2,
+          2,
+          2
+        ],
+        "item-04": [
+          2,
+          1,
+          2
+        ],
+        "item-05": [
+          2,
+          2,
+          2
+        ],
+        "item-06": [
+          2,
+          2,
+          2
+        ],
+        "item-07": [
+          2,
+          2,
+          2
+        ],
+        "item-08": [
+          2,
+          2,
+          2
+        ],
+        "item-09": [
+          1,
+          1,
+          1
+        ],
+        "item-10": [
+          2,
+          2,
+          2
+        ],
+        "item-11": [
+          2,
+          2,
+          2
+        ],
+        "item-12": [
+          2,
+          2,
+          2
+        ],
+        "item-13": [
+          2,
+          2,
+          2
+        ]
+      },
+      "review2": {
+        "item-00": [
+          2,
+          1,
+          2
+        ],
+        "item-01": [
+          2,
+          2,
+          2
+        ],
+        "item-02": [
+          2,
+          2,
+          2
+        ],
+        "item-03": [
+          2,
+          2,
+          2
+        ],
+        "item-04": [
+          2,
+          1,
+          2
+        ],
+        "item-05": [
+          2,
+          2,
+          2
+        ],
+        "item-06": [
+          2,
+          2,
+          2
+        ],
+        "item-07": [
+          2,
+          2,
+          2
+        ],
+        "item-08": [
+          2,
+          2,
+          2
+        ],
+        "item-09": [
+          2,
+          2,
+          2
+        ],
+        "item-10": [
+          2,
+          2,
+          2
+        ],
+        "item-11": [
+          2,
+          2,
+          2
+        ],
+        "item-12": [
+          2,
+          2,
+          2
+        ],
+        "item-13": [
+          2,
+          2,
+          2
+        ]
+      }
+    },
+    "disagreementItems": [
+      "item-09"
+    ],
+    "interpretation": "AI reference judgments, not objective accuracy"
+  },
+  "sampling": {
+    "temperature": 0.3,
+    "topP": 0.9,
+    "topK": 40,
+    "maxOutputTokens": 4096,
+    "randomSeed": "production default, not controlled"
+  },
+  "limitations": [
+    "11 fixed pairs repeated twice; same native Gemma E4B weights; alternating order.",
+    "Whole-sentence counts include legitimate short fixed expressions.",
+    "Complete GE versus modified Learning is a compound prompt comparison, not an isolated count ablation.",
+    "Historical GE used Ollama with a separate system message and template; not the same runtime path.",
+    "Current native results do not demonstrate a granularity benefit."
+  ]
+}

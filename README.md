@@ -232,8 +232,24 @@ Gemma uses the experiment's pinned 5.49 GB Q4_K_M text weights; E4B is not its t
 These recommendations do not override existing selections. Both tasks
 also accept imported GGUFs or configured endpoints. Battery/AC selections belong to each task, and
 shared-file deletion protects all tasks’ saved model references. Original autocomplete model settings remain
-independent. Analysis defaults off: expansion still shows the source and translation, with direct
-native dictionary lookup. Changing or failing analysis keeps the displayed translation.
+independent. Analysis defaults off: expansion still shows the source and translation. Changing or
+failing analysis keeps the displayed translation.
+
+The full translation appears first. An offline expression lexicon independently adds learning-unit
+boundaries: fixed expressions use a neutral underline, while ordinary words remain directly
+queryable. Double-click an expression in either the compact preview or expanded translation to
+query the whole expression. Its dictionary window offers internal words and a return-to-expression
+action in the same window. Missing expression entries are stated explicitly; constituent word
+definitions are never combined into a phrase definition. Copy always returns the original sentence.
+
+The bundled Wiktionary / Kaikki expression subset is about 11.5 MB and contains entries for all
+configured target languages, with uneven coverage and English definitions. Recognition uses exact
+headwords, recorded forms and conservative one-word slots in explicitly recorded expression
+patterns; it is not a comprehensive grammatical phrase detector. The data has separate
+[CC BY-SA attribution and provenance](Cotabby/Resources/learning-expressions.NOTICE.md).
+Expression lookup uses the offline resource; word fallback uses the public Dictionary Services
+API and the system's enabled dictionaries. No extra model request or app-managed hosted dictionary
+lookup is added.
 
 A sentence preview sends only the selected text or current sentence, up to 6 KB; larger scopes are
 rejected without truncation. Analysis additionally receives the exact displayed translation. Learning requests do not include screen contents, clipboard data or typing
@@ -241,7 +257,13 @@ history. The settings disclose transmission to a configured LAN/HTTPS service, a
 session rejects HTTP redirects. Existing learning endpoint selection migrates once into translation;
 analysis never inherits it. Missing configuration and failed requests remain recoverable, and model
 capability determines translation and alignment quality. Alignment preserves the displayed wording,
-uses the short GE prompt baseline and publishes highlights only after complete output validation.
+uses the restored GE prompt for reusable phrases/grammar constructions and clause-level long-sentence
+splits, with a suggested 3–6 pairs and exceptions for short fixed expressions or longer sentences.
+This is model guidance, not a required UI block count. Colors appear only after complete output
+validation and learning-unit boundary checks.
+One correspondence can combine several units; one fixed expression cannot be split into conflicting
+colors. Single-click a colored range to inspect its source/target correspondence. Failed recognition
+leaves the sentence readable and word lookup available; failed alignment leaves neutral units usable.
 
 `LearningTranslationPrompt` selects the specialist's translation instructions independently of
 chat framing. Hy-MT retains its existing vendor prompt; GGUF template metadata distinguishes the

@@ -17,3 +17,12 @@ struct LearningDictionaryTextAnchor {
     let bounds: CGRect
     let font: NSFont
 }
+
+/// A learning-unit hit retains the exact document ranges even when its dictionary headword is
+/// normalized or contains a pattern placeholder. The panel validates it against the live text.
+@MainActor
+struct LearningUnitTextAnchor {
+    let unit: LearningUnit
+    let bounds: CGRect
+    let font: NSFont
+}
