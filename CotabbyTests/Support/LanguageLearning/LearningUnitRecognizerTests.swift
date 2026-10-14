@@ -53,17 +53,6 @@ struct LearningUnitRecognizerTests {
     }
 
     @Test
-    func correspondenceCanCombineWordsButCannotSliceAFixedExpression() {
-        let text = "I look forward to seeing you."
-        let units = LearningUnitRecognizer(entries: [entry("look forward to")]).recognize(text, language: .english)
-        let valid = LearningMeaningChunk(id: 0, sourceRanges: [.init(location: 0, length: 3)],
-            targetRanges: [(text as NSString).range(of: "seeing you")])
-        let sliced = LearningMeaningChunk(id: 1, sourceRanges: [.init(location: 3, length: 2)],
-            targetRanges: [(text as NSString).range(of: "forward")])
-        #expect(LearningUnitPolicy.correspondence([valid, sliced], respecting: units) == [valid])
-    }
-
-    @Test
     func unicodeOccurrenceRangesAndRepeatsRemainDistinct() {
         let text = "😀 gracias a ti; gracias a él."
         let units = LearningUnitRecognizer(entries: [entry("gracias a", language: "es")]).recognize(text, language: .spanish)
@@ -79,8 +68,5 @@ struct LearningUnitRecognizerTests {
             entry("go jump in the lake", forms: ["go"])])
         #expect(recognizer.lookup("go").isEmpty && recognizer.lookup("figures").isEmpty)
         #expect(recognizer.recognize("Those figures look good. Go now.", language: .english).allSatisfy { $0.kind == .word })
-        let words = LearningUnitPolicy.fallback(in: "candle", language: .english)
-        let partial = LearningMeaningChunk(id: 0, sourceRanges: [.init(location: 0, length: 1)], targetRanges: [.init(location: 0, length: 3)])
-        #expect(LearningUnitPolicy.correspondence([partial], respecting: words).isEmpty)
     }
 }

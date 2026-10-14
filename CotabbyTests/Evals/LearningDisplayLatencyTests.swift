@@ -77,15 +77,14 @@ final class LearningDisplayLatencyTests: XCTestCase {
                         row["raw"] = raw
                         do {
                             let result = try LearningAlignmentParser.parse(raw, source: item.source, translation: item.translation)
-                            let visible = LearningUnitPolicy.correspondence(result.chunks, respecting: units)
                             row["protocolSucceeded"] = true
                             row["pairs"] = result.chunks.map { chunk in
                                 [chunk.sourceRanges.map { (item.source as NSString).substring(with: $0) },
                                  chunk.targetRanges.map { (item.translation as NSString).substring(with: $0) }]
                             }
                             row["groupCount"] = result.chunks.count
-                            row["visibleGroupCount"] = visible.count
-                            row["filteredGroupCount"] = result.chunks.count - visible.count
+                            row["visibleGroupCount"] = result.chunks.count
+                            row["filteredGroupCount"] = 0
                             row["unresolvedGroupCount"] = result.unresolvedChunkCount
                             row["wholeSentencePair"] = result.chunks.count == 1 &&
                                 result.chunks[0].sourceRanges == [.init(location: 0, length: item.source.utf16.count)] &&
@@ -193,7 +192,7 @@ private final class PaintLatencyPanel: LearningSentencePresenting {
         // Paint only a new measurable stage. Repainting the complete card every 5ms while the
         // model decodes would create avoidable CPU/GPU contention in the timing fixture itself.
         let unitsReady = unitPaint == nil && last.unitStage == .ready
-        let alignmentReady = alignmentPaint == nil && !last.isGenerating && !last.chunks.isEmpty
+        let alignmentReady = alignmentPaint == nil && !last.chunks.isEmpty
         guard firstPaint == nil || unitsReady || alignmentReady, let frame = real.visibleFrame,
               let host = NSApp.windows.first(where: {
                   $0.title == String(localized: "Expression Learning", table: "Learning") && $0.frame == frame
@@ -210,8 +209,7 @@ private final class PaintLatencyPanel: LearningSentencePresenting {
             unitPaint = now
             try? bitmap.representation(using: .png, properties: [:])?.write(to: directory.appendingPathComponent("\(index)-units.png"))
         }
-        if alignmentPaint == nil, !last.isGenerating,
-           !LearningUnitPolicy.correspondence(last.chunks, respecting: last.units).isEmpty,
+        if alignmentPaint == nil, !last.chunks.isEmpty,
            storage.length > 0 {
             var colored = false
             storage.enumerateAttribute(.backgroundColor, in: .init(location: 0, length: storage.length)) { value, _, _ in
@@ -231,7 +229,7 @@ private final class PaintLatencyPanel: LearningSentencePresenting {
         return ["mode": mode, "source": source, "translation": last?.translation ?? "", "unitPaintMS": elapsed(unitPaint),
                 "alignmentPaintMS": elapsed(alignmentPaint), "unitsPresentAtFirstPaint": unitPaint == firstPaint,
                 "unitCount": last?.units.count ?? 0, "alignmentCount": last?.chunks.count ?? 0,
-                "visibleAlignmentCount": last.map { LearningUnitPolicy.correspondence($0.chunks, respecting: $0.units).count } ?? 0,
+                "visibleAlignmentCount": last?.chunks.count ?? 0,
                 "message": last?.message ?? ""]
     }
     private func descendants(_ view: NSView) -> [LearningDictionaryTextView] {

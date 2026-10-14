@@ -117,11 +117,13 @@ final class LearningDetailPanel {
         dictionary.show(term, from: button)
     }
 
-    func hide() {
+    /// A word lookup closes the expression window while its meaning selection stays in the
+    /// sentence card. Document replacement and full dismissal use the default to clear both.
+    func hide(preservingCorrespondence: Bool = false) {
         dictionary.dismiss()
         dictionarySession.close()
         layoutRevision = UUID()
-        state.chunk = nil
+        if !preservingCorrespondence { state.chunk = nil }
         parentFrame = nil
         contentSize = nil
         isVisible = false

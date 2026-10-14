@@ -115,7 +115,7 @@ struct LearningSentenceCard: View {
                         comment: "Label above the translated sentence in the expanded learning card."))
                         .font(.caption).foregroundStyle(.secondary)
                     sentence(presentation.translation, source: false)
-                    if alignedChunks.isEmpty {
+                    if presentation.chunks.isEmpty {
                         Text(presentation.isGenerating
                             ? String(localized: "The translation appears first; chunk alignments are loading…", table: "Learning",
                                 comment: "Status shown while the translation is available but phrase-alignment analysis is still running.")
@@ -123,7 +123,7 @@ struct LearningSentenceCard: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     if let selected = detailState.chunk, selected.documentID == presentation.id,
-                       alignedChunks.contains(where: { $0.id == selected.chunkID }) {
+                       presentation.chunks.contains(where: { $0.id == selected.chunkID }) {
                         Text(verbatim: "\(selected.source) → \(selected.target)")
                             .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     }
@@ -137,13 +137,6 @@ struct LearningSentenceCard: View {
                         Text(String(localized: "Recognizing expressions… You can still double-click words to look them up.",
                             table: "Learning", comment: """
                             Status while expression recognition runs; dictionary lookup is already available.
-                            """))
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                    if presentation.unitStage != .pending, alignedChunks.count < presentation.chunks.count {
-                        Text(String(localized: "Some matches are not highlighted; complete expressions remain available for lookup.",
-                            table: "Learning", comment: """
-                            Status when some chunk alignments cannot be highlighted, while dictionary lookup still works.
                             """))
                             .font(.caption).foregroundStyle(.secondary)
                     }
@@ -175,18 +168,15 @@ struct LearningSentenceCard: View {
     }
 
     private func sentence(_ text: String, source: Bool) -> some View {
+        // Recognition owns underlines and click boundaries; the analysis service owns validated
+        // meaning ranges. Paint each result as it arrives, without making either grain a gate
+        // for the other. TextKit overlays these attributes on the same untouched sentence.
         LearningSentenceDictionaryText(text: text, language: source ? presentation.sourceLanguage : presentation.targetLanguage,
-            lookup: lookupText, units: source ? [] : presentation.units, chunks: alignedChunks,
+            lookup: lookupText, units: source ? [] : presentation.units, chunks: presentation.chunks,
             selectedChunk: detailState.chunk?.documentID == presentation.id ? detailState.chunk?.chunkID : nil,
             source: source, maximumLines: 0, fontSize: source ? 16 : 18,
             lookupUnit: source ? nil : lookupUnit, inspect: inspect)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var alignedChunks: [LearningMeaningChunk] {
-        guard presentation.unitStage != .pending else { return [] }
-        let units = presentation.units.isEmpty ?
-            LearningUnitPolicy.fallback(in: presentation.translation, language: presentation.targetLanguage) : presentation.units
-        return LearningUnitPolicy.correspondence(presentation.chunks, respecting: units)
-    }
 }

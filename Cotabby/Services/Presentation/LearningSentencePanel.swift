@@ -137,7 +137,7 @@ final class LearningSentencePanel: LearningSentencePresenting {
 
     private func selectCorrespondence(_ identifier: Int, documentID: UUID) {
         guard let current = currentPresentation, current.id == documentID, !current.isStale,
-              let chunk = LearningUnitPolicy.correspondence(current.chunks, respecting: current.units).first(where: { $0.id == identifier }) else { return }
+              let chunk = current.chunks.first(where: { $0.id == identifier }) else { return }
         detailPanel.selectCorrespondence(detail(chunk, presentation: current))
     }
 
@@ -152,18 +152,17 @@ final class LearningSentencePanel: LearningSentencePresenting {
         if anchor.unit.kind == .word {
             // Native presentation preserves pronunciation, word classes, senses and examples.
             // A single word never opens our expression card or requests flattened system text.
-            detailPanel.hide()
+            detailPanel.hide(preservingCorrespondence: true)
             sentenceDictionary.show(anchor.unit.query, from: view, textBounds: anchor.bounds, font: anchor.font)
             return
         }
         sentenceDictionary.dismiss()
-        let alignment = LearningUnitPolicy.correspondence(current.chunks, respecting: units).first { chunk in
-            anchor.unit.ranges.contains { range in chunk.targetRanges.contains { NSIntersectionRange(range, $0).length > 0 } }
-        }
         let anchorFrame = view.window!.convertToScreen(view.convert(anchor.bounds, to: nil))
         let screen = NSScreen.screens.first { $0.frame.intersects(parent) } ?? NSScreen.main
         detailPanel.show(anchor.unit, documentID: current.id, language: current.targetLanguage,
-            correspondence: alignment.map { detail($0, presentation: current) },
+            // A unit can cross multiple colors. Dictionary lookup must not choose a meaning
+            // group from its extent or replace the group selected by a preceding single click.
+            correspondence: detailPanel.state.chunk,
             placement: .init(parent: parent, caret: current.caret, reserved: reservedFrame,
                 screen: screen?.visibleFrame ?? CGRect(x: 0, y: 0, width: 800, height: 600), anchorY: anchorFrame.maxY + 12))
     }

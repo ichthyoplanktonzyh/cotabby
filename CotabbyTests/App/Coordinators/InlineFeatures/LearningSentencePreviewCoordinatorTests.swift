@@ -10,6 +10,37 @@ import Testing
 @Suite(.timeLimit(.minutes(1)))
 @MainActor
 struct LearningSentencePreviewCoordinatorTests {
+    @Test(arguments: [true, false])
+    func alignmentAndRecognitionPublishIndependentlyInEitherArrivalOrder(_ alignmentFirst: Bool) async throws {
+        let gate = UnitGate(), rig = try Rig(unitRecognizer: gate)
+        defer { rig.cleanup() }
+        rig.coordinator.start()
+        try rig.edit("我期待见到你")
+        await waitUntil { rig.service.requests.count == 1 }
+        let text = "I look forward to seeing you."
+        rig.service.emit(.translation(text))
+        await gate.waitFor(text)
+        await waitUntil { rig.service.analysisCalls == 1 }
+        let unit = LearningUnit(id: 2, surface: "look forward to", query: "look forward to", kind: .expression,
+            ranges: [.init(location: 2, length: 15)], words: [])
+        let chunk = LearningMeaningChunk(id: 0, sourceRanges: [.init(location: 1, length: 2)],
+            targetRanges: [(text as NSString).range(of: "forward")])
+        if alignmentFirst {
+            rig.service.emit(.chunks([chunk]))
+            #expect(rig.panel.last?.chunks == [chunk] && rig.panel.last?.unitStage == .pending)
+            await gate.finish(text, units: [unit])
+            await waitUntil { rig.panel.last?.unitStage == .ready }
+        } else {
+            await gate.finish(text, units: [unit])
+            await waitUntil { rig.panel.last?.unitStage == .ready }
+            #expect(rig.panel.last?.units == [unit] && rig.panel.last?.chunks.isEmpty == true)
+            rig.service.emit(.chunks([chunk]))
+        }
+        #expect(rig.panel.last?.chunks == [chunk] && rig.panel.last?.units == [unit])
+        #expect(rig.service.requests.count == 1 && rig.service.analysisCalls == 1)
+        #expect(rig.reader.replaceCount == 0)
+    }
+
     @Test
     func translationAndWordLookupSurviveIndependentUnitRecognitionAndDisabledAnalysis() async throws {
         let gate = UnitGate(), rig = try Rig(unitRecognizer: gate)

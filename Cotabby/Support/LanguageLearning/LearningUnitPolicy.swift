@@ -32,19 +32,4 @@ nonisolated enum LearningUnitPolicy {
         units.first { unit in unit.ranges.contains { NSLocationInRange(location, $0) } }
     }
 
-    /// Do not paint a partial fixed expression as if the model had aligned the whole expression.
-    /// Unit recognition can finish after analysis: recomputing this projection requires no new
-    /// model call and does not change either result. Neutral unit clicks remain available.
-    static func correspondence(_ chunks: [LearningMeaningChunk], respecting units: [LearningUnit]) -> [LearningMeaningChunk] {
-        chunks.filter { chunk in
-            units.allSatisfy { unit in
-                let touches = unit.ranges.contains { fixed in
-                    chunk.targetRanges.contains { NSIntersectionRange(fixed, $0).length > 0 }
-                }
-                return !touches || unit.ranges.allSatisfy { fixed in
-                    chunk.targetRanges.contains { $0.location <= fixed.location && NSMaxRange($0) >= NSMaxRange(fixed) }
-                }
-            }
-        }
-    }
 }

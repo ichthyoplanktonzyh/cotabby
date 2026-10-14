@@ -11,6 +11,77 @@ import Vision
 @MainActor
 struct LearningSentenceCardTests {
     @Test
+    func alignmentPaintsWhileUnitsArePendingAndKeepsItsRangesWhenRecognitionArrivesOrFails() async throws {
+        let id = UUID(), state = LearningDetailState()
+        let source = "我期待见到你。", target = "I look forward to seeing you."
+        let phraseRange = (target as NSString).range(of: "look forward to")
+        let coloredRange = (target as NSString).range(of: "forward")
+        let complementRange = (target as NSString).range(of: "seeing you")
+        // These literal ranges are layout fixtures, not a claim about model translation quality.
+        // One color crosses several click units; another deliberately covers part of a phrase.
+        let chunks = [LearningMeaningChunk(id: 0, sourceRanges: [.init(location: 1, length: 2)], targetRanges: [coloredRange]),
+                      LearningMeaningChunk(id: 1, sourceRanges: [.init(location: 3, length: 3)], targetRanges: [complementRange])]
+        let unit = LearningUnit(id: phraseRange.location, surface: "look forward to", query: "look forward to",
+            kind: .expression, ranges: [phraseRange], words: LearningUnitPolicy.words(in: "look forward to", language: .english))
+        var inspected: [Int] = [], lookedUp: [LearningUnit] = []
+        func card(_ stage: LearningUnitStage) -> LearningSentenceCard {
+            let units = stage == .ready ? [unit] : []
+            let presentation = LearningSentencePresentation(id: id, source: source, translation: target, chunks: chunks,
+                sourceLanguage: .chinese, targetLanguage: .english, caret: .zero, isExpanded: true,
+                isGenerating: false, message: "", previousTranslation: nil, shortcutLabel: "⌥T", units: units, unitStage: stage)
+            return LearningSentenceCard(presentation: presentation, detailState: state,
+                inspect: { inspected.append($0) }, expand: {}, dismiss: {},
+                lookupUnit: { anchor, _ in lookedUp.append(anchor.unit) }, sizeChanged: { _ in })
+        }
+        let window = NSPanel(contentRect: CGRect(x: 0, y: 0, width: 480, height: 280),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.appearance = NSAppearance(named: .aqua)
+        let host = NSHostingView(rootView: card(.pending))
+        window.contentView = host
+        defer { window.close() }
+        window.orderFrontRegardless()
+        for stage in [LearningUnitStage.pending, .ready, .failed] {
+            host.rootView = card(stage)
+            await settle(host, in: window)
+            let sourceView = try #require(findTranslation(source, in: host))
+            let targetView = try #require(findTranslation(target, in: host))
+            let left = try #require(sourceView.textStorage), right = try #require(targetView.textStorage)
+            let sourceColor = try #require(left.attribute(.backgroundColor, at: 1, effectiveRange: nil) as? NSColor)
+            let targetColor = try #require(right.attribute(.backgroundColor, at: coloredRange.location, effectiveRange: nil) as? NSColor)
+            #expect(sourceColor == targetColor)
+            #expect(right.attribute(.backgroundColor, at: (target as NSString).range(of: "seeing").location, effectiveRange: nil) as? NSColor
+                == right.attribute(.backgroundColor, at: (target as NSString).range(of: "you").location, effectiveRange: nil) as? NSColor)
+            #expect(right.attribute(.backgroundColor, at: 0, effectiveRange: nil) == nil)
+            #expect(right.attribute(.backgroundColor, at: phraseRange.location, effectiveRange: nil) == nil)
+            #expect(targetView.string == target && sourceView.string == source)
+            let underline = right.attribute(.underlineStyle, at: phraseRange.location, effectiveRange: nil)
+            #expect((underline != nil) == (stage == .ready))
+            if stage == .ready {
+                let point = try glyphPoint(coloredRange, in: targetView)
+                targetView.handleClick(at: point, count: 1)
+                targetView.handleClick(at: point, count: 2)
+                #expect(inspected == [0] && lookedUp == [unit], "Color clicks and whole-expression lookup have independent extents")
+            }
+            if let output = ProcessInfo.processInfo.environment["COTABBY_UI_SCREENSHOT_DIR"] {
+                let bitmap = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+                host.cacheDisplay(in: host.bounds, to: bitmap)
+                let directory = URL(fileURLWithPath: output)
+                try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                try bitmap.representation(using: .png, properties: [:])?.write(to: directory.appendingPathComponent("independent-\(stage).png"))
+            }
+        }
+    }
+
+    private func glyphPoint(_ range: NSRange, in view: LearningDictionaryTextView) throws -> NSPoint {
+        let manager = try #require(view.layoutManager), container = try #require(view.textContainer)
+        manager.ensureLayout(for: container)
+        let glyphs = manager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+        let bounds = manager.boundingRect(forGlyphRange: glyphs, in: container)
+        return .init(x: bounds.midX + view.textContainerOrigin.x, y: bounds.midY + view.textContainerOrigin.y)
+    }
+
+    @Test
     func compactLongTranslationScrollsToItsEndAndShortContentShrinksAgain() async throws {
         let id = UUID()
         let target = "Opening sentence remains visible. "
