@@ -1,12 +1,14 @@
+import AppKit
 import SwiftUI
 
-/// The single dictionary window keeps the expression as its home page. Switching a word changes
-/// this session's content, not its window. Structured senses and raw system definitions have
-/// separate layouts, so missing fields are never invented by parsing arbitrary dictionary text.
+/// The expression stays visible as the home page. Its component buttons supply live AppKit
+/// anchors for native word lookup; closing the system popup returns to this structured entry.
+/// System hits are links to native presentation, never flattened dictionary text rendered here.
 struct LearningDictionaryCard: View {
     @ObservedObject var session: LearningDictionarySession
     let close: () -> Void
     let sizeChanged: (CGSize) -> Void
+    let lookup: (String, NSButton) -> Void
     @State private var definitionHeight: CGFloat = 60
 
     var body: some View {
@@ -36,16 +38,14 @@ struct LearningDictionaryCard: View {
             ScrollView {
                 definition.frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
-                    .background(GeometryReader { geometry in
-                        Color.clear.preference(key: LearningScrollHeightPreference.self, value: geometry.size.height)
-                    })
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                        // Read content directly so a ScrollView cannot swallow the measurement
+                        // while the same host changes from a loaded phrase entry to a miss.
+                        if height.isFinite, height > 0 { definitionHeight = height }
+                    }
             }
             .frame(height: min(max(definitionHeight, 24), 210))
-            .onPreferenceChange(LearningScrollHeightPreference.self) { height in
-                // Short entries should not inherit a full dictionary viewport's blank space.
-                // Keep a bounded scroll area for long entries, ignoring transient zero measures.
-                if height.isFinite, height > 0 { definitionHeight = height }
-            }
+            .id(session.query)
             if case .result(.entries) = session.content,
                let url = URL(string: "https://creativecommons.org/licenses/by-sa/4.0/") {
                 // Attribution stays outside the scroll viewport, including for long entries.
@@ -60,8 +60,7 @@ struct LearningDictionaryCard: View {
                     .font(.caption).foregroundStyle(.secondary)
                 LearningTextFlowLayout(spacing: 5, rowSpacing: 5, rightToLeft: session.contentLanguage == .arabic) {
                     ForEach(Array(unit.words.enumerated()), id: \.offset) { _, word in
-                        Button(word.text) { session.select(word) }
-                            .buttonStyle(.bordered).controlSize(.small)
+                        LearningDictionaryButton(word: word.text, lookup: lookup)
                     }
                 }
                 // Dictionary terms keep their stored order; only their positions follow the
@@ -94,16 +93,12 @@ struct LearningDictionaryCard: View {
                 : String(localized: "No definition for this word was found in the available dictionaries.",
                     table: "Learning", comment: "Empty state when the configured dictionaries have no entry for a word."))
                 .font(.callout).foregroundStyle(.secondary)
-        case .result(.systemDefinition(let text)):
+        case .result(.systemEntry):
             VStack(alignment: .leading, spacing: 10) {
                 Text(String(localized: "System Dictionary · enabled sources", table: "Learning",
                     comment: "Label indicating that the definition below came from the user's enabled macOS dictionaries."))
                     .font(.caption).foregroundStyle(.secondary)
-                // Display one query's result, preserving its paragraph structure. No word
-                // definitions are concatenated and no POS/pronunciation fields are fabricated.
-                ForEach(Array(text.components(separatedBy: "\n\n").enumerated()), id: \.offset) { _, paragraph in
-                    Text(paragraph).font(.callout).fixedSize(horizontal: false, vertical: true)
-                }
+                LearningDictionaryButton(word: session.query, lookup: lookup)
             }
         case .result(.entries(let entries)):
             VStack(alignment: .leading, spacing: 14) {

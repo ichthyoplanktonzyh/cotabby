@@ -8,7 +8,7 @@ nonisolated enum LearningAnalysisPrompt {
                        targetLanguage: LearningLanguage) throws -> String {
         guard source.utf8.count <= 6_000, source.contains(where: \.isLetter) else {
             throw LearningFailure.message(String(localized: "The current sentence is empty or exceeds 6 KB.",
-                table: "Learning", comment: "Error shown when phrase matching receives an empty or oversized source sentence."))
+                table: "Learning", comment: "Error shown when chunk alignment receives an empty or oversized source sentence."))
         }
         let translation = try LearningExpressionOutputPolicy.validatedText(translation)
         let evidence = try JSONSerialization.data(withJSONObject: ["source": source, "translation": translation], options: [.sortedKeys])

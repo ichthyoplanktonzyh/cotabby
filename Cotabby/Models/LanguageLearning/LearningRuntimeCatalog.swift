@@ -39,14 +39,14 @@ nonisolated enum LearningRuntimeCatalog {
     /// an Ollama service dependency. Candidate status makes no promise about teaching accuracy.
     static let analysisModels = [DownloadableRuntimeModel(
         filename: "Gemma-4-E4B-Q4_K_M.gguf",
-        displayName: String(localized: "Gemma 4 E4B · Phrase matching", table: "Learning",
-            comment: "Display name for a local model recommended for phrase matching."),
+        displayName: String(localized: "Gemma 4 E4B · Chunk alignment", table: "Learning",
+            comment: "Display name for a local model recommended for chunk alignment."),
         downloadURL: URL(string: "https://registry.ollama.ai/v2/library/gemma4/blobs/sha256:370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c")!,
         approximateSizeInGigabytes: 5.49, expectedSizeBytes: 5_493_439_296,
         sha256: "370c2879f17648d337b0ab4e208fdce348e24d1060064e93d7645daafd56d39c"), DownloadableRuntimeModel(
         filename: "Qwen3.5-4B-Q4_K_M.gguf",
-        displayName: String(localized: "Qwen3.5 4B · Phrase matching", table: "Learning",
-            comment: "Display name for a local model recommended for phrase matching."),
+        displayName: String(localized: "Qwen3.5 4B · Chunk alignment", table: "Learning",
+            comment: "Display name for a local model recommended for chunk alignment."),
         downloadURL: URL(string: "https://registry.ollama.ai/v2/library/qwen3.5/blobs/sha256:a9d0a3e1d8c91732a3812becd31f8d4a8ff57414903f226306069f0437e2ac50")!,
         approximateSizeInGigabytes: 2.65, expectedSizeBytes: 2_648_593_216,
         sha256: "a9d0a3e1d8c91732a3812becd31f8d4a8ff57414903f226306069f0437e2ac50")]

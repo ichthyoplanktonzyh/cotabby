@@ -89,6 +89,56 @@ struct LearningDetailPanelTests {
         #expect(calls == 1)
     }
 
+    @Test
+    func expressionComponentLookupKeepsItsEntryAndRejectsReplacedDocumentControls() async throws {
+        var displayed: [String] = []
+        let popup = NSPanel(contentRect: CGRect(x: 100, y: 220, width: 220, height: 140),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
+        popup.isReleasedWhenClosed = false
+        defer { popup.close() }
+        let dictionary = LearningSystemDictionaryPresenter { view, text, _ in
+            displayed.append(text.string)
+            view.window?.addChildWindow(popup, ordered: .above)
+            popup.orderFrontRegardless()
+        }
+        let panel = LearningDetailPanel(dictionary: dictionary, provider: ExpressionDictionaryProbe())
+        defer { panel.hide() }
+        let text = "look forward to"
+        let unit = LearningUnit(id: 0, surface: text, query: text, kind: .expression,
+            ranges: [.init(location: 0, length: text.utf16.count)],
+            words: LearningUnitPolicy.words(in: text, language: .english))
+        let id = UUID()
+        let placement = try placement()
+        panel.show(unit, documentID: id, language: .english, correspondence: nil, placement: placement)
+        await waitUntil { panel.dictionarySession.content == .result(.notFound) && panel.isVisible }
+        let source = try #require(NSApp.windows.first { panel.owns($0) && $0.parent == nil })
+        let button = NSButton(title: "forward", target: nil, action: nil)
+        button.frame = CGRect(x: 20, y: 20, width: 100, height: 24)
+        source.contentView?.addSubview(button)
+        panel.selectDictionaryTerm("forward", from: button, unit: unit, documentID: id)
+        #expect(displayed == ["forward"] && popup.isVisible && panel.owns(popup))
+        #expect(panel.dictionarySession.unit == unit && panel.dictionarySession.selectedWord == nil)
+        #expect(panel.dictionarySession.content == .result(.notFound))
+        #expect(panel.dismissDictionary())
+        #expect(panel.isVisible && !popup.isVisible)
+        // A full phrase miss must not open native lookup that might substitute one constituent.
+        button.title = text
+        panel.selectDictionaryTerm(text, from: button, unit: unit, documentID: id)
+        #expect(displayed == ["forward"])
+        let nextID = UUID()
+        panel.show(unit, documentID: nextID, language: .english, correspondence: nil, placement: placement)
+        source.contentView?.addSubview(button)
+        button.title = "forward"
+        panel.selectDictionaryTerm("forward", from: button, unit: unit, documentID: id)
+        #expect(displayed == ["forward"], "The same text in a newer document must reject an old control")
+        panel.selectDictionaryTerm("forward", from: button, unit: unit, documentID: nextID)
+        #expect(displayed == ["forward", "forward"])
+        panel.hide()
+        #expect(!popup.isVisible)
+        panel.selectDictionaryTerm("forward", from: button, unit: unit, documentID: nextID)
+        #expect(displayed.count == 2)
+    }
+
     private static func chunk(identifier: Int = 0) -> LearningChunkDetail {
         .init(documentID: UUID(), chunkID: identifier, source: "能做到", target: "can do it",
             language: .english, words: ["can", "do", "it"])
@@ -99,5 +149,11 @@ struct LearningDetailPanelTests {
         let parent = CGRect(x: screen.minX + 40, y: screen.midY, width: 480, height: 200)
         return .init(parent: parent, caret: CGRect(x: parent.minX, y: parent.minY - 30, width: 2, height: 20),
             reserved: nil, screen: screen, anchorY: parent.maxY)
+    }
+}
+
+private actor ExpressionDictionaryProbe: LearningDictionaryProviding {
+    func lookup(_ query: String, language: LearningLanguage, expression: Bool) async throws -> LearningDictionaryResult {
+        .notFound
     }
 }

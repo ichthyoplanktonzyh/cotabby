@@ -5,16 +5,28 @@ import Testing
 @Suite(.serialized)
 @MainActor
 struct LearningSentencePanelTests {
-    @Test
-    func compactLookupSurvivesAnalysisUpdatesAndClosesWithInputPreview() async throws {
+    @Test(arguments: [false, true])
+    func nativeWordLookupSurvivesAnalysisUpdatesAndClosesWithInputPreview(_ expanded: Bool) async throws {
         let provider = PanelDictionaryProbe()
-        let panel = LearningSentencePanel(dictionaryProvider: provider)
+        var displayed = ""
+        var anchor: NSWindow?
+        let popup = NSPanel(contentRect: CGRect(x: 100, y: 100, width: 220, height: 120),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: true)
+        popup.isReleasedWhenClosed = false
+        defer { popup.close() }
+        let dictionary = LearningSystemDictionaryPresenter { view, text, _ in
+            displayed = text.string
+            anchor = view.window
+            view.window?.addChildWindow(popup, ordered: .above)
+            popup.orderFrontRegardless()
+        }
+        let panel = LearningSentencePanel(dictionary: dictionary, dictionaryProvider: provider)
         defer { panel.hide() }
         let id = UUID()
         func presentation(chunks: [LearningMeaningChunk]) -> LearningSentencePresentation {
             .init(id: id, source: "我喜欢你", translation: "I like you.", chunks: chunks,
                 sourceLanguage: .chinese, targetLanguage: .english,
-                caret: CGRect(x: 180, y: 220, width: 1, height: 18), isExpanded: false, isGenerating: true,
+                caret: CGRect(x: 180, y: 220, width: 1, height: 18), isExpanded: expanded, isGenerating: true,
                 message: "正在准备语块对应…", previousTranslation: nil, shortcutLabel: "⌥T")
         }
         panel.show(presentation(chunks: []), expand: {}, dismiss: {})
@@ -36,16 +48,16 @@ struct LearningSentencePanelTests {
         view.handleClick(at: NSPoint(x: bounds.midX + view.textContainerOrigin.x,
             y: bounds.midY + view.textContainerOrigin.y), count: 2)
         #expect(clickedUnit == .word(.init(text: "like", range: range)))
-        await provider.waitForLookup()
-        let source = try #require(NSApp.windows.first {
-            $0.title == String(localized: "Expression Dictionary", table: "Learning") && $0.isVisible
-        })
+        #expect(displayed == "like", "A word click must dispatch to native dictionary presentation")
+        #expect(await provider.calls == 0, "Word lookup must bypass the flattened Dictionary Services provider")
+        let source = try #require(anchor)
         #expect(source.isVisible)
         panel.show(presentation(chunks: [.init(id: 0, sourceRanges: [.init(location: 1, length: 2)],
             targetRanges: [.init(location: 2, length: 4)])]), expand: {}, dismiss: {})
         #expect(source.isVisible, "Background analysis must not close the fixed translation's word lookup")
         panel.hide()
         #expect(!source.isVisible)
+        #expect(!popup.isVisible)
     }
 
     private func textView(in panel: LearningSentencePanel) -> LearningDictionaryTextView? {
@@ -56,21 +68,15 @@ struct LearningSentencePanelTests {
     }
 
     private func findTextView(_ view: NSView) -> LearningDictionaryTextView? {
-        if let text = view as? LearningDictionaryTextView { return text }
+        if let text = view as? LearningDictionaryTextView, text.string == "I like you." { return text }
         return view.subviews.lazy.compactMap(findTextView).first
     }
 }
 
 private actor PanelDictionaryProbe: LearningDictionaryProviding {
-    private var lookedUp = false
-    private var waiter: CheckedContinuation<Void, Never>?
-    func waitForLookup() async {
-        if lookedUp { return }
-        await withCheckedContinuation { waiter = $0 }
-    }
+    private(set) var calls = 0
     func lookup(_ query: String, language: LearningLanguage, expression: Bool) async throws -> LearningDictionaryResult {
-        lookedUp = true
-        waiter?.resume(); waiter = nil
-        return .systemDefinition("One definition for " + query)
+        calls += 1
+        return .systemEntry
     }
 }

@@ -12,7 +12,7 @@ struct LearningSentenceDictionaryText: NSViewRepresentable {
     var chunks: [LearningMeaningChunk] = []
     var selectedChunk: Int? = nil
     var source = false
-    var maximumLines = 3
+    var maximumLines = 0
     var fontSize: CGFloat = 16
     var lookupUnit: ((LearningUnitTextAnchor, NSTextView) -> Void)? = nil
     var inspect: (Int) -> Void = { _ in }
@@ -26,7 +26,7 @@ struct LearningSentenceDictionaryText: NSViewRepresentable {
         view.textContainerInset = .zero
         view.textContainer?.lineFragmentPadding = 0
         view.textContainer?.maximumNumberOfLines = maximumLines
-        view.textContainer?.lineBreakMode = .byTruncatingTail
+        view.textContainer?.lineBreakMode = maximumLines == 0 ? .byWordWrapping : .byTruncatingTail
         view.textContainer?.widthTracksTextView = false
         view.isHorizontallyResizable = false
         view.isVerticallyResizable = false
@@ -43,12 +43,13 @@ struct LearningSentenceDictionaryText: NSViewRepresentable {
         view.lookupUnit = lookupUnit
         view.inspect = inspect
         view.textContainer?.maximumNumberOfLines = maximumLines
+        view.textContainer?.lineBreakMode = maximumLines == 0 ? .byWordWrapping : .byTruncatingTail
         view.font = .systemFont(ofSize: fontSize)
         view.present(text, selectedChunk: selectedChunk)
         view.baseWritingDirection = language == .arabic ? .rightToLeft : .natural
         view.lookup = lookup
         view.toolTip = source
-            ? String(localized: "Click to inspect the source phrase match", table: "Learning",
+            ? String(localized: "Click to inspect the source chunk alignment", table: "Learning",
                 comment: "Tooltip for the source sentence text; clicking a highlighted range inspects its target-language match.")
             : String(localized: "Double-click an expression to look it up · browse its words in Dictionary", table: "Learning",
                 comment: "Tooltip for translated sentence text; complete expressions and their words can be looked up.")
@@ -137,7 +138,7 @@ final class LearningDictionaryTextView: NSTextView {
     }
 
     /// Extracted from event delivery so hidden-window tests can exercise exact glyph clicks without
-    /// posting global mouse events. Ignore blank areas and the ellipsis/hidden tail of line three.
+    /// posting global mouse events. Ignore blank areas and any explicitly truncated glyphs.
     func handleClick(at point: NSPoint, count: Int) {
         guard count == 1 || count == 2, let textContainer, let layoutManager, let font else { return }
         layoutManager.ensureLayout(for: textContainer)

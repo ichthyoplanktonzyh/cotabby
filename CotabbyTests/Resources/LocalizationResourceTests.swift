@@ -73,6 +73,15 @@ struct LocalizationResourceTests {
         #expect(range.promptInstruction == "Return only the next 4 to 7 words.")
     }
 
+    @Test(arguments: [("zh-Hans", "语块对齐"), ("zh-Hant", "語塊對齊")])
+    func chineseModelTaskNamesDescribeAlignmentInsteadOfPhraseRecognition(_ sample: (String, String)) throws {
+        let path = try #require(Bundle.main.path(forResource: sample.0, ofType: "lproj"))
+        let bundle = try #require(Bundle(path: path))
+        #expect(bundle.localizedString(forKey: "Chunk alignment", value: nil, table: "Learning") == sample.1)
+        #expect(bundle.localizedString(forKey: "Enable chunk alignment", value: nil, table: "Learning").contains(sample.1))
+        #expect(bundle.localizedString(forKey: "Chunk alignment model", value: nil, table: "Learning").contains(sample.1))
+    }
+
     @Test(arguments: translatedLanguages)
     func compiledLearningTableResolves(language: String) throws {
         let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"))

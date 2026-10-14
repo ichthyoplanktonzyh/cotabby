@@ -8,22 +8,25 @@ import Vision
 @MainActor
 struct LearningDictionaryCardTests {
     @Test(arguments: [LayoutDirection.leftToRight, .rightToLeft])
-    func expressionWordAndMissStatesPaintInOneWindow(_ interfaceDirection: LayoutDirection) async throws {
+    func expressionAndMissKeepNativeWordAnchorsWithoutDisplayingRawDefinitions(_ interfaceDirection: LayoutDirection) async throws {
         let session = LearningDictionarySession(provider: CardDictionaryProbe())
         let text = "look forward to"
         let unit = LearningUnit(id: 0, surface: text, query: text, kind: .expression,
             ranges: [.init(location: 0, length: text.utf16.count)],
             words: LearningUnitPolicy.words(in: text, language: .english))
-        let card = LearningDictionaryCard(session: session, close: {}, sizeChanged: { _ in })
+        var lookups: [String] = []
+        let card = LearningDictionaryCard(session: session, close: {}, sizeChanged: { _ in },
+            lookup: { word, _ in lookups.append(word) })
             .environment(\.layoutDirection, interfaceDirection)
         let hosting = NSHostingView(rootView: card)
-        let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 340, height: 380),
-            styleMask: [.borderless], backing: .buffered, defer: false)
+        let window = NSPanel(contentRect: CGRect(x: 0, y: 0, width: 340, height: 380),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.appearance = NSAppearance(named: .aqua)
         window.backgroundColor = .white
         window.contentView = hosting
         defer { window.close(); session.close() }
+        window.orderFrontRegardless()
         let number = window.windowNumber
         session.open(unit, documentID: UUID(), language: .english)
         await waitUntil { if case .result(.entries) = session.content { return true }; return false }
@@ -33,22 +36,33 @@ struct LearningDictionaryCardTests {
         #expect(expressionText.contains("CC BY-SA"), "Attribution must remain painted outside the scroll viewport")
         #expect(window.frame.height < 340, "A short definition must not reserve a full empty viewport")
         try expectEnglishComponentWordOrder(expression.observations)
-        session.select(unit.words[1])
-        await waitUntil { session.title == "forward" && session.content == .result(.systemDefinition("A direction in front of you.")) }
-        let wordText = try await paint(hosting, window: window, name: "dictionary-word").text
-        #expect(wordText.contains("forward") && wordText.contains("direction"))
-        #expect(!wordText.contains("anticipate"))
+        try #require(findButton("forward", in: hosting)).performClick(nil)
+        #expect(lookups == ["forward"])
+        #expect(session.selectedWord == nil && session.title == "look forward to")
+        let afterClick = try await paint(hosting, window: window, name: "dictionary-expression-after-word").text
+        #expect(afterClick.contains("anticipate"), "Native word lookup leaves the full expression intact")
         #expect(window.windowNumber == number)
-        session.returnToExpression()
-        #expect(session.title == "look forward to")
+        let system = LearningUnit(id: 0, surface: "system phrase", query: "system phrase", kind: .expression,
+            ranges: [.init(location: 0, length: 13)], words: [])
+        session.open(system, documentID: UUID(), language: .english)
+        await waitUntil { session.content == .result(.systemEntry) }
+        let systemText = try await paint(hosting, window: window, name: "dictionary-system-link").text
+        #expect(systemText.contains("System Dictionary") && !systemText.contains("anticipate"))
+        try #require(findButton("system phrase", in: hosting)).performClick(nil)
+        #expect(lookups.last == "system phrase")
         let miss = LearningUnit(id: 0, surface: "unknown expression", query: "unknown expression", kind: .expression,
             ranges: [.init(location: 0, length: 18)], words: unit.words)
         session.open(miss, documentID: UUID(), language: .english)
         await waitUntil { session.content == .result(.notFound) }
         let missText = try await paint(hosting, window: window, name: "dictionary-miss").text
         #expect(missText.contains("unknown expression"))
-        #expect(!missText.contains("anticipate") && !missText.contains("direction"))
+        #expect(!missText.contains("anticipate"))
         #expect(window.windowNumber == number)
+    }
+
+    private func findButton(_ title: String, in view: NSView) -> NSButton? {
+        if let button = view as? NSButton, button.title == title { return button }
+        return view.subviews.lazy.compactMap { findButton(title, in: $0) }.first
     }
 
     private func paint<Content: View>(
@@ -62,7 +76,7 @@ struct LearningDictionaryCardTests {
         host.cacheDisplay(in: host.bounds, to: bitmap)
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent()
-        let directory = root.appendingPathComponent("build/LanguageLearning/LearningUnitStudy")
+        let directory = root.appendingPathComponent("build/LanguageLearning/DictionaryRegression")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try bitmap.representation(using: .png, properties: [:])?.write(to: directory.appendingPathComponent(name + ".png"))
         let recognition = VNRecognizeTextRequest()
@@ -99,7 +113,7 @@ struct LearningDictionaryCardTests {
 
 private actor CardDictionaryProbe: LearningDictionaryProviding {
     func lookup(_ query: String, language: LearningLanguage, expression: Bool) async throws -> LearningDictionaryResult {
-        if !expression { return .systemDefinition("A direction in front of you.") }
+        if !expression || query == "system phrase" { return .systemEntry }
         if query != "look forward to" { return .notFound }
         return .entries([.init(id: "fixture", language: "en", headword: query, forms: [],
             senses: [.init(partOfSpeech: "verb", definitions: ["To anticipate an event."], labels: [])],

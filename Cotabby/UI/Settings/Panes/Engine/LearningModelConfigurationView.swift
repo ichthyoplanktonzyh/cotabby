@@ -93,10 +93,10 @@ struct LearningModelConfigurationView: View {
             """,
                 table: "Learning", comment: "Description of the translation task's engine setting.")
             : String(localized: """
-            Choose a local instruction-tuned GGUF or a separate endpoint for phrase matching. Only confirmed source and translation \
+            Choose a local instruction-tuned GGUF or a separate endpoint for chunk alignment. Only confirmed source and translation \
             text is aligned.
             """,
-                table: "Learning", comment: "Description of the phrase-matching task's engine setting.")
+                table: "Learning", comment: "Description of the chunk-alignment task's engine setting.")
     }
 
     private var selectedModel: String {
@@ -116,9 +116,9 @@ struct LearningModelConfigurationView: View {
                 ? String(localized: "Choose a translation model. It runs on this Mac.", table: "Learning",
                     comment: "Instruction above the local model picker for the translation task.")
                 : String(localized: """
-                Choose an instruction-tuned model for phrase matching. Base continuation models are not suited to this task.
+                Choose an instruction-tuned model for chunk alignment. Base continuation models are not suited to this task.
                 """,
-                    table: "Learning", comment: "Instruction above the local model picker for phrase matching."))
+                    table: "Learning", comment: "Instruction above the local model picker for chunk alignment."))
                 .font(.caption).foregroundStyle(.secondary)
             if controller.availableModels.isEmpty {
                 Text(String(localized: "No local GGUF models found. Download one below or add your own model file.",
@@ -231,7 +231,7 @@ struct LearningModelConfigurationView: View {
                 : String(localized: """
                 With this endpoint, the service receives the current source text, displayed translation, and language direction.
                 """,
-                    table: "Learning", comment: "Disclosure of what the configured endpoint receives for phrase-matching requests."),
+                    table: "Learning", comment: "Disclosure of what the configured endpoint receives for chunk-alignment requests."),
             connect: {
                 let draft = apiKey
                 Task { await controller.connect(using: draft); credentialError = nil }

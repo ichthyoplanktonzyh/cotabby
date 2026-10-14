@@ -16,6 +16,7 @@ struct LearningSentenceCard: View {
     // Begin with the sentence pair's short layout; longer content measures itself below.
     // The former instruction-sized fallback leaves a blank block after the guide text is removed.
     @State private var detailsHeight: CGFloat = 100
+    @State private var compactTranslationHeight: CGFloat = 20
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -27,9 +28,7 @@ struct LearningSentenceCard: View {
                     Text(previous).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 if !presentation.translation.isEmpty, !presentation.isStale {
-                    LearningSentenceDictionaryText(text: presentation.translation, language: presentation.targetLanguage,
-                        lookup: lookupText, units: presentation.units, lookupUnit: lookupUnit)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    compactTranslation
                 } else {
                     Text(presentation.translation.isEmpty
                         ? (presentation.isStale
@@ -57,6 +56,23 @@ struct LearningSentenceCard: View {
         })
         .onPreferenceChange(LearningCardSizePreference.self, perform: sizeChanged)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    /// Compact describes the viewport, not a shortened translation. TextKit lays out the entire
+    /// sentence; short content fits naturally and longer content scrolls without growing over the
+    /// editor. Direct geometry observation also shrinks a reused host after a long sentence.
+    private var compactTranslation: some View {
+        ScrollView {
+            LearningSentenceDictionaryText(text: presentation.translation, language: presentation.targetLanguage,
+                lookup: lookupText, units: presentation.units, maximumLines: 0, lookupUnit: lookupUnit)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    if height.isFinite, height > 0 { compactTranslationHeight = height }
+                }
+        }
+        .frame(height: min(max(compactTranslationHeight, 1), 180))
+        .id(presentation.id)
     }
 
     private var header: some View {
@@ -101,7 +117,7 @@ struct LearningSentenceCard: View {
                     sentence(presentation.translation, source: false)
                     if alignedChunks.isEmpty {
                         Text(presentation.isGenerating
-                            ? String(localized: "The translation appears first; phrase matches are loading…", table: "Learning",
+                            ? String(localized: "The translation appears first; chunk alignments are loading…", table: "Learning",
                                 comment: "Status shown while the translation is available but phrase-alignment analysis is still running.")
                             : presentation.message)
                             .font(.caption).foregroundStyle(.secondary)
@@ -127,7 +143,7 @@ struct LearningSentenceCard: View {
                     if presentation.unitStage != .pending, alignedChunks.count < presentation.chunks.count {
                         Text(String(localized: "Some matches are not highlighted; complete expressions remain available for lookup.",
                             table: "Learning", comment: """
-                            Status when some phrase matches cannot be highlighted, while dictionary lookup still works.
+                            Status when some chunk alignments cannot be highlighted, while dictionary lookup still works.
                             """))
                             .font(.caption).foregroundStyle(.secondary)
                     }

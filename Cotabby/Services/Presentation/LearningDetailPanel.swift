@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 /// Owned once by the sentence panel. This nonactivating sibling owns one expression/word dictionary
-/// session and shares correspondence selection with the sentence card. Closing or replacing the
-/// document invalidates lookup work; the native presenter remains for compatibility callers.
+/// session and shares correspondence selection with the sentence card. The native presenter
+/// owns system lookup for its component words; closing/replacing the document closes both layers.
 @MainActor
 final class LearningDetailPanel {
     let state = LearningDetailState()
@@ -63,7 +63,9 @@ final class LearningDetailPanel {
         layoutRevision = UUID()
         let revision = layoutRevision
         let card = LearningDetailCard(state: state,
-            selectWord: { _, _ in },
+            selectWord: { [weak self] word, button in
+                self?.selectDictionaryTerm(word, from: button, unit: unit, documentID: documentID)
+            },
             close: { [weak self] in self?.hide() }, sizeChanged: { [weak self] in self?.scheduleLayout($0, revision: revision) },
             session: dictionarySession)
         let window = panel ?? LearningDetailWindow(contentRect: .zero,
@@ -102,6 +104,17 @@ final class LearningDetailPanel {
     func selectWord(_ word: String, from button: NSButton, chunk: LearningChunkDetail) {
         guard isVisible, state.chunk == chunk, chunk.words.contains(word), button.window === panel else { return }
         dictionary.show(word, from: button)
+    }
+
+    /// A component lookup leaves the expression session intact. Immutable unit/document values
+    /// captured by the card reject reused controls from an older sentence; the real button gives
+    /// the native popup its baseline without reading or activating the user's editor.
+    func selectDictionaryTerm(_ term: String, from button: NSButton, unit: LearningUnit, documentID: UUID) {
+        let isWholeSystemEntry = term == dictionarySession.query && dictionarySession.content == .result(.systemEntry)
+        guard isVisible, dictionarySession.documentID == documentID, dictionarySession.unit == unit,
+              button.window === panel,
+              unit.words.contains(where: { $0.text == term }) || isWholeSystemEntry else { return }
+        dictionary.show(term, from: button)
     }
 
     func hide() {

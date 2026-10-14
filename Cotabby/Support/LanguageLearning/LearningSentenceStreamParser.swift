@@ -56,8 +56,8 @@ nonisolated struct LearningSentenceStreamParser {
                 table: "Learning", comment: "Error shown when the model response contains no valid translation."))
         }
         guard !chunks.isEmpty else {
-            throw LearningFailure.message(String(localized: "The translation was generated, but phrase matches are unavailable.",
-                table: "Learning", comment: "Error shown when translation succeeded but no valid phrase matches were returned."))
+            throw LearningFailure.message(String(localized: "The translation was generated, but chunk alignments are unavailable.",
+                table: "Learning", comment: "Error shown when translation succeeded but no valid chunk alignments were returned."))
         }
         return .init(translation: translation, chunks: chunks.map(\.meaning))
     }
@@ -83,9 +83,9 @@ nonisolated struct LearningSentenceStreamParser {
                   !sourceParts.isEmpty || !targetParts.isEmpty, chunks.count < 40,
                   sourceParts.count <= 8, targetParts.count <= 8,
                   let explanation = record.explanation, explanation.utf8.count <= 1_200 else {
-                throw LearningFailure.message(String(localized: "Phrase matches are incomplete.",
+                throw LearningFailure.message(String(localized: "Chunk alignments are incomplete.",
                     table: "Learning", comment: """
-                    Error shown when the returned phrase matches do not cover a valid complete analysis result.
+                    Error shown when the returned chunk alignments do not cover a valid complete analysis result.
                     """))
             }
             let sourceRanges = try resolve(sourceParts, in: source, occupied: chunks.flatMap(\.sourceRanges))

@@ -23,19 +23,19 @@ struct LanguageLearningSection: View {
             translationControls
             Text(String(localized: """
             Type as usual and confirm text with your input method. After a pause, the target expression appears beside the field. When \
-            phrase matching is enabled, aligned meaning appears shortly afterward. Use the shortcut to expand the source and \
+            chunk alignment is enabled, aligned meaning appears shortly afterward. Use the shortcut to expand the source and \
             translation. Click a highlighted match to inspect both sides, or double-click an expression to open its dictionary entry. \
-            No specific input method or ABC keyboard is required. Translation and phrase matching use separate models, each with a \
+            No specific input method or ABC keyboard is required. Translation and chunk alignment use separate models, each with a \
             local GGUF or its own endpoint.
             """,
                 table: "Learning",
                 comment: """
-                Overview of automatic sentence translation, phrase matching, dictionary lookup, input-method compatibility, and the \
+                Overview of automatic sentence translation, chunk alignment, dictionary lookup, input-method compatibility, and the \
                 separate model choices.
                 """))
                 .font(.caption).foregroundStyle(.secondary)
             Text(String(localized: """
-            Learning requests contain the current source text and language direction. Phrase-matching requests also include the \
+            Learning requests contain the current source text and language direction. Chunk-alignment requests also include the \
             displayed translation. They never include screen content, clipboard content, or typing history.
             """,
                 table: "Learning", comment: """
@@ -46,17 +46,17 @@ struct LanguageLearningSection: View {
                 comment: "Name of the model profile used for translation."), profile: settings.translation) {
                 configureModel(.translation)
             }
-            Toggle(String(localized: "Enable phrase matching", table: "Learning",
+            Toggle(String(localized: "Enable chunk alignment", table: "Learning",
                 comment: "Turns source-to-translation phrase alignment on or off."),
                 isOn: $settings.analysisEnabled)
                 .disabled(!settings.translationEnabled)
             Text(String(localized: """
-            You can still read the translation, compare it with the source, and look up words when phrase matching is off. Matching \
+            You can still read the translation, compare it with the source, and look up words when chunk alignment is off. Matching \
             only identifies corresponding excerpts; it does not translate again or generate explanations.
             """,
-                table: "Learning", comment: "Explains the independent phrase-matching setting and what its model does."))
+                table: "Learning", comment: "Explains the independent chunk-alignment setting and what its model does."))
                 .font(.caption).foregroundStyle(.secondary)
-            LearningModelSummaryRow(title: String(localized: "Phrase matching model", table: "Learning",
+            LearningModelSummaryRow(title: String(localized: "Chunk alignment model", table: "Learning",
                 comment: "Name of the model profile used to align source and target phrases."), profile: settings.analysis) {
                 configureModel(.analysis)
             }

@@ -41,7 +41,7 @@ final class LearningAnalysisService {
             try validate()
             bytes += delta.utf8.count
             guard bytes <= 48_000 else {
-                throw LearningFailure.message(String(localized: "Phrase-matching output exceeds the display limit.",
+                throw LearningFailure.message(String(localized: "Chunk-alignment output exceeds the display limit.",
                     table: "Learning", comment: "Error shown when phrase-alignment output is too large to display safely."))
             }
         }

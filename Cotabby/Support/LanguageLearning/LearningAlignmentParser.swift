@@ -12,7 +12,7 @@ nonisolated enum LearningAlignmentParser {
               !pairs.isEmpty, pairs.count <= 40,
               pairs.allSatisfy({ $0.count == 2 && $0.allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } }) else {
             throw LearningFailure.message(String(localized: """
-            Phrase matching is unavailable; you can still read the translation and look up words.
+            Chunk alignment is unavailable; you can still read the translation and look up words.
             """,
                 table: "Learning", comment: """
                 Status shown when phrase-alignment output cannot be parsed but the translation remains usable.
@@ -23,7 +23,7 @@ nonisolated enum LearningAlignmentParser {
         var pending = try pairs.enumerated().map { index, pair in
             let left = candidates(pair[0], in: source), right = candidates(pair[1], in: translation)
             guard !left.isEmpty, !right.isEmpty else {
-                throw LearningFailure.message(String(localized: "A phrase match does not match the current source or translation.",
+                throw LearningFailure.message(String(localized: "A chunk alignment does not match the current source or translation.",
                     table: "Learning", comment: """
                     Error shown when an alignment quote does not exactly match this request's source or translation.
                     """))
@@ -42,7 +42,7 @@ nonisolated enum LearningAlignmentParser {
                     !located.contains { NSIntersectionRange($0.target, candidate).length > 0 }
                 }
                 guard !left.isEmpty, !right.isEmpty else {
-                    throw LearningFailure.message(String(localized: "A phrase match contains duplicate or overlapping text ranges.",
+                    throw LearningFailure.message(String(localized: "A chunk alignment contains duplicate or overlapping text ranges.",
                         table: "Learning", comment: "Error shown when phrase-alignment ranges overlap or repeat text."))
                 }
                 if left.count == 1, right.count == 1 {

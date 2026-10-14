@@ -15,7 +15,7 @@ struct LearningDetailCard: View {
 
     var body: some View {
         if let session {
-            LearningDictionaryCard(session: session, close: close, sizeChanged: sizeChanged)
+            LearningDictionaryCard(session: session, close: close, sizeChanged: sizeChanged, lookup: selectWord)
         } else {
             legacyCorrespondence
         }

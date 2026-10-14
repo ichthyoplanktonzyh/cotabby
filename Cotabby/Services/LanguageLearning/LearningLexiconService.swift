@@ -43,10 +43,12 @@ actor LearningLexiconService: LearningUnitRecognizing, LearningDictionaryProvidi
         // Copy follows the Core Foundation ownership rule; transfer its retained string once.
         // The full-range check prevents a constituent word definition posing as a phrase result.
         guard let copied = DCSCopyTextDefinition(nil, value, whole) else { return .notFound }
-        let text = copied.takeRetainedValue() as String
+        let text = copied.takeRetainedValue()
         try Task.checkCancellation()
-        guard !text.isEmpty, text.utf8.count <= 64_000 else { return .notFound }
-        return .systemDefinition(text)
+        guard CFStringGetLength(text) > 0 else { return .notFound }
+        // This call confirms a whole-expression hit only. Preserve the system's own formatted
+        // presentation via showDefinition rather than exporting its flattened text into SwiftUI.
+        return .systemEntry
     }
 
     private func index(for language: LearningLanguage) throws -> LearningUnitRecognizer {

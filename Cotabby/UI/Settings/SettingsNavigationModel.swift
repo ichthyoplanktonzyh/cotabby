@@ -10,7 +10,7 @@ enum SettingsEngineTask: String, CaseIterable, Identifiable {
         switch self {
         case .completion: String(localized: "Autocomplete")
         case .translation: String(localized: "Translation", table: "Learning")
-        case .analysis: String(localized: "Phrase matching", table: "Learning")
+        case .analysis: String(localized: "Chunk alignment", table: "Learning")
         }
     }
     init(role: LearningModelRole) { self = role == .translation ? .translation : .analysis }

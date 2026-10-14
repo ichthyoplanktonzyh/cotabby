@@ -25,9 +25,9 @@ struct LearningChunkTextView: View {
                                 lineWidth: selectedChunk == identifier ? 2 : 0.5))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(String(localized: "Phrase match \(identifier + 1): \(fragment.text)", table: "Learning",
+                    .accessibilityLabel(String(localized: "Chunk alignment \(identifier + 1): \(fragment.text)", table: "Learning",
                         comment: "VoiceOver label for an aligned phrase; the number and phrase text describe this specific result."))
-                    .accessibilityHint(String(localized: "Inspect the phrase match and look up its words", table: "Learning",
+                    .accessibilityHint(String(localized: "Inspect the chunk alignment and look up its words", table: "Learning",
                         comment: "VoiceOver hint describing actions available on an aligned phrase."))
                 } else if fragment.text.allSatisfy(\.isNewline) {
                     Color.clear.frame(width: 0, height: 0).layoutValue(key: LearningLineBreakKey.self, value: true)

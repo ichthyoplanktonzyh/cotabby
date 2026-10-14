@@ -326,8 +326,8 @@ final class LearningSentencePreviewCoordinator {
         document?.chunks = []
         guard service.settings.languageLearning.analysisEnabled else {
             document?.generating = false
-            document?.message = String(localized: "Phrase matching is off; dictionary lookup is still available.",
-                table: "Learning", comment: "Status shown when phrase matching is disabled while the translation remains available.")
+            document?.message = String(localized: "Chunk alignment is off; dictionary lookup is still available.",
+                table: "Learning", comment: "Status shown when chunk alignment is disabled while the translation remains available.")
             render()
             return
         }
@@ -340,16 +340,16 @@ final class LearningSentencePreviewCoordinator {
             document?.chunks = result.chunks
             document?.generating = false
             document?.message = result.unresolvedChunkCount > 0
-                ? String(localized: "Some phrase matches could not be located reliably; confirmed matches are kept.",
+                ? String(localized: "Some chunk alignments could not be located reliably; confirmed matches are kept.",
                     table: "Learning", comment: """
-                    Status when uncertain alignments are omitted while verified phrase matches remain visible.
+                    Status when uncertain alignments are omitted while verified chunk alignments remain visible.
                     """)
                 : ""
             render()
             return
         }
         document?.generating = true
-        document?.message = String(localized: "Preparing phrase matches…", table: "Learning",
+        document?.message = String(localized: "Preparing chunk alignments…", table: "Learning",
             comment: "Status while the separate model aligns source and translated phrases.")
         render()
         let id = analysisID
@@ -376,9 +376,9 @@ final class LearningSentencePreviewCoordinator {
                     self.document?.chunks = result.chunks
                     self.document?.generating = false
                     self.document?.message = result.unresolvedChunkCount > 0
-                        ? String(localized: "Some phrase matches could not be located reliably; confirmed matches are kept.",
+                        ? String(localized: "Some chunk alignments could not be located reliably; confirmed matches are kept.",
                             table: "Learning", comment: """
-                            Status when uncertain alignments are omitted while verified phrase matches remain visible.
+                            Status when uncertain alignments are omitted while verified chunk alignments remain visible.
                             """)
                         : ""
                     if self.analysisCache.count >= 64 { self.analysisCache.removeAll() }

@@ -11,6 +11,59 @@ import Vision
 @MainActor
 struct LearningSentenceCardTests {
     @Test
+    func compactLongTranslationScrollsToItsEndAndShortContentShrinksAgain() async throws {
+        let id = UUID()
+        let target = "Opening sentence remains visible. "
+            + Array(repeating: "The full translation stays readable inside a compact scrolling viewport.", count: 8)
+                .joined(separator: " ") + " Final words remain visible."
+        let state = LearningDetailState()
+        func card(_ text: String) -> LearningSentenceCard {
+            let presentation = LearningSentencePresentation(id: id, source: "原文", translation: text, chunks: [],
+                sourceLanguage: .chinese, targetLanguage: .english, caret: .zero, isExpanded: false,
+                isGenerating: false, message: "", previousTranslation: nil, shortcutLabel: "⌥T", unitStage: .ready)
+            return LearningSentenceCard(presentation: presentation, detailState: state,
+                inspect: { _ in }, expand: {}, dismiss: {}, sizeChanged: { _ in })
+        }
+        let window = NSPanel(contentRect: CGRect(x: 0, y: 0, width: 320, height: 80),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.appearance = NSAppearance(named: .aqua)
+        let hosting = NSHostingView(rootView: card(target))
+        window.contentView = hosting
+        defer { window.close() }
+        window.orderFrontRegardless()
+        await settle(hosting, in: window)
+        #expect(hosting.fittingSize.height < 250, "Long text must keep a bounded compact viewport")
+        let textView = try #require(findTranslation(target, in: hosting))
+        #expect(textView.textContainer?.maximumNumberOfLines == 0)
+        #expect(textView.textContainer?.lineBreakMode == .byWordWrapping)
+        let tail = (target as NSString).range(of: "Final words remain visible")
+        textView.scrollRangeToVisible(tail)
+        await settle(hosting, in: window)
+        let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
+        hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+        if let output = ProcessInfo.processInfo.environment["COTABBY_UI_SCREENSHOT_DIR"] {
+            let directory = URL(fileURLWithPath: output)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try bitmap.representation(using: .png, properties: [:])?.write(to: directory.appendingPathComponent("compact-long-tail.png"))
+        }
+        let recognition = VNRecognizeTextRequest()
+        recognition.recognitionLanguages = ["en-US"]
+        recognition.recognitionLevel = .accurate
+        try VNImageRequestHandler(cgImage: try #require(bitmap.cgImage)).perform([recognition])
+        let painted = (recognition.results?.compactMap { $0.topCandidates(1).first?.string } ?? []).joined(separator: " ")
+        #expect(painted.contains("Final words remain visible"), "The final line must be painted after scrolling")
+        hosting.rootView = card("Hello.")
+        await settle(hosting, in: window)
+        #expect(hosting.fittingSize.height < 120, "A reused compact card must shrink back for a short translation")
+    }
+
+    private func findTranslation(_ text: String, in view: NSView) -> LearningDictionaryTextView? {
+        if let textView = view as? LearningDictionaryTextView, textView.string == text { return textView }
+        return view.subviews.lazy.compactMap { findTranslation(text, in: $0) }.first
+    }
+
+    @Test
     func expansionPaintsTheOriginalTranslationAndMeaningUnit() async throws {
         let id = UUID()
         let window = NSPanel(contentRect: CGRect(x: 0, y: 0, width: 320, height: 100),

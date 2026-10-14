@@ -44,11 +44,12 @@ nonisolated struct LearningLexiconResource: Codable, Sendable {
     let entries: [LearningLexiconEntry]
 }
 
-/// The UI distinguishes an exact expression entry from a raw system word definition, a genuine
-/// miss, and an unavailable resource. It never assembles word definitions into a phrase entry.
+/// Bundled entries are already structured. A system hit carries only availability: AppKit owns
+/// its original dictionary UI, and raw Dictionary Services text never reaches the learning card.
+/// A genuine miss stays distinct from an unavailable resource or a constituent-word definition.
 nonisolated enum LearningDictionaryResult: Equatable, Sendable {
     case entries([LearningLexiconEntry])
-    case systemDefinition(String)
+    case systemEntry
     case notFound
 }
 

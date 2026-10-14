@@ -74,8 +74,7 @@ final class LearningSentencePanel: LearningSentencePresenting {
         // streams in. Dismiss when its text/view mode changes, rather than on every chunk update.
         if currentPresentation?.id != presentation.id || presentation.isStale ||
             currentPresentation?.translation != presentation.translation ||
-            currentPresentation?.isExpanded != presentation.isExpanded ||
-            (presentation.isExpanded && currentPresentation?.chunks.count != presentation.chunks.count) {
+            currentPresentation?.isExpanded != presentation.isExpanded {
             sentenceDictionary.dismiss()
         }
         if detailPanel.dictionarySession.documentID != nil,
@@ -150,6 +149,14 @@ final class LearningSentencePanel: LearningSentencePresenting {
               let parent = visibleFrame else { return }
         let units = current.units.isEmpty ? LearningUnitPolicy.fallback(in: current.translation, language: current.targetLanguage) : current.units
         guard units.contains(anchor.unit) else { return }
+        if anchor.unit.kind == .word {
+            // Native presentation preserves pronunciation, word classes, senses and examples.
+            // A single word never opens our expression card or requests flattened system text.
+            detailPanel.hide()
+            sentenceDictionary.show(anchor.unit.query, from: view, textBounds: anchor.bounds, font: anchor.font)
+            return
+        }
+        sentenceDictionary.dismiss()
         let alignment = LearningUnitPolicy.correspondence(current.chunks, respecting: units).first { chunk in
             anchor.unit.ranges.contains { range in chunk.targetRanges.contains { NSIntersectionRange(range, $0).length > 0 } }
         }

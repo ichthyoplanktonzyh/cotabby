@@ -1169,7 +1169,7 @@
         }
       }
     },
-    "A phrase match contains duplicate or overlapping text ranges.": {
+    "A chunk alignment contains duplicate or overlapping text ranges.": {
       "comment": "Error shown when phrase-alignment ranges overlap or repeat text.",
       "localizations": {
         "ar": {
@@ -1247,18 +1247,18 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配包含重复或重叠的文本范围。"
+            "value": "语块对齐包含重复或重叠的文本范围。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應包含重複或重疊的文字範圍。"
+            "value": "語塊對齊包含重複或重疊的文字範圍。"
           }
         }
       }
     },
-    "A phrase match does not match the current source or translation.": {
+    "A chunk alignment does not match the current source or translation.": {
       "comment": "Error shown when an alignment quote does not exactly match this request's source or translation.",
       "localizations": {
         "ar": {
@@ -1336,13 +1336,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配与当前原文或译文不一致。"
+            "value": "语块对齐与当前原文或译文不一致。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應與目前的原文或譯文不符。"
+            "value": "語塊對齊與目前的原文或譯文不符。"
           }
         }
       }
@@ -2414,8 +2414,8 @@
         }
       }
     },
-    "Choose a local instruction-tuned GGUF or a separate endpoint for phrase matching. Only confirmed source and translation text is aligned.": {
-      "comment": "Description of the phrase-matching task's engine setting.",
+    "Choose a local instruction-tuned GGUF or a separate endpoint for chunk alignment. Only confirmed source and translation text is aligned.": {
+      "comment": "Description of the chunk-alignment task's engine setting.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -2492,13 +2492,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "为短语匹配选择本地指令微调 GGUF 模型或单独的端点。只会对齐已确认的原文和译文。"
+            "value": "为语块对齐选择本地指令微调 GGUF 模型或单独的端点。只会对齐已确认的原文和译文。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇本機指令微調 GGUF 模型或另一個端點來進行片語對應。只會對齊已確認的原文與譯文。"
+            "value": "選擇本機指令微調 GGUF 模型或另一個端點來進行語塊對齊。只會對齊已確認的原文與譯文。"
           }
         }
       }
@@ -2681,8 +2681,8 @@
         }
       }
     },
-    "Choose an instruction-tuned model for phrase matching. Base continuation models are not suited to this task.": {
-      "comment": "Instruction above the local model picker for phrase matching.",
+    "Choose an instruction-tuned model for chunk alignment. Base continuation models are not suited to this task.": {
+      "comment": "Instruction above the local model picker for chunk alignment.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -2759,13 +2759,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "为短语匹配选择指令微调模型。续写型基础模型不适合此任务。"
+            "value": "为语块对齐选择指令微调模型。续写型基础模型不适合此任务。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "請選擇指令微調模型進行片語對應。基礎續寫模型不適合這項工作。"
+            "value": "請選擇指令微調模型進行語塊對齊。基礎續寫模型不適合這項工作。"
           }
         }
       }
@@ -3036,7 +3036,7 @@
         }
       }
     },
-    "Click to inspect the source phrase match": {
+    "Click to inspect the source chunk alignment": {
       "comment": "Tooltip for the source sentence text; clicking a highlighted range inspects its target-language match.",
       "localizations": {
         "ar": {
@@ -3120,7 +3120,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "按一下即可檢視原文中的片語對應"
+            "value": "按一下即可檢視原文中的語塊對齊"
           }
         }
       }
@@ -6058,7 +6058,7 @@
         }
       }
     },
-    "Enable phrase matching": {
+    "Enable chunk alignment": {
       "comment": "Turns source-to-translation phrase alignment on or off.",
       "localizations": {
         "ar": {
@@ -6136,13 +6136,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "启用短语匹配"
+            "value": "启用语块对齐"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "啟用片語對應"
+            "value": "啟用語塊對齊"
           }
         }
       }
@@ -8280,8 +8280,8 @@
         }
       }
     },
-    "Gemma 4 E4B · Phrase matching": {
-      "comment": "Display name for a local model recommended for phrase matching.",
+    "Gemma 4 E4B · Chunk alignment": {
+      "comment": "Display name for a local model recommended for chunk alignment.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -8358,13 +8358,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gemma 4 E4B · 短语匹配"
+            "value": "Gemma 4 E4B · 语块对齐"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gemma 4 E4B · 片語對應"
+            "value": "Gemma 4 E4B · 語塊對齊"
           }
         }
       }
@@ -8991,7 +8991,7 @@
         }
       }
     },
-    "Inspect the phrase match and look up its words": {
+    "Inspect the chunk alignment and look up its words": {
       "comment": "VoiceOver hint describing actions available on an aligned phrase.",
       "localizations": {
         "ar": {
@@ -9075,7 +9075,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "檢視片語對應並查詢其中的單字"
+            "value": "檢視語塊對齊並查詢其中的單字"
           }
         }
       }
@@ -9613,7 +9613,7 @@
         }
       }
     },
-    "Learning requests contain the current source text and language direction. Phrase-matching requests also include the displayed translation. They never include screen content, clipboard content, or typing history.": {
+    "Learning requests contain the current source text and language direction. Chunk-alignment requests also include the displayed translation. They never include screen content, clipboard content, or typing history.": {
       "comment": "Privacy disclosure describing the data sent for learning requests and context that is never included.",
       "localizations": {
         "ar": {
@@ -9691,13 +9691,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "学习请求会包含当前原文和语言方向。短语匹配请求还会包含当前显示的译文。请求绝不会包含屏幕内容、剪贴板内容或输入历史。"
+            "value": "学习请求会包含当前原文和语言方向。语块对齐请求还会包含当前显示的译文。请求绝不会包含屏幕内容、剪贴板内容或输入历史。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "學習功能的要求會包含目前原文與翻譯方向。片語對應要求也會包含目前顯示的譯文。要求絕不會包含螢幕內容、剪貼簿內容或打字記錄。"
+            "value": "學習功能的要求會包含目前原文與翻譯方向。語塊對齊要求也會包含目前顯示的譯文。要求絕不會包含螢幕內容、剪貼簿內容或打字記錄。"
           }
         }
       }
@@ -10498,7 +10498,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "標示內容代表片語對應。按一下標示可檢視對應內容；連按兩下片語可查詢。"
+            "value": "標示內容代表語塊對齊。按一下標示可檢視對應內容；連按兩下片語可查詢。"
           }
         }
       }
@@ -11918,12 +11918,12 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應"
+            "value": "語塊對齊"
           }
         }
       }
     },
-    "Phrase match %lld: %@": {
+    "Chunk alignment %lld: %@": {
       "comment": "VoiceOver label for an aligned phrase; the number and phrase text describe this specific result.",
       "localizations": {
         "ar": {
@@ -11941,7 +11941,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Phrase match %1$lld: %2$@"
+            "value": "Chunk alignment %1$lld: %2$@"
           }
         },
         "es": {
@@ -12007,19 +12007,19 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配 %lld：%@"
+            "value": "语块对齐 %lld：%@"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應 %lld：%@"
+            "value": "語塊對齊 %lld：%@"
           }
         }
       }
     },
-    "Phrase matches are incomplete.": {
-      "comment": "Error shown when the returned phrase matches do not cover a valid complete analysis result.",
+    "Chunk alignments are incomplete.": {
+      "comment": "Error shown when the returned chunk alignments do not cover a valid complete analysis result.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -12096,18 +12096,18 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配结果不完整。"
+            "value": "语块对齐结果不完整。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應不完整。"
+            "value": "語塊對齊不完整。"
           }
         }
       }
     },
-    "Phrase matching": {
+    "Chunk alignment": {
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -12184,19 +12184,19 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配"
+            "value": "语块对齐"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應"
+            "value": "語塊對齊"
           }
         }
       }
     },
-    "Phrase matching is off; dictionary lookup is still available.": {
-      "comment": "Status shown when phrase matching is disabled while the translation remains available.",
+    "Chunk alignment is off; dictionary lookup is still available.": {
+      "comment": "Status shown when chunk alignment is disabled while the translation remains available.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -12273,18 +12273,18 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配已关闭；仍可查询词典。"
+            "value": "语块对齐已关闭；仍可查询词典。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應已關閉；仍可查詢字典。"
+            "value": "語塊對齊已關閉；仍可查詢字典。"
           }
         }
       }
     },
-    "Phrase matching is unavailable; you can still read the translation and look up words.": {
+    "Chunk alignment is unavailable; you can still read the translation and look up words.": {
       "comment": "Status shown when phrase-alignment output cannot be parsed but the translation remains usable.",
       "localizations": {
         "ar": {
@@ -12362,18 +12362,18 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配不可用；你仍可阅读译文并查询单词。"
+            "value": "语块对齐不可用；你仍可阅读译文并查询单词。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "無法使用片語對應；你仍可閱讀譯文並查詢單字。"
+            "value": "無法使用語塊對齊；你仍可閱讀譯文並查詢單字。"
           }
         }
       }
     },
-    "Phrase matching model": {
+    "Chunk alignment model": {
       "comment": "Name of the model profile used to align source and target phrases.",
       "localizations": {
         "ar": {
@@ -12451,18 +12451,18 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配模型"
+            "value": "语块对齐模型"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應模型"
+            "value": "語塊對齊模型"
           }
         }
       }
     },
-    "Phrase-matching output exceeds the display limit.": {
+    "Chunk-alignment output exceeds the display limit.": {
       "comment": "Error shown when phrase-alignment output is too large to display safely.",
       "localizations": {
         "ar": {
@@ -12540,13 +12540,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "短语匹配输出超出显示上限。"
+            "value": "语块对齐输出超出显示上限。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "片語對應輸出超出顯示上限。"
+            "value": "語塊對齊輸出超出顯示上限。"
           }
         }
       }
@@ -12729,7 +12729,7 @@
         }
       }
     },
-    "Preparing phrase matches…": {
+    "Preparing chunk alignments…": {
       "comment": "Status while the separate model aligns source and translated phrases.",
       "localizations": {
         "ar": {
@@ -12807,13 +12807,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在准备短语匹配…"
+            "value": "正在准备语块对齐…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "正在準備片語對應…"
+            "value": "正在準備語塊對齊…"
           }
         }
       }
@@ -12996,8 +12996,8 @@
         }
       }
     },
-    "Qwen3.5 4B · Phrase matching": {
-      "comment": "Display name for a local model recommended for phrase matching.",
+    "Qwen3.5 4B · Chunk alignment": {
+      "comment": "Display name for a local model recommended for chunk alignment.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -13074,13 +13074,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Qwen3.5 4B · 短语匹配"
+            "value": "Qwen3.5 4B · 语块对齐"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Qwen3.5 4B · 片語對應"
+            "value": "Qwen3.5 4B · 語塊對齊"
           }
         }
       }
@@ -14867,7 +14867,7 @@
       }
     },
     "Some matches are not highlighted; complete expressions remain available for lookup.": {
-      "comment": "Status when some phrase matches cannot be highlighted, while dictionary lookup still works.",
+      "comment": "Status when some chunk alignments cannot be highlighted, while dictionary lookup still works.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -14955,8 +14955,8 @@
         }
       }
     },
-    "Some phrase matches could not be located reliably; confirmed matches are kept.": {
-      "comment": "Status when uncertain alignments are omitted while verified phrase matches remain visible.",
+    "Some chunk alignments could not be located reliably; confirmed matches are kept.": {
+      "comment": "Status when uncertain alignments are omitted while verified chunk alignments remain visible.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -15033,13 +15033,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "部分短语匹配无法可靠定位；已保留能够确认的匹配项。"
+            "value": "部分语块对齐无法可靠定位；已保留能够确认的对齐项。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "部分片語對應無法可靠定位；已保留可確認的對應內容。"
+            "value": "部分語塊對齊無法可靠定位；已保留可確認的對應內容。"
           }
         }
       }
@@ -16469,7 +16469,7 @@
       }
     },
     "The current sentence is empty or exceeds 6 KB.": {
-      "comment": "Error shown when phrase matching receives an empty or oversized source sentence.\nError shown when sentence preview receives an empty or oversized sentence.",
+      "comment": "Error shown when chunk alignment receives an empty or oversized source sentence.\nError shown when sentence preview receives an empty or oversized sentence.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -19137,7 +19137,7 @@
         }
       }
     },
-    "The translation appears first; phrase matches are loading…": {
+    "The translation appears first; chunk alignments are loading…": {
       "comment": "Status shown while the translation is available but phrase-alignment analysis is still running.",
       "localizations": {
         "ar": {
@@ -19215,19 +19215,19 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "译文已显示；正在加载短语匹配…"
+            "value": "译文已显示；正在加载语块对齐…"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "譯文已先顯示；正在載入片語對應…"
+            "value": "譯文已先顯示；正在載入語塊對齊…"
           }
         }
       }
     },
-    "The translation was generated, but phrase matches are unavailable.": {
-      "comment": "Error shown when translation succeeded but no valid phrase matches were returned.",
+    "The translation was generated, but chunk alignments are unavailable.": {
+      "comment": "Error shown when translation succeeded but no valid chunk alignments were returned.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -19304,13 +19304,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "译文已生成，但短语匹配不可用。"
+            "value": "译文已生成，但语块对齐不可用。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "譯文已產生，但無法使用片語對應。"
+            "value": "譯文已產生，但無法使用語塊對齊。"
           }
         }
       }
@@ -19754,7 +19754,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "此檔案正供自動完成、翻譯、片語對應或電源設定檔使用。"
+            "value": "此檔案正供自動完成、翻譯、語塊對齊或電源設定檔使用。"
           }
         }
       }
@@ -20470,8 +20470,8 @@
         }
       }
     },
-    "Type as usual and confirm text with your input method. After a pause, the target expression appears beside the field. When phrase matching is enabled, aligned meaning appears shortly afterward. Use the shortcut to expand the source and translation. Click a highlighted match to inspect both sides, or double-click an expression to open its dictionary entry. No specific input method or ABC keyboard is required. Translation and phrase matching use separate models, each with a local GGUF or its own endpoint.": {
-      "comment": "Overview of automatic sentence translation, phrase matching, dictionary lookup, input-method compatibility, and the separate model choices.",
+    "Type as usual and confirm text with your input method. After a pause, the target expression appears beside the field. When chunk alignment is enabled, aligned meaning appears shortly afterward. Use the shortcut to expand the source and translation. Click a highlighted match to inspect both sides, or double-click an expression to open its dictionary entry. No specific input method or ABC keyboard is required. Translation and chunk alignment use separate models, each with a local GGUF or its own endpoint.": {
+      "comment": "Overview of automatic sentence translation, chunk alignment, dictionary lookup, input-method compatibility, and the separate model choices.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -20548,13 +20548,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "像平常一样输入，并通过输入法确认文字。暂停后，目标表达会显示在输入框旁。启用短语匹配后，稍后会标出对应的文本片段。使用快捷键展开原文和译文。点按高亮项可查看对应的两段文本；双击表达可打开其词典条目。无需使用特定输入法或 ABC 键盘。翻译和短语匹配使用不同的模型，各自可选择本地 GGUF 模型或自己的端点。"
+            "value": "像平常一样输入，并通过输入法确认文字。暂停后，目标表达会显示在输入框旁。启用语块对齐后，稍后会标出对应的文本片段。使用快捷键展开原文和译文。点按高亮项可查看对应的两段文本；双击表达可打开其词典条目。无需使用特定输入法或 ABC 键盘。翻译和语块对齐使用不同的模型，各自可选择本地 GGUF 模型或自己的端点。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "照常輸入，並使用輸入法確認文字。暫停輸入後，譯文會顯示在輸入欄位旁。啟用片語對應後，稍後還會顯示彼此對應的語意片段。使用快速鍵展開原文與譯文。按一下標示的對應內容可檢視兩側，或連按兩下片語開啟其字典項目。不需特定輸入法或 ABC 鍵盤。翻譯與片語對應使用不同模型，各自可選本機 GGUF 模型或專屬端點。"
+            "value": "照常輸入，並使用輸入法確認文字。暫停輸入後，譯文會顯示在輸入欄位旁。啟用語塊對齊後，稍後還會顯示彼此對應的語意片段。使用快速鍵展開原文與譯文。按一下標示的對應內容可檢視兩側，或連按兩下片語開啟其字典項目。不需特定輸入法或 ABC 鍵盤。翻譯與語塊對齊使用不同模型，各自可選本機 GGUF 模型或專屬端點。"
           }
         }
       }
@@ -21273,7 +21273,7 @@
       }
     },
     "With this endpoint, the service receives the current source text, displayed translation, and language direction.": {
-      "comment": "Disclosure of what the configured endpoint receives for phrase-matching requests.",
+      "comment": "Disclosure of what the configured endpoint receives for chunk-alignment requests.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -22073,8 +22073,8 @@
         }
       }
     },
-    "You can still read the translation, compare it with the source, and look up words when phrase matching is off. Matching only identifies corresponding excerpts; it does not translate again or generate explanations.": {
-      "comment": "Explains the independent phrase-matching setting and what its model does.",
+    "You can still read the translation, compare it with the source, and look up words when chunk alignment is off. Matching only identifies corresponding excerpts; it does not translate again or generate explanations.": {
+      "comment": "Explains the independent chunk-alignment setting and what its model does.",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -22151,13 +22151,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "关闭短语匹配后，你仍可阅读译文、与原文对照并查询单词。匹配功能只标出相互对应的文本片段；不会重新翻译，也不会生成解释。"
+            "value": "关闭语块对齐后，你仍可阅读译文、与原文对照并查询单词。对齐功能只标出相互对应的文本片段；不会重新翻译，也不会生成解释。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "即使關閉片語對應，你仍可閱讀譯文、與原文比較並查詢單字。對應功能只會找出彼此對應的文字片段；不會再次翻譯，也不會生成解說。"
+            "value": "即使關閉語塊對齊，你仍可閱讀譯文、與原文比較並查詢單字。對應功能只會找出彼此對應的文字片段；不會再次翻譯，也不會生成解說。"
           }
         }
       }

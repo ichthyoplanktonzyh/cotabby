@@ -442,7 +442,7 @@ struct LearningSentencePreviewCoordinatorTests {
         rig.service.finish(unresolvedChunkCount: 1)
         await waitUntil { rig.panel.last?.isGenerating == false }
         #expect(rig.panel.last?.translation == "I can do it.")
-        #expect(rig.panel.last?.message == String(localized: "Some phrase matches could not be located reliably; confirmed matches are kept.",
+        #expect(rig.panel.last?.message == String(localized: "Some chunk alignments could not be located reliably; confirmed matches are kept.",
             table: "Learning"))
     }
 
