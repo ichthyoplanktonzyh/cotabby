@@ -8,9 +8,9 @@ enum SettingsEngineTask: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .completion: "补全"
-        case .translation: "翻译"
-        case .analysis: "语块对应"
+        case .completion: String(localized: "Autocomplete")
+        case .translation: String(localized: "Translation", table: "Learning")
+        case .analysis: String(localized: "Phrase matching", table: "Learning")
         }
     }
     init(role: LearningModelRole) { self = role == .translation ? .translation : .analysis }

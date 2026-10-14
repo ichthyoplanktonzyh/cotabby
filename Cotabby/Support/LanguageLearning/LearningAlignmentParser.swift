@@ -11,14 +11,22 @@ nonisolated enum LearningAlignmentParser {
               let pairs = try? JSONDecoder().decode([[String]].self, from: data),
               !pairs.isEmpty, pairs.count <= 40,
               pairs.allSatisfy({ $0.count == 2 && $0.allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } }) else {
-            throw LearningFailure.message("语块对应格式不可用；译文仍可阅读和查词。")
+            throw LearningFailure.message(String(localized: """
+            Phrase matching is unavailable; you can still read the translation and look up words.
+            """,
+                table: "Learning", comment: """
+                Status shown when phrase-alignment output cannot be parsed but the translation remains usable.
+                """))
         }
         // Keep every literal candidate until other unique pairs claim their ranges. This can
         // disambiguate a repeat enclosed by a larger unique phrase without assuming target order.
         var pending = try pairs.enumerated().map { index, pair in
             let left = candidates(pair[0], in: source), right = candidates(pair[1], in: translation)
             guard !left.isEmpty, !right.isEmpty else {
-                throw LearningFailure.message("语块与本次原文或译文不一致。")
+                throw LearningFailure.message(String(localized: "A phrase match does not match the current source or translation.",
+                    table: "Learning", comment: """
+                    Error shown when an alignment quote does not exactly match this request's source or translation.
+                    """))
             }
             return (index: index, source: left, target: right)
         }
@@ -34,7 +42,8 @@ nonisolated enum LearningAlignmentParser {
                     !located.contains { NSIntersectionRange($0.target, candidate).length > 0 }
                 }
                 guard !left.isEmpty, !right.isEmpty else {
-                    throw LearningFailure.message("语块包含重复或重叠的文字范围。")
+                    throw LearningFailure.message(String(localized: "A phrase match contains duplicate or overlapping text ranges.",
+                        table: "Learning", comment: "Error shown when phrase-alignment ranges overlap or repeat text."))
                 }
                 if left.count == 1, right.count == 1 {
                     located.append((pair.index, left[0], right[0]))
@@ -46,7 +55,12 @@ nonisolated enum LearningAlignmentParser {
             if located.count == count { break }
         }
         guard !located.isEmpty else {
-            throw LearningFailure.message("重复文字无法可靠定位；译文仍可阅读和查词。")
+            throw LearningFailure.message(String(localized: """
+            Repeated text could not be located reliably; you can still read the translation and look up words.
+            """,
+                table: "Learning", comment: """
+                Status shown when repeated phrases make alignment ambiguous but translation and lookup remain available.
+                """))
         }
         // Source order assigns stable colors even if the model returns pairs in another order.
         // Target order is independent: translation may reorder subjects, time or conditions.

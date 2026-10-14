@@ -10,26 +10,35 @@ struct ModelsFolderSection: View {
     @AppStorage(BundledRuntimeLocator.lmStudioSourceEnabledKey) private var lmStudioEnabled = false
 
     var body: some View {
-        Section("Folder") {
+        Section(String(localized: "Folder")) {
             LabeledContent {
                 VStack(alignment: .trailing, spacing: 8) {
                     Text(downloads.modelsDirectoryPath).font(.callout.monospaced())
                         .textSelection(.enabled).multilineTextAlignment(.trailing)
                     HStack(spacing: 8) {
-                        Button("Open Folder") { downloads.openModelsDirectory() }
-                        Button("Refresh") { downloads.refreshSearchDirectories(); refresh() }
+                        Button(String(localized: "Open Folder")) { downloads.openModelsDirectory() }
+                        Button(String(localized: "Refresh")) { downloads.refreshSearchDirectories(); refresh() }
                     }
                 }
             } label: {
-                SettingsRowLabel(title: "Models Folder",
-                    description: "Where downloaded model files are stored on this Mac.", systemImage: "folder")
+                SettingsRowLabel(
+                    title: String(localized: "Models Folder"),
+                    description: String(localized: "Where downloaded model files are stored on this Mac."),
+                    systemImage: "folder"
+                )
             }
             .settingsItem(.modelsFolder)
             Toggle(isOn: $lmStudioEnabled) {
-                SettingsRowLabel(title: "Also Use LM Studio Models",
-                    description: lmStudioModelsURL == nil ? "Install LM Studio to load models from its library here." :
-                        "Add models from your LM Studio library (~/.lmstudio/models) to the picker above. Downloads still save to Cotabby's own folder.",
-                    systemImage: "square.stack.3d.up")
+                SettingsRowLabel(
+                    title: String(localized: "Also Use LM Studio Models"),
+                    description: lmStudioModelsURL == nil
+                        ? String(localized: "Install LM Studio to load models from its library here.")
+                        : String(localized: """
+                        Add models from your LM Studio library (~/.lmstudio/models) to the picker above. Downloads still save to \
+                        Cotabby's own folder.
+                        """),
+                    systemImage: "square.stack.3d.up"
+                )
             }
             .disabled(lmStudioModelsURL == nil)
             .onChange(of: lmStudioEnabled) { _, _ in downloads.refreshSearchDirectories(); refresh() }

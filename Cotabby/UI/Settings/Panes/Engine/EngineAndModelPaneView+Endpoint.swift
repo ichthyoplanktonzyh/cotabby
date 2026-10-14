@@ -50,8 +50,8 @@ extension EngineAndModelPaneView {
                 }
             } label: {
                 SettingsRowLabel(
-                    title: "Model",
-                    description: "Choose a model returned by the server or enter its identifier manually.",
+                    title: String(localized: "Model"),
+                    description: String(localized: "Choose a model returned by the server or enter its identifier manually."),
                     systemImage: "shippingbox"
                 )
             }
@@ -62,9 +62,10 @@ extension EngineAndModelPaneView {
                 Text("Text Completions").tag(OpenAICompatibleAPIMode.completions)
             } label: {
                 SettingsRowLabel(
-                    title: "API Format",
-                    description: "Chat uses /v1/chat/completions (recommended). Text uses " +
-                        "/v1/completions for base models that continue a raw prompt.",
+                    title: String(localized: "API Format"),
+                    description: String(localized: """
+                    Chat uses /v1/chat/completions (recommended). Text uses /v1/completions for base models that continue a raw prompt.
+                    """),
                     systemImage: "arrow.left.arrow.right"
                 )
             }

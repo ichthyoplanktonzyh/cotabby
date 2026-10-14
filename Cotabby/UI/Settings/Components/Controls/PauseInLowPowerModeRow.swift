@@ -7,9 +7,14 @@ struct PauseInLowPowerModeRow: View {
     var body: some View {
         Toggle(isOn: Binding(get: { settings.isLowPowerModeAutoDisableEnabled },
             set: { settings.setLowPowerModeAutoDisableEnabled($0) })) {
-            SettingsRowLabel(title: "Pause in Low Power Mode",
-                description: "Pause completion and language learning while Low Power Mode is on to reduce battery use.",
-                systemImage: "bolt.slash.circle")
+            SettingsRowLabel(
+                title: String(localized: "Pause in Low Power Mode"),
+                description: String(
+                    localized: "Pause completion and language learning while Low Power Mode is on to reduce battery use.",
+                    table: "Learning"
+                ),
+                systemImage: "bolt.slash.circle"
+            )
         }
         .settingsItem(.lowPowerModeAutoDisable)
     }

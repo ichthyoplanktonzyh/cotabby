@@ -12,9 +12,9 @@ enum ShortcutAction: CaseIterable {
 
     var displayName: String {
         switch self {
-        case .acceptWord: return "Accept Word"
-        case .acceptEntireSuggestion: return "Accept Entire Suggestion"
-        case .toggleTabby: return "Toggle Cotabby"
+        case .acceptWord: return String(localized: "Accept Word")
+        case .acceptEntireSuggestion: return String(localized: "Accept Entire Suggestion")
+        case .toggleTabby: return String(localized: "Toggle Cotabby")
         }
     }
 }
@@ -1685,7 +1685,7 @@ final class SuggestionSettingsModel: ObservableObject {
         if includingLearningShortcut, languageLearning.translationEnabled,
            languageLearning.keyCode == keyCode,
            languageLearning.modifiers == modifiers {
-            return "跨语言表达学习"
+            return String(localized: "Language Learning", table: "Learning")
         }
         return nil
     }
@@ -1722,7 +1722,7 @@ final class SuggestionSettingsModel: ObservableObject {
         if includingLearningShortcut, languageLearning.translationEnabled,
            languageLearning.keyCode == keyCode,
            languageLearning.modifiers == modifiers {
-            return "跨语言表达学习"
+            return String(localized: "Language Learning", table: "Learning")
         }
         return nil
     }

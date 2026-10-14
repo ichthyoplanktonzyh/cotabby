@@ -15,7 +15,12 @@ nonisolated enum LearningExpressionPrompt {
     }
 
     private static func render(source: String, instruction: String) throws -> String {
-        guard source.utf8.count <= 6_000 else { throw LearningFailure.message("文本超过 6 KB，未发送或截断。") }
+        guard source.utf8.count <= 6_000 else {
+            throw LearningFailure.message(String(localized: "The text exceeds 6 KB. No text was sent or truncated.",
+                table: "Learning", comment: """
+                Error shown before a request when the source text exceeds the limit; no part of it was sent or shortened.
+                """))
+        }
         let payload = try JSONEncoder().encode(source)
         guard let encoded = String(data: payload, encoding: .utf8) else { throw OpenAICompatibleClientError.invalidResponse }
         // The instruction and quoted source remain separate. Explicit previews may carry text

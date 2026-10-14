@@ -78,9 +78,9 @@ struct LearningModelResidencyTests {
         #expect(output == "Hello")
         #expect(core.recordedTrace?.requestID == "req_native_fixture")
         #expect(core.recordedTrace?.source == .analysis)
-        #expect(controller.status == "就绪")
+        #expect(controller.status == String(localized: "Ready", table: "Learning"))
         await waitUntil { core.unloadCount == 1 }
-        #expect(controller.status == "未加载")
+        #expect(controller.status == String(localized: "Not loaded", table: "Learning"))
         #expect(try await controller.generate(prompt: "fixture", maxTokens: 1) == "Hello")
         #expect(core.loadCount == 2)
         controller.applyResidency(.released, generationAllowed: false)

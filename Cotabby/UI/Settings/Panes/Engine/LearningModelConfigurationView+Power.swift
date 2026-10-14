@@ -4,17 +4,32 @@ import SwiftUI
 /// Endpoint profiles keep this role's server/key; local choices carry their own instruction format.
 extension LearningModelConfigurationView {
     var powerSection: some View {
-        Section("Power") {
+        Section(String(localized: "Power", table: "Learning",
+            comment: "Settings section for choosing this task's model based on power source.")) {
             PauseInLowPowerModeRow(settings: suggestionSettings)
             Toggle(isOn: Binding(get: { profile.powerSwitchingEnabled }, set: profile.setPowerSwitchingEnabled)) {
-                SettingsRowLabel(title: "Switch Based on Power Source",
-                    description: "Use a different engine or model on battery vs. while plugged in for this task.",
+                SettingsRowLabel(title: String(localized: "Switch based on power source", table: "Learning",
+                    comment: "Enables separate model choices for battery and plugged-in power."),
+                    description: String(localized: "Use a different engine or model on battery and while plugged in for this task.",
+                        table: "Learning", comment: """
+                        Explains that this learning task can select different model profiles based on power source.
+                        """),
                     systemImage: "battery.100.bolt")
             }
             if profile.powerSwitchingEnabled {
-                powerPicker("On Battery", image: "battery.25", selection: $profile.batteryProfile)
-                powerPicker("Plugged In", image: "powerplug", selection: $profile.pluggedInProfile)
-                Text("Endpoint 使用此任务 Connection 中的地址与密钥；模型选择不会改变补全或另一个学习任务。")
+                powerPicker(String(localized: "On battery", table: "Learning",
+                    comment: "Label for the model profile used while the Mac is on battery power."),
+                    image: "battery.25", selection: $profile.batteryProfile)
+                powerPicker(String(localized: "Plugged in", table: "Learning",
+                    comment: "Label for the model profile used while the Mac is connected to power."),
+                    image: "powerplug", selection: $profile.pluggedInProfile)
+                Text(String(localized: """
+                Endpoint profiles use this task's connection address and credential. Model choices do not change autocomplete or the \
+                other learning task.
+                """,
+                    table: "Learning", comment: """
+                    Clarifies that power-based endpoint choices use this task's own connection and do not affect other features.
+                    """))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -34,19 +49,32 @@ extension LearningModelConfigurationView {
             selection.wrappedValue = value
         })) {
             if !options.contains(canonical) {
-                Text(canonical.localModel.isEmpty && canonical.endpointModel.isEmpty ? "请选择模型" : "Configured · \(powerName(canonical))")
+                Text(canonical.localModel.isEmpty && canonical.endpointModel.isEmpty
+                    ? String(localized: "Choose a model", table: "Learning",
+                        comment: "Picker entry shown when the power profile has no model selected.")
+                    : String(localized: "Configured · \(powerName(canonical))", table: "Learning",
+                        comment: "Picker entry showing the current engine and model for this power profile."))
                     .tag(canonical)
             }
             ForEach(options, id: \.self) { choice in Text(powerName(choice)).tag(choice) }
         } label: {
-            SettingsRowLabel(title: title, description: "Engine and model to use while on this power source.", systemImage: image)
+            SettingsRowLabel(title: title,
+                description: String(localized: "Engine and model to use while on this power source.", table: "Learning",
+                    comment: "Description of the engine and model selected for this power profile."),
+                systemImage: image)
         }
         .pickerStyle(.menu)
         if selection.wrappedValue.backend == .endpoint {
-            TextField("Endpoint model identifier", text: selection.endpointModel)
-                .textFieldStyle(.roundedBorder).accessibilityLabel("\(title) Endpoint model")
+            TextField(String(localized: "Endpoint model identifier", table: "Learning",
+                comment: "Placeholder for a manually entered endpoint model identifier in a power profile."),
+                text: selection.endpointModel)
+                .textFieldStyle(.roundedBorder)
+                .accessibilityLabel(String(localized: "\(title) endpoint model", table: "Learning",
+                    comment: "VoiceOver label for the endpoint model field under the selected power source."))
         } else if !selection.wrappedValue.localModel.isEmpty {
-            Picker("\(title) · 指令模板", selection: selection.template) {
+            Picker(String(localized: "\(title) · Instruction template", table: "Learning",
+                comment: "Picker label for the local model's instruction template under this power source."),
+                selection: selection.template) {
                 ForEach(LearningChatTemplate.available(for: profile.role)) { Text($0.label).tag($0) }
             }.pickerStyle(.menu)
         }
@@ -63,7 +91,15 @@ extension LearningModelConfigurationView {
         return local + [.endpoint("")] + names.sorted().map { LearningPowerProfile.endpoint($0) }
     }
     private func powerName(_ value: LearningPowerProfile) -> String {
-        value.backend == .local ? value.localModel :
-            "Endpoint · \(value.endpointModel.isEmpty ? "Enter model identifier" : value.endpointModel)"
+        switch value.backend {
+        case .local:
+            value.localModel
+        case .endpoint:
+            value.endpointModel.isEmpty
+                ? String(localized: "Endpoint · enter model identifier", table: "Learning",
+                    comment: "Value shown when the endpoint model identifier has not been entered for this power profile.")
+                : String(localized: "Endpoint · \(value.endpointModel)", table: "Learning",
+                    comment: "Endpoint model identifier shown for the selected power profile.")
+        }
     }
 }

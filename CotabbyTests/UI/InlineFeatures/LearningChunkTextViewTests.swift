@@ -3,19 +3,29 @@ import SwiftUI
 import Testing
 @testable import Cotabby
 
-/// Pixel centroids check the actual order of colored units, including a right-to-left target.
-/// The production wrapping layout is exercised, not a duplicated frame calculation.
+/// Pixel centroids check the actual order of colored units while varying both content direction
+/// and interface direction. The production wrapping layout is exercised, not a copied calculation.
 @Suite(.serialized)
 @MainActor
 struct LearningChunkTextViewTests {
-    @Test(arguments: [false, true])
-    func rightToLeftTargetsKeepTheFirstMeaningOnTheRight(_ rightToLeft: Bool) async throws {
+    @Test(arguments: [false, true], [LayoutDirection.leftToRight, .rightToLeft])
+    func contentDirectionControlsMeaningOrder(_ contentIsRTL: Bool, _ interfaceDirection: LayoutDirection) async throws {
         let chunks = [
             LearningMeaningChunk(id: 0, sourceRanges: [], targetRanges: [.init(location: 0, length: 3)]),
             LearningMeaningChunk(id: 1, sourceRanges: [], targetRanges: [.init(location: 4, length: 6)])
         ]
-        let view = LearningChunkTextView(text: "أنا أستطيع", chunks: chunks, source: false, selectedChunk: nil,
-            select: { _ in }, rightToLeft: rightToLeft).frame(width: 300).background(Color.white)
+        let text = "أنا أستطيع"
+        let chipLabels = LearningChunkDisplay.fragments(text: text, chunks: chunks, source: false)
+            .filter { $0.chunkID != nil }.map(\.text)
+        // Direction changes where each original label is placed, never which characters belong
+        // to that meaning or the order retained by the source text and its ranges.
+        #expect(chipLabels == ["أنا", "أستطيع"])
+        #expect(chipLabels.joined(separator: " ") == text)
+
+        let view = LearningChunkTextView(text: text, chunks: chunks, source: false, selectedChunk: nil,
+            select: { _ in }, rightToLeft: contentIsRTL)
+            .frame(width: 300).background(Color.white)
+            .environment(\.layoutDirection, interfaceDirection)
         let hosting = NSHostingView(rootView: view)
         let window = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 300, height: 60),
             styleMask: [.borderless], backing: .buffered, defer: false)
@@ -47,6 +57,6 @@ struct LearningChunkTextViewTests {
         #expect(orange.count > 20)
         let blueCenter = blue.reduce(0, +) / max(blue.count, 1)
         let orangeCenter = orange.reduce(0, +) / max(orange.count, 1)
-        #expect(rightToLeft ? blueCenter > orangeCenter : blueCenter < orangeCenter)
+        #expect(contentIsRTL ? blueCenter > orangeCenter : blueCenter < orangeCenter)
     }
 }

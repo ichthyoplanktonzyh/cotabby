@@ -11,33 +11,58 @@ struct LanguageLearningSection: View {
     @State private var sourceLanguagesExpanded = false
 
     var body: some View {
-        Section("跨语言表达学习") {
-            Toggle("启用跨语言翻译", isOn: $settings.translationEnabled)
-            Toggle("输入停顿后自动显示整句表达", isOn: $settings.sentencePreviewEnabled)
+        Section(String(localized: "Language Learning", table: "Learning",
+            comment: "Settings section for language translation and sentence-learning controls.")) {
+            Toggle(String(localized: "Enable expression translation", table: "Learning",
+                comment: "Turns explicit translation previews on or off."),
+                isOn: $settings.translationEnabled)
+            Toggle(String(localized: "Show sentence expressions after a pause", table: "Learning",
+                comment: "Automatically translates newly typed complete sentences after a brief pause."),
+                isOn: $settings.sentencePreviewEnabled)
                 .disabled(!settings.translationEnabled)
             translationControls
-            Text(
-                "照常输入并确认候选词上屏，停顿后会在旁边显示目标表达；" +
-                "开启语块对应后，对应结果随后准备；按快捷键展开原文与译文；" +
-                "点击语块查看两侧表达，再点击单词打开系统词典浮窗。译文可直接双击单词查词。" +
-                "不要求特定品牌输入法，也不需要切换到 ABC 键盘。" +
-                "翻译与语块对应分别配置模型，支持内置 GGUF 或独立 Endpoint。"
-            )
+            Text(String(localized: """
+            Type as usual and confirm text with your input method. After a pause, the target expression appears beside the field. When \
+            phrase matching is enabled, aligned meaning appears shortly afterward. Use the shortcut to expand the source and \
+            translation. Click a highlighted match to inspect both sides, or double-click an expression to open its dictionary entry. \
+            No specific input method or ABC keyboard is required. Translation and phrase matching use separate models, each with a \
+            local GGUF or its own endpoint.
+            """,
+                table: "Learning",
+                comment: """
+                Overview of automatic sentence translation, phrase matching, dictionary lookup, input-method compatibility, and the \
+                separate model choices.
+                """))
                 .font(.caption).foregroundStyle(.secondary)
-            Text("学习请求不包含屏幕、剪贴板或输入历史。")
+            Text(String(localized: """
+            Learning requests contain the current source text and language direction. Phrase-matching requests also include the \
+            displayed translation. They never include screen content, clipboard content, or typing history.
+            """,
+                table: "Learning", comment: """
+                Privacy disclosure describing the data sent for learning requests and context that is never included.
+                """))
                 .font(.caption).foregroundStyle(.secondary)
-            LearningModelSummaryRow(title: "翻译模型", profile: settings.translation) {
+            LearningModelSummaryRow(title: String(localized: "Translation model", table: "Learning",
+                comment: "Name of the model profile used for translation."), profile: settings.translation) {
                 configureModel(.translation)
             }
-            Toggle("启用语块对应", isOn: $settings.analysisEnabled)
+            Toggle(String(localized: "Enable phrase matching", table: "Learning",
+                comment: "Turns source-to-translation phrase alignment on or off."),
+                isOn: $settings.analysisEnabled)
                 .disabled(!settings.translationEnabled)
-            Text("关闭语块对应后仍可阅读译文、对照原文和查词。对应任务只摘取片段，不重新翻译或生成解释。")
+            Text(String(localized: """
+            You can still read the translation, compare it with the source, and look up words when phrase matching is off. Matching \
+            only identifies corresponding excerpts; it does not translate again or generate explanations.
+            """,
+                table: "Learning", comment: "Explains the independent phrase-matching setting and what its model does."))
                 .font(.caption).foregroundStyle(.secondary)
-            LearningModelSummaryRow(title: "语块对应模型", profile: settings.analysis) {
+            LearningModelSummaryRow(title: String(localized: "Phrase matching model", table: "Learning",
+                comment: "Name of the model profile used to align source and target phrases."), profile: settings.analysis) {
                 configureModel(.analysis)
             }
             HStack {
-                Text("展开学习详情：\(settings.keyLabel)")
+                Text(String(localized: "Expand learning details: \(settings.keyLabel)", table: "Learning",
+                    comment: "Shows the configured keyboard shortcut that expands the sentence-learning card."))
                 if recording {
                     KeyRecorderView(onKeyRecorded: { code, modifiers, label in
                         settings.keyCode = code
@@ -46,29 +71,40 @@ struct LanguageLearningSection: View {
                         recording = false
                     }, onCancelled: { recording = false }, conflictChecker: conflict)
                 } else {
-                    Button("更改") { recording = true }
+                    Button(String(localized: "Change", table: "Learning",
+                        comment: "Starts recording a new shortcut for the learning detail card.")) { recording = true }
                 }
             }
             if settings.translationEnabled,
                let reason = conflict(settings.keyCode, settings.modifiers) {
-                Text("快捷键与\(reason)冲突，请更改")
+                Text(String(localized: "This shortcut conflicts with \(reason). Choose a different key combination.", table: "Learning",
+                    comment: "Explains why the learning shortcut cannot be used; the conflicting command name is inserted."))
                     .font(.caption)
                     .foregroundStyle(.red)
             }
-            Text("自动预览仅处理开启后当前字段的新输入，不会因切换到已有文本而自动发送。" +
-                 "停顿触发预览，句末标点和换行划分句子；继续补充同一句时更新该句。" +
-                 "学习浮层不修改原文，Tab 和 Enter 保持正常输入；Esc 收起。" +
-                 "关闭自动预览后，可按快捷键预览当前选区或句子。")
+            Text(String(localized: """
+            Automatic preview processes only new text typed in the focused field after you enable it; moving to existing text never \
+            sends it automatically. A pause starts the preview. Sentence-ending punctuation and line breaks define sentence \
+            boundaries, and adding to the same sentence updates its preview. The learning overlay never edits source text; Tab and \
+            Return still go to the editor, and Escape dismisses the overlay. When automatic preview is off, use the shortcut to \
+            preview the current selection or sentence.
+            """,
+                table: "Learning", comment: """
+                Explains when automatic preview runs, how sentence boundaries are detected, and how the overlay interacts with typing.
+                """))
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
 
     private var translationControls: some View {
         Group {
-            Picker("目标语言", selection: $settings.targetLanguage) {
+            Picker(String(localized: "Target language", table: "Learning",
+                comment: "Picker label for the language to translate into."),
+                selection: $settings.targetLanguage) {
                 ForEach(LearningLanguage.allCases) { Text($0.label).tag($0) }
             }
-            DisclosureGroup("源语言（可选多个，当前 \(settings.sourceLanguages.count) 个）",
+            DisclosureGroup(String(localized: "Source languages (optional; \(settings.sourceLanguages.count) selected)", table: "Learning",
+                comment: "Disclosure label for source-language choices; the selected language count is inserted."),
                             isExpanded: sourceExpansionBinding) {
                 ForEach(LearningLanguage.allCases) { language in
                     Toggle(language.label, isOn: Binding(
@@ -79,8 +115,11 @@ struct LanguageLearningSection: View {
                         }
                     )).disabled(language == settings.targetLanguage)
                 }
-                Text("只选一个源语言时，按所选方向翻译；" +
-                     "选择多个时，会根据本次原文自动判断，判断不确定时请调整设置或选择更长文本。")
+                Text(String(localized: """
+                With one source language selected, translations follow that direction. With several selected, Cotabby detects the \
+                language of each source; if it is uncertain, adjust the settings or select more text.
+                """,
+                    table: "Learning", comment: "Explains fixed-direction translation versus automatic source-language detection."))
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -99,7 +138,10 @@ struct LanguageLearningSection: View {
     }
 
     private func conflict(_ code: UInt16, _ modifiers: ShortcutModifierMask) -> String? {
-        if code == 36 || code == 76 || code == 53 || modifiers.isEmpty { return "请用带修饰键的快捷键，保留 Enter/Esc" }
+        if code == 36 || code == 76 || code == 53 || modifiers.isEmpty {
+            return String(localized: "Use a shortcut with a modifier key; Enter and Escape are reserved.",
+                table: "Learning", comment: "Validation message shown when a shortcut uses a reserved key or has no modifier.")
+        }
         for action in ShortcutAction.allCases {
             if let conflict = suggestionSettings.conflictingShortcutName(
                 keyCode: code, modifiers: modifiers, excluding: action, includingLearningShortcut: false
@@ -127,9 +169,12 @@ private struct LearningModelSummaryRow: View {
 
     var body: some View {
         LabeledContent {
-            Button("配置模型", action: configure)
-                .help("在 Engine & Model 中配置\(title)")
-                .accessibilityLabel("配置\(title)")
+            Button(String(localized: "Configure model", table: "Learning",
+                comment: "Opens Engine & Model settings for this learning model profile."), action: configure)
+                .help(String(localized: "Configure \(title) in Engine & Model", table: "Learning",
+                    comment: "Tooltip for opening this learning model profile's configuration."))
+                .accessibilityLabel(String(localized: "Configure \(title)", table: "Learning",
+                    comment: "VoiceOver label for opening this learning model profile's configuration."))
         } label: {
             SettingsRowLabel(title: title, description: summary, systemImage: "shippingbox")
         }
@@ -138,9 +183,17 @@ private struct LearningModelSummaryRow: View {
     private var summary: String {
         switch profile.backend {
         case .local:
-            "内置 GGUF · \(profile.localModel.isEmpty ? "尚未选择模型" : profile.localModel)"
+            profile.localModel.isEmpty
+                ? String(localized: "Local GGUF · no model selected", table: "Learning",
+                    comment: "Summary shown when the local backend is selected but this task has no GGUF model.")
+                : String(localized: "Local GGUF · \(profile.localModel)", table: "Learning",
+                    comment: "Summary of the local GGUF backend and selected model filename.")
         case .endpoint:
-            "Endpoint · \(profile.endpointModel.isEmpty ? "尚未填写模型" : profile.endpointModel)"
+            profile.endpointModel.isEmpty
+                ? String(localized: "Endpoint · no model entered", table: "Learning",
+                    comment: "Summary shown when the endpoint backend is selected but its model identifier is empty.")
+                : String(localized: "Endpoint · \(profile.endpointModel)", table: "Learning",
+                    comment: "Summary of the endpoint backend and user-configured model identifier.")
         }
     }
 }

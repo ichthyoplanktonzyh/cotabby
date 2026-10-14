@@ -117,7 +117,7 @@ struct LanguageLearningCoordinatorTests {
         await rig.panel.waitForPresentationCount(1)
 
         #expect(rig.service.requests.isEmpty)
-        #expect(rig.panel.presentations.last?.message.contains("源语言与目标相同") == true)
+        #expect(rig.panel.presentations.last?.message.contains("matches the target") == true)
         #expect(rig.panel.presentations.last?.sourceLanguage == nil)
         #expect(rig.panel.presentations.last?.targetLanguage == language)
     }
@@ -314,7 +314,7 @@ struct LanguageLearningCoordinatorTests {
 
         #expect(rig.panel.isVisible)
         #expect(rig.panel.hideCount == hideCountBeforeConfirm)
-        #expect(rig.panel.presentations.last?.message == "正在核对替换结果…")
+        #expect(rig.panel.presentations.last?.message == String(localized: "Verifying the replacement…", table: "Learning"))
         #expect(rig.replacement.replaceCalls == [.init(source: source, english: english)])
 
         rig.replacement.completeReplace(.success(()))

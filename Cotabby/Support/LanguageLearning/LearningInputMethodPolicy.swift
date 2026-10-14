@@ -33,11 +33,17 @@ nonisolated enum LearningInputMethodPolicy {
         }
     }
 
-    static let markedTextConfirmationMessage =
-        "输入法仍有未提交的标记文本。请先确认候选词已上屏并结束组词，再预览；原文保留。"
+    static let markedTextConfirmationMessage = String(localized: """
+    Your input method has uncommitted text. Confirm the candidate and finish composing before previewing; the original text was kept.
+    """,
+        table: "Learning", comment: """
+        Guidance shown when the host input method still has marked text and the learning feature cannot safely capture it.
+        """)
 
-    static let unavailableMarkedRangeReason =
-        "可阅读或复制目标内容；当前编辑器无法确认安全写入，因此预览为只读。"
+    static let unavailableMarkedRangeReason = String(localized: """
+    You can read or copy the result. This editor cannot confirm that writing is safe, so the preview is read-only.
+    """,
+        table: "Learning", comment: "Explains why a learning preview is read-only when editor or input-method state cannot be verified.")
 
     /// Manual expression preview is allowed when AX positively reports no marked text or when no
     /// composing input method is selected. Missing AX evidence under a composing input method still

@@ -54,7 +54,7 @@ struct CotabbyApp: App {
             // MenuBarExtra does not create a Settings scene, so install the standard app-menu
             // command here and send it to the same coordinator used by the status-item menu.
             CommandGroup(replacing: .appSettings) {
-                Button("Settings…") {
+                Button(String(localized: "Settings") + "…") {
                     appDelegate.settingsCoordinator.showSettings()
                 }
                 .keyboardShortcut(",", modifiers: .command)

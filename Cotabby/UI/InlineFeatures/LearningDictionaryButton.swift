@@ -16,14 +16,16 @@ struct LearningDictionaryButton: NSViewRepresentable {
         button.controlSize = .small
         button.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         button.refusesFirstResponder = true
-        button.toolTip = "在系统词典中查看 \(word)"
+        button.toolTip = String(localized: "Look up \(word) in Dictionary", table: "Learning",
+            comment: "Tooltip for opening the system Dictionary panel for this word; the word comes from the translated text.")
         return button
     }
 
     func updateNSView(_ button: NSButton, context: Context) {
         context.coordinator.lookup = lookup
         button.title = word
-        button.toolTip = "在系统词典中查看 \(word)"
+        button.toolTip = String(localized: "Look up \(word) in Dictionary", table: "Learning",
+            comment: "Tooltip for opening the system Dictionary panel for this word; the word comes from the translated text.")
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSButton, context: Context) -> CGSize? {

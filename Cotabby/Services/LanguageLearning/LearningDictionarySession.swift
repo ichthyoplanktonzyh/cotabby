@@ -26,6 +26,10 @@ final class LearningDictionarySession: ObservableObject {
     var title: String { selectedWord?.text ?? unit?.surface ?? "" }
     var query: String { selectedWord?.text ?? unit?.query ?? "" }
 
+    /// The opening language is captured with the active unit. The card uses it for the component
+    /// words' visual reading order without inferring direction from the UI locale or term text.
+    var contentLanguage: LearningLanguage { language }
+
     func open(_ unit: LearningUnit, documentID: UUID, language: LearningLanguage) {
         close()
         self.unit = unit

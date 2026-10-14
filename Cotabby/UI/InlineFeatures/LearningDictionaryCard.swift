@@ -58,12 +58,15 @@ struct LearningDictionaryCard: View {
                 Text(String(localized: "Words in this expression", table: "Learning",
                     comment: "Label above component words that can be opened from an expression dictionary entry."))
                     .font(.caption).foregroundStyle(.secondary)
-                LearningTextFlowLayout(spacing: 5, rowSpacing: 5) {
+                LearningTextFlowLayout(spacing: 5, rowSpacing: 5, rightToLeft: session.contentLanguage == .arabic) {
                     ForEach(Array(unit.words.enumerated()), id: \.offset) { _, word in
                         Button(word.text) { session.select(word) }
                             .buttonStyle(.bordered).controlSize(.small)
                     }
                 }
+                // Dictionary terms keep their stored order; only their positions follow the
+                // captured lookup language, independent of the interface's own direction.
+                .environment(\.layoutDirection, .leftToRight)
             }
             Text(String(localized: "Closes as you type", table: "Learning",
                 comment: "Hint that typing in the host editor dismisses the dictionary panel."))

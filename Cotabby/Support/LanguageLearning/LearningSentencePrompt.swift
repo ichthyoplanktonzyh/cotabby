@@ -5,10 +5,12 @@ import Foundation
 nonisolated enum LearningSentencePrompt {
     static func render(source: String, sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage) throws -> String {
         guard source.utf8.count <= 6_000, source.contains(where: \.isLetter) else {
-            throw LearningFailure.message("当前句子为空或超过 6 KB。")
+            throw LearningFailure.message(String(localized: "The current sentence is empty or exceeds 6 KB.",
+                table: "Learning", comment: "Error shown when sentence preview receives an empty or oversized sentence."))
         }
         guard let quoted = String(data: try JSONEncoder().encode(source), encoding: .utf8) else {
-            throw LearningFailure.message("无法编码当前句子。")
+            throw LearningFailure.message(String(localized: "The current sentence could not be encoded.",
+                table: "Learning", comment: "Error shown when the source sentence cannot be safely encoded for a learning request."))
         }
         return """
         Translate from \(sourceLanguage.name) into natural \(targetLanguage.name).

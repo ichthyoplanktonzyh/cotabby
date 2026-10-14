@@ -7,7 +7,13 @@ nonisolated enum LearningModelRole: String, Sendable { case translation, analysi
 nonisolated enum LearningModelBackend: String, CaseIterable, Identifiable, Codable, Sendable {
     case local, endpoint
     var id: String { rawValue }
-    var label: String { self == .local ? "内置开源模型（GGUF）" : "Endpoint" }
+    var label: String {
+        self == .local
+            ? String(localized: "Local open-source model (GGUF)", table: "Learning",
+                comment: "Picker label for running a learning model locally from a GGUF file.")
+            : String(localized: "Endpoint", table: "Learning",
+                comment: "Picker label for using the configured API endpoint for a learning model.")
+    }
 }
 
 /// Known text-only instruction formats. Automatic selection reads the GGUF architecture; manual
@@ -22,15 +28,25 @@ nonisolated enum LearningChatTemplate: String, CaseIterable, Identifiable, Codab
     }
     var label: String {
         switch self {
-        case .automatic: "自动识别"
+        case .automatic:
+            String(localized: "Automatic", table: "Learning",
+                comment: "Instruction-template choice that detects the format from GGUF metadata.")
         case .hyMT: "Hy-MT / Hy-MT2 1.8B"
         case .hyMT7: "Hy-MT2 7B"
         case .chatML: "ChatML / Qwen2.5"
-        case .qwen3: "Qwen3 / Qwen3.5（关闭思考）"
-        case .gemma4: "Gemma 4 E2B / E4B（关闭思考）"
-        case .gemma4Large: "Gemma 4 12B / 26B / 31B（关闭思考）"
+        case .qwen3:
+            String(localized: "Qwen3 / Qwen3.5 (thinking disabled)", table: "Learning",
+                comment: "Instruction-template choice for Qwen3 models with thinking mode disabled.")
+        case .gemma4:
+            String(localized: "Gemma 4 E2B / E4B (thinking disabled)", table: "Learning",
+                comment: "Instruction-template choice for Gemma 4 E2B and E4B models with thinking mode disabled.")
+        case .gemma4Large:
+            String(localized: "Gemma 4 12B / 26B / 31B (thinking disabled)", table: "Learning",
+                comment: "Instruction-template choice for larger Gemma 4 models with thinking mode disabled.")
         case .gemma3: "Gemma 3"
-        case .translateGemma: "TranslateGemma（翻译专用）"
+        case .translateGemma:
+            String(localized: "TranslateGemma (translation only)", table: "Learning",
+                comment: "Instruction-template choice for TranslateGemma models, which are intended only for translation.")
         case .llama3: "Llama 3"
         }
     }
@@ -181,7 +197,10 @@ final class LearningModelSettings: ObservableObject {
             try credentials.saveAPIKey(value)
             if previous != normalized { credentialRevision += 1 }
             credentialMessage = (value?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
-                ? "密钥已清除" : "密钥已保存到钥匙串"
+                ? String(localized: "Credential cleared", table: "Learning",
+                    comment: "Confirmation shown after the saved learning endpoint credential is removed.")
+                : String(localized: "Credential saved to Keychain", table: "Learning",
+                    comment: "Confirmation shown after the learning endpoint credential is saved to macOS Keychain.")
             return true
         } catch { credentialMessage = error.localizedDescription; return false }
     }

@@ -40,7 +40,10 @@ final class LearningAnalysisService {
         let raw = try await model.generate(prompt: prompt, maxTokens: 4_096) { delta in
             try validate()
             bytes += delta.utf8.count
-            guard bytes <= 48_000 else { throw LearningFailure.message("语块对应超过可显示范围。") }
+            guard bytes <= 48_000 else {
+                throw LearningFailure.message(String(localized: "Phrase-matching output exceeds the display limit.",
+                    table: "Learning", comment: "Error shown when phrase-alignment output is too large to display safely."))
+            }
         }
         try validate()
         let result = try LearningAlignmentParser.parse(raw, source: source, translation: text)

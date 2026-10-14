@@ -8,7 +8,8 @@ import Logging
 @MainActor
 final class LearningModelController: ObservableObject {
     let profile: LearningModelSettings
-    @Published private(set) var status = "未加载"
+    @Published private(set) var status = String(localized: "Not loaded", table: "Learning",
+        comment: "Initial status shown in settings when this learning model is not resident.")
     @Published private(set) var availableModels: [RuntimeModelOption] = []
     let endpointConnection: OpenAICompatibleConnectionModel
     var endpointModels: [OpenAICompatibleModelOption] { endpointConnection.models }
@@ -57,11 +58,14 @@ final class LearningModelController: ObservableObject {
         let selection = profile.snapshot
         if selection.backend == .local, !selection.localModel.isEmpty,
            !availableModels.contains(where: { $0.filename == selection.localModel }) {
-            stop(); status = "配置的 GGUF 文件不可用，请重新选择模型。"
+            stop()
+            status = String(localized: "The configured GGUF file is unavailable. Choose a model again.",
+                table: "Learning", comment: "Status shown when a selected local model file can no longer be found.")
             missingSelectedFile = true
         } else if missingSelectedFile {
             missingSelectedFile = false
-            status = "未加载"
+            status = String(localized: "Not loaded", table: "Learning",
+                comment: "Status shown in settings when this learning model is not resident.")
         }
     }
 
@@ -96,7 +100,11 @@ final class LearningModelController: ObservableObject {
         let id = UUID(), snapshot = profile.snapshot
         let sampling = sampling ?? (userOnly ? .hyMT : .standard)
         taskID = id
-        status = snapshot.backend == .local ? "加载 / 生成中" : "请求中"
+        status = snapshot.backend == .local
+            ? String(localized: "Loading / generating", table: "Learning",
+                comment: "Model status while a local learning model loads or generates a result.")
+            : String(localized: "Requesting", table: "Learning",
+                comment: "Model status while a learning request is being sent to its configured endpoint.")
         let work = Task { [self] in
             switch snapshot.backend {
             case .endpoint:
@@ -121,7 +129,10 @@ final class LearningModelController: ObservableObject {
                     onRawText: { measurement?.received($0) })
                 return raw
             case .local:
-                guard !snapshot.localModel.isEmpty else { throw LearningFailure.message("请为此任务选择内置 GGUF 模型。") }
+                guard !snapshot.localModel.isEmpty else {
+                    throw LearningFailure.message(String(localized: "Choose a local GGUF model for this task.",
+                        table: "Learning", comment: "Error shown when local generation starts without a selected model."))
+                }
                 let modelURL = try localModelURL(snapshot.localModel)
                 return try await runLocal(model: modelURL, snapshot: snapshot, prompt: prompt,
                                           maxTokens: maxTokens, id: id, onDelta: onDelta)
@@ -132,7 +143,8 @@ final class LearningModelController: ObservableObject {
             let result = try await withTaskCancellationHandler { try await work.value } onCancel: { work.cancel() }
             try Task.checkCancellation()
             guard taskID == id, profile.snapshot == snapshot else { throw CancellationError() }
-            status = "就绪"
+            status = String(localized: "Ready", table: "Learning",
+                comment: "Model status after the learning request completes successfully.")
             task = nil
             scheduleIdleRelease()
             return result
@@ -140,7 +152,10 @@ final class LearningModelController: ObservableObject {
             let cancelled = work.isCancelled || Task.isCancelled || taskID != id || profile.snapshot != snapshot || error is CancellationError
             if taskID == id {
                 task = nil
-                status = cancelled ? "已取消" : error.localizedDescription
+                status = cancelled
+                    ? String(localized: "Canceled", table: "Learning",
+                        comment: "Model status after a learning request is canceled.")
+                    : error.localizedDescription
                 scheduleIdleRelease()
             }
             if cancelled { throw CancellationError() }
@@ -203,7 +218,8 @@ final class LearningModelController: ObservableObject {
         task?.cancel(); task = nil
         let lease = core.invalidate()
         Task.detached { [core] in core.unload(expectedLease: lease, trace: trace) }
-        status = "未加载"
+        status = String(localized: "Not loaded", table: "Learning",
+            comment: "Model status after the local learning model is unloaded.")
     }
 
     func prepare() async {
@@ -214,7 +230,8 @@ final class LearningModelController: ObservableObject {
         let id = UUID(); taskID = id
         let core = self.core
         core.claim(id)
-        status = "加载中"
+        status = String(localized: "Loading", table: "Learning",
+            comment: "Model status while preparing the local learning model.")
         let trace = LearningRequestContext(requestID: RequestID.generate(), operationID: RequestID.generate(),
             source: profile.role == .translation ? .translation : .analysis,
             modelName: snapshot.localModel, engine: "llama")
@@ -227,11 +244,17 @@ final class LearningModelController: ObservableObject {
             task = work
             _ = try await withTaskCancellationHandler { try await work.value } onCancel: { work.cancel(); core.cancel(id) }
             guard taskID == id, profile.snapshot == snapshot else { return }
-            task = nil; preparedSnapshot = snapshot; status = "就绪"
+            task = nil; preparedSnapshot = snapshot
+            status = String(localized: "Ready", table: "Learning",
+                comment: "Model status after the local learning model is prepared.")
             LearningRequestLog.emit(trace, phase: "warmup_finished")
         } catch {
             guard taskID == id else { return }
-            task = nil; status = error is CancellationError ? "已取消" : error.localizedDescription
+            task = nil
+            status = error is CancellationError
+                ? String(localized: "Canceled", table: "Learning",
+                    comment: "Model status after local model preparation is canceled.")
+                : error.localizedDescription
             LearningRequestLog.emit(trace, phase: error is CancellationError ? "warmup_cancelled" : "warmup_failed",
                 details: ["error_type": String(reflecting: type(of: error))])
         }

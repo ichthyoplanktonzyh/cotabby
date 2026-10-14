@@ -17,7 +17,7 @@
         },
         "en": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ %2$lld ms"
           }
         },
@@ -379,7 +379,7 @@
         },
         "en": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ → %2$@"
           }
         },
@@ -1437,6 +1437,7 @@
       }
     },
     "Autocomplete": {
+      "extractionState": "stale",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -9259,6 +9260,7 @@
     },
     "Keep typing to close the details": {
       "comment": "Hint that typing in the host editor dismisses the expanded sentence details.",
+      "extractionState": "stale",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -10413,6 +10415,7 @@
     },
     "Matching highlights show phrase correspondence. Click a match to inspect it; double-click an expression to look it up.": {
       "comment": "Instructions for clicking aligned phrases and looking up an expression in the expanded sentence card.",
+      "extractionState": "stale",
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -11937,7 +11940,7 @@
         },
         "en": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "Phrase match %1$lld: %2$@"
           }
         },
@@ -13275,7 +13278,7 @@
         },
         "en": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "Recent Requests · %1$@ (%2$lld, shared cap %3$lld)"
           }
         },
@@ -20558,6 +20561,7 @@
     },
     "Underlined phrases are complete expressions · double-click to look up": {
       "comment": "Instruction explaining that underlines mark complete expressions that can be looked up.",
+      "extractionState": "stale",
       "localizations": {
         "ar": {
           "stringUnit": {

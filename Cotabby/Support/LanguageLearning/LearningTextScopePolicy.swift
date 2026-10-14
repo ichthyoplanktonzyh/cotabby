@@ -9,11 +9,22 @@ nonisolated enum LearningTextScopePolicy {
         guard range.location >= 0, range.length > 0, range.location <= value.length,
               range.length <= value.length - range.location,
               value.rangeOfComposedCharacterSequences(for: range) == range else {
-            throw LearningFailure.message("文本范围不完整，请重新选择已提交的文本。")
+            throw LearningFailure.message(String(localized: "The text range is incomplete. Select the committed text again.",
+                table: "Learning", comment: "Error shown when the requested learning text range cannot be verified as complete."))
         }
         let source = value.substring(with: range)
-        guard source.utf8.count <= 6_000 else { throw LearningFailure.message("当前范围超过 6 KB，请手动选择较短文本；原文未截断。") }
-        guard source.contains(where: \.isLetter) else { throw LearningFailure.message("当前范围没有可转换的文字。") }
+        guard source.utf8.count <= 6_000 else {
+            throw LearningFailure.message(String(localized: """
+            The selected range exceeds 6 KB. Select shorter text manually; the source was not truncated.
+            """,
+                table: "Learning", comment: """
+                Error shown when the selected text exceeds the safe request limit; no shortened text was sent.
+                """))
+        }
+        guard source.contains(where: \.isLetter) else {
+            throw LearningFailure.message(String(localized: "The selected range contains no text that can be converted.",
+                table: "Learning", comment: "Error shown when the selected range contains no letters to translate."))
+        }
         return source
     }
 
@@ -24,7 +35,10 @@ nonisolated enum LearningTextScopePolicy {
               Range(selection, in: value) != nil,
               selection.location == utf16.length ||
                 utf16.rangeOfComposedCharacterSequence(at: selection.location).location == selection.location
-        else { throw LearningFailure.message("无法确认光标范围。") }
+        else {
+            throw LearningFailure.message(String(localized: "Could not confirm the caret range.",
+                table: "Learning", comment: "Error shown when the caret's sentence range cannot be resolved safely."))
+        }
         if selection.length > 0 { _ = try text(value: value, range: selection); return selection }
         // AX exposes full document values, but NLP must not scan unbounded text on MainActor.
         // 6000 UTF-16 units on either side exceed the complete source's UTF-8 byte budget.
@@ -54,10 +68,18 @@ nonisolated enum LearningTextScopePolicy {
             if probe >= candidate.location && probe <= NSMaxRange(candidate) { previousSentence = candidate }
             return true
         }
-        guard let result = result ?? previousSentence else { throw LearningFailure.message("光标处没有完整句子，请手动选择文本。") }
+        guard let result = result ?? previousSentence else {
+            throw LearningFailure.message(String(localized: "There is no complete sentence at the caret. Select text manually.",
+                table: "Learning", comment: "Guidance shown when the caret is not inside a complete sentence suitable for preview."))
+        }
         guard !(window.location > 0 && result.location == 0),
               !(NSMaxRange(window) < utf16.length && NSMaxRange(result) == local.utf16.count) else {
-            throw LearningFailure.message("当前句子边界超出可核对范围，请手动选择文本；未发送截断内容。")
+            throw LearningFailure.message(String(localized: """
+            The current sentence extends beyond the verifiable range. Select text manually; truncated text was not sent.
+            """,
+                table: "Learning", comment: """
+                Error shown when sentence boundaries extend outside verified editor text; no truncated content was sent.
+                """))
         }
         let resolved = NSRange(location: result.location + window.location, length: result.length)
         _ = try text(value: value, range: resolved)

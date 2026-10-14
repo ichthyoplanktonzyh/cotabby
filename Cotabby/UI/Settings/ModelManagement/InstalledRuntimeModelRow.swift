@@ -21,13 +21,22 @@ struct InstalledRuntimeModelRow: View {
             if selected {
                 Image(systemName: "checkmark.circle.fill").foregroundStyle(.tint)
             } else {
-                if let select { Button("选用", action: select).buttonStyle(.borderless) }
+                if let select {
+                    Button(String(localized: "Select", table: "Learning"), action: select)
+                        .buttonStyle(.borderless)
+                }
                 if downloads.isModelInUse(filename: model.filename) {
-                    Text("In Use").font(.caption).foregroundStyle(.secondary)
-                        .help("此文件被补全、翻译、语块对应或电源配置引用。")
+                    Text(String(localized: "In Use", table: "Learning"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .help(String(
+                            localized: "This file is used by autocomplete, translation, chunk alignment, or a power profile.",
+                            table: "Learning"
+                        ))
                 } else if downloads.canDeleteModel(filename: model.filename) {
                     Button(action: delete) { Image(systemName: "trash").foregroundStyle(.secondary) }
-                        .buttonStyle(.borderless).accessibilityLabel("Delete \(model.filename)")
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel(String(localized: "Delete \(model.filename)", table: "Learning"))
                 }
             }
         }

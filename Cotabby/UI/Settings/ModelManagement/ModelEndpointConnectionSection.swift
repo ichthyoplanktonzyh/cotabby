@@ -14,11 +14,16 @@ struct ModelEndpointConnectionSection: View {
     let clearKey: () -> Void
 
     var body: some View {
-        Section("Connection") {
+        Section(String(localized: "Connection")) {
             VStack(alignment: .leading, spacing: 10) {
-                SettingsRowLabel(title: "Server URL", description:
-                    "The OpenAI-compatible server address. Cotabby adds /v1 when the address has no path; Ollama uses http://127.0.0.1:11434 by default.",
-                    systemImage: "network")
+                SettingsRowLabel(
+                    title: String(localized: "Server URL"),
+                    description: String(localized: """
+                    The OpenAI-compatible server address. Cotabby adds /v1 when the address has no path; Ollama uses \
+                    http://127.0.0.1:11434 by default.
+                    """),
+                    systemImage: "network"
+                )
                 HStack(spacing: 8) {
                     TextField("", text: $baseURL, prompt: Text(OpenAICompatibleEndpointConfiguration.defaultBaseURLString))
                         .labelsHidden().textFieldStyle(.roundedBorder).onSubmit(connect)
@@ -35,25 +40,31 @@ struct ModelEndpointConnectionSection: View {
                             .foregroundStyle(color).lineLimit(2)
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Server status")
-                    .accessibilityValue("\(connection.state.summary), \(displayURL)")
+                    .accessibilityLabel(String(localized: "Server status"))
+                    .accessibilityValue(String(localized: "\(connection.state.summary), \(displayURL)"))
                     .settingsItem(.endpointStatus)
                     Spacer(minLength: 8)
-                    Button("Use Ollama Default", systemImage: "arrow.counterclockwise", action: reset)
+                    Button(String(localized: "Use Ollama Default"), systemImage: "arrow.counterclockwise", action: reset)
                         .disabled(baseURL == OpenAICompatibleEndpointConfiguration.defaultBaseURLString)
                 }
             }
             .settingsItem(.endpointBaseURL)
             LabeledContent {
                 HStack(spacing: 8) {
-                    SecureField("", text: $keyDraft, prompt: Text("Paste API key"))
+                    SecureField("", text: $keyDraft, prompt: Text(String(localized: "Paste API key")))
                         .labelsHidden().textFieldStyle(.roundedBorder)
                         .frame(minWidth: 200, idealWidth: 260, maxWidth: 300)
-                    if !keyDraft.isEmpty { Button("Clear", action: clearKey) }
+                    if !keyDraft.isEmpty { Button(String(localized: "Clear"), action: clearKey) }
                 }
             } label: {
-                SettingsRowLabel(title: "API Key", description: "Optional bearer token stored in Keychain. Connect saves this task's key.",
-                    systemImage: "key")
+                SettingsRowLabel(
+                    title: String(localized: "API Key"),
+                    description: String(
+                        localized: "Optional bearer token stored in Keychain. Connect saves this task's key.",
+                        table: "Learning"
+                    ),
+                    systemImage: "key"
+                )
             }
             .settingsItem(.endpointAPIKey)
             if let transmissionNote { Text(transmissionNote).font(.caption).foregroundStyle(.secondary) }
@@ -62,8 +73,8 @@ struct ModelEndpointConnectionSection: View {
         }
     }
     private var connectTitle: String {
-        if case .ready = connection.state { return "Refresh" }
-        return "Connect"
+        if case .ready = connection.state { return String(localized: "Refresh") }
+        return String(localized: "Connect")
     }
     private var displayURL: String {
         (try? OpenAICompatibleEndpointConfiguration(baseURLString: baseURL, modelName: "", apiMode: .chatCompletions))?

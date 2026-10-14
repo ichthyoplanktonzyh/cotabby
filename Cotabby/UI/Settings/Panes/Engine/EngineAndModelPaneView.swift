@@ -22,12 +22,12 @@ struct EngineAndModelPaneView: View {
     @State var endpointCredentialError: String?
     var body: some View {
         VStack(spacing: 0) {
-            Picker("模型配置任务", selection: $navigation.engineTask) {
+            Picker(String(localized: "Model task", table: "Learning"), selection: $navigation.engineTask) {
                 ForEach(SettingsEngineTask.allCases) { task in Text(task.label).tag(task) }
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .accessibilityLabel("模型配置任务")
+            .accessibilityLabel(String(localized: "Model task", table: "Learning"))
             .padding(.horizontal, 20)
             .padding(.top, 16)
             .padding(.bottom, 4)
@@ -73,10 +73,11 @@ struct EngineAndModelPaneView: View {
                     }
                 } label: {
                     SettingsRowLabel(
-                        title: "Engine",
-                        description: "Apple Intelligence runs on-device using macOS's built-in model " +
-                            "(newer Apple Silicon Macs only). Open Source runs a downloaded model file. " +
-                            "Local Endpoint connects to an OpenAI-compatible server you manage.",
+                        title: String(localized: "Engine"),
+                        description: String(localized: """
+                        Apple Intelligence runs on-device using macOS's built-in model (newer Apple Silicon Macs only). Open Source \
+                        runs a downloaded model file. Local Endpoint connects to an OpenAI-compatible server you manage.
+                        """),
                         systemImage: "cpu"
                     )
                 }
@@ -118,7 +119,7 @@ struct EngineAndModelPaneView: View {
             }
         }
         .alert(
-            "Delete Model?",
+            String(localized: "Delete Model?"),
             isPresented: pendingDeletionAlertBinding,
             presenting: pendingDeletionModel
         ) { model in
@@ -136,7 +137,9 @@ struct EngineAndModelPaneView: View {
                 LearningModelConfigurationView(controller: controller, profile: controller.profile,
                     suggestionSettings: suggestionSettings, downloads: modelDownloadManager, searchService: huggingFaceSearchService)
             } else {
-                Section("Runtime") { Text("学习模型服务不可用，请重新打开设置。") }
+                Section("Runtime") { Text(String(localized: """
+                Learning model services are unavailable. Reopen Settings.
+                """, table: "Learning")) }
             }
         }
         // Draft keys belong to a page's UI lifetime. Distinct identity prevents an unsaved

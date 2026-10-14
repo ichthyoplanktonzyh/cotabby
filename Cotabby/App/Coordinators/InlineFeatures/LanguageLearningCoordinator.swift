@@ -148,14 +148,23 @@ final class LanguageLearningCoordinator {
                 enabledSourceLanguages: settings.sourceLanguages,
                 targetLanguage: settings.targetLanguage
             ) else {
-                throw LearningFailure.message("无法确定已启用的源语言，或源语言与目标相同。请调整源语言设置或选择更多文本。")
+                throw LearningFailure.message(String(localized: """
+                The source language could not be confirmed or matches the target. Adjust the source-language settings or select more \
+                text.
+                """,
+                    table: "Learning", comment: """
+                    Error shown when a translation direction cannot be resolved from the selected source languages and target.
+                    """))
             }
             sourceLanguage = language
             saved = capture
             let traceIdentifier = RequestID.generate()
             let task = LearningExpressionTask.translation(source: language, target: settings.targetLanguage)
             let identifier = requestID
-            show(message: "正在生成目标语言表达；继续输入会关闭预览。", accept: nil)
+            show(message: String(localized: "Generating the target expression… Keep typing to dismiss this preview.",
+                table: "Learning", comment: """
+                Status while an explicit translation preview is being generated; typing cancels it.
+                """), accept: nil)
             work = Task { [weak self] in
                 guard let self else { return }
                 await LearningRequestTrace.$requestID.withValue(traceIdentifier) {
@@ -166,10 +175,22 @@ final class LanguageLearningCoordinator {
                         guard self.replacement.isCurrent(capture) else { self.cancel(); return }
                         self.english = result
                         if capture.supportsReplacement {
-                            self.show(message: "你可以阅读或复制表达；点击替换前会重新核对原文。", accept: { [weak self] in self?.accept() })
+                            self.show(message: String(localized: """
+                            You can read or copy the expression. The source text will be checked again before replacement.
+                            """,
+                                table: "Learning", comment: """
+                                Explains that replacement is available and the source is revalidated after the user confirms.
+                                """),
+                                accept: { [weak self] in self?.accept() })
                         } else {
                             self.show(message: capture.replacementUnavailableReason ??
-                                "可以阅读或复制表达；如需替换，请手动选择原文后再次预览。", accept: nil)
+                                String(localized: """
+                                You can read or copy the expression. To replace text, select the source manually and preview it again.
+                                """,
+                                    table: "Learning", comment: """
+                                    Copy-only preview guidance when the editor does not support a safe automatic replacement.
+                                    """),
+                                accept: nil)
                         }
                         if self.panel.isVisible { self.service.recordDisplay(source: .translation, requestID: traceIdentifier) }
                     } catch {
@@ -195,7 +216,8 @@ final class LanguageLearningCoordinator {
         focus.refreshNow()
         if let reason = availability() { show(message: reason, accept: nil); return }
         committing = true
-        show(message: "正在核对替换结果…", accept: nil)
+        show(message: String(localized: "Verifying the replacement…", table: "Learning",
+            comment: "Status while the coordinator checks whether the editor applied the confirmed replacement."), accept: nil)
         let identifier = requestID
         work = Task { [weak self] in
             guard let self else { return }
@@ -215,7 +237,14 @@ final class LanguageLearningCoordinator {
                 self.work = nil
                 if error is CancellationError, !startedEditing { self.cancel(); return }
                 let message = error is CancellationError
-                    ? "操作已取消，替换结果需核对；可复制译文或原文恢复。" : error.localizedDescription
+                    ? String(localized: """
+                    The operation was canceled before the replacement could be verified. Copy the translation or restore the source \
+                    text if needed.
+                    """,
+                        table: "Learning", comment: """
+                        Recovery guidance when cancellation occurs after an editor replacement may have started.
+                        """)
+                    : error.localizedDescription
                 self.show(message: message, accept: nil)
             }
         }

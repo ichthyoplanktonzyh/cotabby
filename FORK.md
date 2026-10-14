@@ -28,6 +28,12 @@ and tested under CONTRIBUTING.md.
 Fetch upstream changes explicitly and review them before merging. Upstream fixes are useful inputs,
 not automatic product decisions. Avoid rebasing or force-pushing a shared development branch.
 
+Interface localization follows the same boundary: `Localizable.xcstrings` is the upstream common
+catalog, while `Learning.xcstrings` contains this fork's learning and integration copy. English is
+the UI source language with 14 translated locales. Interface language, autocomplete languages,
+and learning source/target languages remain separate preferences. See CONTRIBUTING.md for catalog
+ownership, translation imports, and compiled-resource checks.
+
 ```sh
 git fetch upstream
 git push origin codex/language-learning

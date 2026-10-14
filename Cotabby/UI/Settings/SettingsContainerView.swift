@@ -18,6 +18,7 @@ struct SettingsContainerView: View {
     @ObservedObject var permissionManager: PermissionManager
     let permissionGuidanceController: PermissionGuidanceController
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
+    @ObservedObject var interfaceLanguageSettings: InterfaceLanguageSettingsModel
     @ObservedObject var openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
     @ObservedObject var foundationModelAvailabilityService: FoundationModelAvailabilityService
     @ObservedObject var runtimeModel: RuntimeBootstrapModel
@@ -28,6 +29,7 @@ struct SettingsContainerView: View {
     @ObservedObject var systemMetricsStore: SystemMetricsStore
 
     let onShowWelcome: () -> Void
+    let onRestart: () throws -> Void
     let clearEmojiHistory: () -> Void
     /// Owned by `CotabbyAppEnvironment`; the Context pane observes it for the Typing History section.
     let typingHistoryStore: TypingHistoryStore
@@ -59,7 +61,7 @@ struct SettingsContainerView: View {
                 // AppKit-side write gets stomped on the next navigation update). Home is the
                 // landing surface rather than a pane of controls, so it titles the window with
                 // the app-wide name instead of the literal "Home".
-                .navigationTitle(navigation.selection == .home ? "Cotabby Settings" : navigation.selection.label)
+                .navigationTitle(navigation.selection == .home ? String(localized: "Cotabby Settings") : navigation.selection.label)
         }
         .environment(\.settingsHighlightedItem, navigation.highlightedItem)
         // Window-level Cmd-F: jump to the search surface from any pane. The button renders
@@ -125,7 +127,9 @@ struct SettingsContainerView: View {
             GeneralPaneView(
                 suggestionSettings: suggestionSettings,
                 permissionManager: permissionManager,
-                onShowWelcome: onShowWelcome
+                interfaceLanguageSettings: interfaceLanguageSettings,
+                onShowWelcome: onShowWelcome,
+                onRestart: onRestart
             )
         case .appearance:
             AppearancePaneView(suggestionSettings: suggestionSettings)

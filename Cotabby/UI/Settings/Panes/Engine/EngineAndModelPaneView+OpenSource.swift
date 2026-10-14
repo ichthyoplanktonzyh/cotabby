@@ -16,9 +16,10 @@ extension EngineAndModelPaneView {
                     .fixedSize(horizontal: false, vertical: true)
             } label: {
                 SettingsRowLabel(
-                    title: "Model Status",
-                    description: "Whether the local model is loaded and ready to generate. " +
-                        "Loading takes a few seconds the first time.",
+                    title: String(localized: "Model Status"),
+                    description: String(localized: """
+                    Whether the local model is loaded and ready to generate. Loading takes a few seconds the first time.
+                    """),
                     systemImage: "info.circle"
                 )
             }
@@ -40,12 +41,15 @@ extension EngineAndModelPaneView {
                     }
                 } label: {
                     SettingsRowLabel(
-                        title: "Selected Model",
+                        title: String(localized: "Selected Model"),
                         description: suggestionSettings.isPowerBasedModelSwitchingEnabled
-                            ? "Set automatically by power source. Use the On Battery / Plugged In " +
-                                "pickers in the Power section, or turn off power-based switching."
-                            : "Which downloaded model file generates suggestions. " +
-                                "Larger models are slower but write better.",
+                            ? String(localized: """
+                            Set automatically by power source. Use the On Battery / Plugged In pickers in the Power section, or turn \
+                            off power-based switching.
+                            """)
+                            : String(localized: """
+                            Which downloaded model file generates suggestions. Larger models are slower but write better.
+                            """),
                         systemImage: "shippingbox"
                     )
                 }

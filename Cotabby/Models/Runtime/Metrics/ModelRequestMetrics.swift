@@ -7,9 +7,9 @@ nonisolated enum ModelRequestSource: String, Codable, CaseIterable, Identifiable
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .completion: "Autocomplete"
-        case .translation: "Translation"
-        case .analysis: "Learning Analysis"
+        case .completion: String(localized: "Autocomplete")
+        case .translation: String(localized: "Translation", table: "Learning")
+        case .analysis: String(localized: "Learning Analysis", table: "Learning")
         }
     }
 }
@@ -19,7 +19,14 @@ nonisolated enum ModelRequestSource: String, Codable, CaseIterable, Identifiable
 nonisolated enum ModelRequestOutcome: String, Codable, Sendable {
     case completed, failed, cancelled
     var label: String {
-        switch self { case .completed: "Completed"; case .failed: "Failed"; case .cancelled: "Cancelled" }
+        switch self {
+        case .completed:
+            String(localized: "Completed", table: "Learning")
+        case .failed:
+            String(localized: "Failed", table: "Learning")
+        case .cancelled:
+            String(localized: "Cancelled", table: "Learning")
+        }
     }
 }
 

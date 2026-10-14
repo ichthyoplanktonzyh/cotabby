@@ -27,7 +27,12 @@ final class LearningTranslationService {
         switch task {
         case .translation(let language, let target):
             guard snapshot.sourceLanguages.contains(language), snapshot.targetLanguage == target, language != target else {
-                throw LearningFailure.message("源语言未启用或与目标相同，请检查翻译设置。")
+                throw LearningFailure.message(String(localized: """
+                The source language is not enabled or matches the target. Check the translation settings.
+                """,
+                    table: "Learning", comment: """
+                    Error shown when the requested translation direction is not enabled or has identical source and target languages.
+                    """))
             }
             sourceLanguage = language
         }

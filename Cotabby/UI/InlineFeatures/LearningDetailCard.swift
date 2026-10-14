@@ -81,6 +81,9 @@ struct LearningDetailCard: View {
                         LearningDictionaryButton(word: word, lookup: selectWord)
                     }
                 }
+                // The language of the selected phrase controls visual reading order. SwiftUI's
+                // interface locale must not apply another mirror to these manually placed words.
+                .environment(\.layoutDirection, .leftToRight)
             }
         }
     }

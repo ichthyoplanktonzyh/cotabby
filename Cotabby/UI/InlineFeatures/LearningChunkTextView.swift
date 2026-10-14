@@ -25,15 +25,21 @@ struct LearningChunkTextView: View {
                                 lineWidth: selectedChunk == identifier ? 2 : 0.5))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("语块 \(identifier + 1)：\(fragment.text)")
-                    .accessibilityHint("查看语块对应和单词查词")
+                    .accessibilityLabel(String(localized: "Phrase match \(identifier + 1): \(fragment.text)", table: "Learning",
+                        comment: "VoiceOver label for an aligned phrase; the number and phrase text describe this specific result."))
+                    .accessibilityHint(String(localized: "Inspect the phrase match and look up its words", table: "Learning",
+                        comment: "VoiceOver hint describing actions available on an aligned phrase."))
                 } else if fragment.text.allSatisfy(\.isNewline) {
                     Color.clear.frame(width: 0, height: 0).layoutValue(key: LearningLineBreakKey.self, value: true)
                 } else {
                     Text(fragment.text).font(.system(size: source ? 16 : 18))
                 }
             }
-        }.frame(maxWidth: .infinity, alignment: .leading)
+        }
+        // This layout mirrors coordinates from the content language. Keep SwiftUI's inherited
+        // interface direction out of the same subtree so Arabic chips are not mirrored twice.
+        .environment(\.layoutDirection, .leftToRight)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var displayFragments: [LearningTextFragment] {
@@ -58,7 +64,9 @@ enum LearningChunkPalette {
 }
 
 /// Unlike tag-editor chips, a meaning unit can be wider than the card. Measure it again with the
-/// available width so its text wraps inside the chip rather than overflowing the window.
+/// available width so its text wraps inside the chip rather than overflowing the window. Callers
+/// pin this layout to left-to-right coordinates; `rightToLeft` describes the content and is the
+/// only direction that should mirror the manually placed frames.
 struct LearningTextFlowLayout: Layout {
     let spacing: CGFloat
     let rowSpacing: CGFloat

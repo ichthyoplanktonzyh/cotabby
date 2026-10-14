@@ -17,7 +17,12 @@ nonisolated enum LearningLocalPrompt {
         case "gemma4":
             let name = modelURL.lastPathComponent.lowercased()
             guard name.contains("e2b") || name.contains("e4b") else {
-                throw LearningFailure.message("Gemma 4 不同规格的模板不同，请手动选择对应规格的指令模板。")
+                throw LearningFailure.message(String(localized: """
+                Gemma 4 model variants use different templates. Choose the template for your model variant.
+                """,
+                    table: "Learning", comment: """
+                    Guidance shown when a Gemma 4 GGUF does not identify which variant-specific instruction template to use.
+                    """))
             }
             return .gemma4
         case "gemma3":
@@ -28,7 +33,11 @@ nonisolated enum LearningLocalPrompt {
             return .gemma3
         case "gemma3n", "gemma2", "gemma": return .gemma3
         case "llama": return .llama3
-        default: throw LearningFailure.message("无法自动识别此 GGUF 的指令模板，请在模型设置中选择模板。")
+        default:
+            throw LearningFailure.message(String(localized: """
+            Could not detect this GGUF's instruction template automatically. Choose one in Model settings.
+            """,
+                table: "Learning", comment: "Guidance shown when automatic instruction-template detection fails for a local GGUF model."))
         }
     }
 
@@ -42,10 +51,16 @@ nonisolated enum LearningLocalPrompt {
     /// that a specialist was trained for longer input. Reject rather than silently truncate.
     static func validateTokenBudget(input: Int, output: Int, template: LearningChatTemplate) throws {
         if template == .translateGemma, input > 2_048 {
-            throw LearningFailure.message("TranslateGemma 输入超过 2,048 token，请分段输入。")
+            throw LearningFailure.message(String(localized: "TranslateGemma input exceeds 2,048 tokens. Split the text into smaller parts.",
+                table: "Learning", comment: "Error shown when input exceeds TranslateGemma's supported token budget."))
         }
         guard input > 0, output > 0, input < 8_192, output < 8_192 - input else {
-            throw LearningFailure.message("原文与输出预算超过内置模型上下文，请分段输入。")
+            throw LearningFailure.message(String(localized: """
+            The source text and output budget exceed the local model's context limit. Split the text into smaller parts.
+            """,
+                table: "Learning", comment: """
+                Error shown when the source text plus requested output exceeds the local model context window.
+                """))
         }
     }
 
@@ -61,7 +76,11 @@ nonisolated enum LearningLocalPrompt {
         case .gemma4Large: return ("<bos><|turn>user\n", "<turn|>\n<|turn>model\n<|channel>thought\n<channel|>")
         case .gemma3, .translateGemma: return ("<bos><start_of_turn>user\n", "<end_of_turn>\n<start_of_turn>model\n")
         case .llama3: return ("<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n", "<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n")
-        case .automatic: throw LearningFailure.message("指令模板尚未识别。")
+        case .automatic:
+            throw LearningFailure.message(String(localized: "The instruction template has not been identified.",
+                table: "Learning", comment: """
+                Error shown when an automatic instruction template could not be resolved before local generation.
+                """))
         }
     }
 
@@ -73,7 +92,8 @@ nonisolated enum LearningLocalPrompt {
         var buffer = Data(), cursor = 0, consumed = 0, loaded = 0
         func read(_ count: Int) throws -> Data {
             guard count >= 0, count <= 16_000_000, count <= 32_000_000 - consumed else {
-                throw LearningFailure.message("GGUF 元数据不完整或超过读取范围。")
+                throw LearningFailure.message(String(localized: "GGUF metadata is incomplete or exceeds the supported read limit.",
+                    table: "Learning", comment: "Error shown when GGUF metadata is missing or larger than the parser's safe limit."))
             }
             if buffer.count - cursor < count {
                 buffer = buffer.subdata(in: cursor..<buffer.count)
@@ -81,7 +101,10 @@ nonisolated enum LearningLocalPrompt {
                 while buffer.count < count {
                     let request = min(32_000_000 - loaded, max(65_536, count - buffer.count))
                     guard request > 0, let part = try file.read(upToCount: request), !part.isEmpty else {
-                        throw LearningFailure.message("GGUF 元数据不完整或超过读取范围。")
+                        throw LearningFailure.message(String(localized: "GGUF metadata is incomplete or exceeds the supported read limit.",
+                            table: "Learning", comment: """
+                            Error shown when GGUF metadata is missing or larger than the parser's safe limit.
+                            """))
                     }
                     loaded += part.count
                     buffer.append(part)
@@ -98,30 +121,46 @@ nonisolated enum LearningLocalPrompt {
         }
         func string() throws -> String {
             let length = try integer(8)
-            guard length <= 16_000_000 else { throw LearningFailure.message("GGUF 字符串过长。") }
+            guard length <= 16_000_000 else {
+                throw LearningFailure.message(String(localized: "A GGUF metadata string is too long.",
+                    table: "Learning", comment: "Error shown when a GGUF metadata string exceeds the supported read size."))
+            }
             return String(decoding: try read(Int(length)), as: UTF8.self)
         }
         func skip(_ type: UInt64) throws {
             let lengths: [UInt64: Int] = [0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8]
             if type == 8 {
                 let length = try integer(8)
-                guard length <= 16_000_000 else { throw LearningFailure.message("GGUF 字符串过长。") }
+                guard length <= 16_000_000 else {
+                    throw LearningFailure.message(String(localized: "A GGUF metadata string is too long.",
+                        table: "Learning", comment: "Error shown when a GGUF metadata string exceeds the supported read size."))
+                }
                 _ = try read(Int(length))
             }
             else if type == 9 {
                 let subtype = try integer(4), count = try integer(8)
-                guard count <= 1_000_000, subtype != 9 else { throw LearningFailure.message("GGUF 数组无效。") }
+                guard count <= 1_000_000, subtype != 9 else {
+                    throw LearningFailure.message(String(localized: "A GGUF metadata array is invalid.",
+                        table: "Learning", comment: "Error shown when GGUF metadata contains an unsupported or oversized array."))
+                }
                 if let length = lengths[subtype] { _ = try read(Int(count) * length) }
                 else { for _ in 0..<count { try skip(subtype) } }
             } else if let length = lengths[type] { _ = try read(length) }
-            else { throw LearningFailure.message("GGUF 元数据类型无效。") }
+            else {
+                throw LearningFailure.message(String(localized: "A GGUF metadata type is invalid.",
+                    table: "Learning", comment: "Error shown when GGUF metadata contains a type this parser cannot read."))
+            }
         }
         guard try read(4) == Data("GGUF".utf8), [2, 3].contains(try integer(4)) else {
-            throw LearningFailure.message("不是支持的 GGUF 文件。")
+            throw LearningFailure.message(String(localized: "This is not a supported GGUF file.",
+                table: "Learning", comment: "Error shown when a selected file is not a GGUF model supported by this app."))
         }
         _ = try integer(8)
         let count = try integer(8)
-        guard count <= 100_000 else { throw LearningFailure.message("GGUF 元数据数量无效。") }
+        guard count <= 100_000 else {
+            throw LearningFailure.message(String(localized: "The GGUF metadata count is invalid.",
+                table: "Learning", comment: "Error shown when a GGUF file declares more metadata entries than the parser supports."))
+        }
         var architecture: String?, name: String?, chatTemplate: String?
         for _ in 0..<count {
             let key = try string(), type = try integer(4)
@@ -139,6 +178,7 @@ nonisolated enum LearningLocalPrompt {
             }
         }
         if let architecture { return (architecture, name, chatTemplate) }
-        throw LearningFailure.message("GGUF 缺少模型架构信息。")
+        throw LearningFailure.message(String(localized: "The GGUF file is missing model architecture information.",
+            table: "Learning", comment: "Error shown when GGUF metadata does not identify the model architecture."))
     }
 }

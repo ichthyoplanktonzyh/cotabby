@@ -60,7 +60,12 @@ final class LearningSelectionReplacement: LearningSelectionReplacing {
               AXHelper.elementIdentifier(for: element, bundleIdentifier: context.bundleIdentifier) == context.elementIdentifier,
               let receipt = AXHelper.exactEditableTextSelection(on: element),
               receipt.range == context.documentSelection else {
-            throw LearningFailure.message("当前字段或选区不可信。请重新选中已提交的原文；原文保留。")
+            throw LearningFailure.message(String(localized: """
+            This field or selection cannot be verified. Select the committed source text again; the original text was kept.
+            """,
+                table: "Learning", comment: """
+                Error shown when Accessibility cannot verify the field, selection, or committed source text for a translation preview.
+                """))
         }
         guard !context.hasHostMarkedText else {
             throw LearningFailure.message(LearningInputMethodPolicy.markedTextConfirmationMessage)
@@ -79,7 +84,8 @@ final class LearningSelectionReplacement: LearningSelectionReplacing {
         let source = try LearningTextScopePolicy.text(value: value, range: replacementRange)
         guard receipt.usesTextMarkers || range.length == 0 ||
                 AXHelper.stringValue(for: kAXSelectedTextAttribute as CFString, on: element) == source else {
-            throw LearningFailure.message("选区文本与字段范围不一致；原文保留。")
+            throw LearningFailure.message(String(localized: "The selected text does not match the field range; the original text was kept.",
+                table: "Learning", comment: "Error shown when the selected text differs from the verified range in the editor."))
         }
         return LearningSelectionCapture(element: element, context: context, value: value, range: replacementRange, source: source,
             usesTextMarkers: receipt.usesTextMarkers, editorSelection: range,
@@ -101,16 +107,30 @@ final class LearningSelectionReplacement: LearningSelectionReplacing {
         try Task.checkCancellation()
         guard saved.supportsReplacement else {
             throw LearningFailure.message(saved.replacementUnavailableReason ??
-                "此编辑器只提供文本标记。请复制当前句子译文，或手动选择原文后再转换。")
+                String(localized: """
+                This editor only provides text markers. Copy the current sentence translation, or select the source manually and \
+                preview it again.
+                """,
+                    table: "Learning", comment: """
+                    Copy-only recovery guidance when the editor does not expose a safe text-selection replacement action.
+                    """))
         }
-        guard isCurrent(saved) else { throw LearningFailure.message("文本、选区或聊天已改变，旧翻译已失效。") }
+        guard isCurrent(saved) else {
+            throw LearningFailure.message(String(localized: """
+            The text, selection, or conversation changed. The previous translation is no longer valid.
+            """,
+                table: "Learning", comment: "Error shown when the saved source text or host conversation changes before replacement."))
+        }
         let transaction = try prepareSelection(saved)
         // `prepareSelection` may cross the AX boundary and recapture the selected sentence. Recheck
         // permission here so a newly unavailable IME state cannot fall through to native write or Paste.
         guard transaction.supportsReplacement,
               transaction.hasSameReplacementSafety(as: saved) else {
             throw LearningFailure.message(transaction.replacementUnavailableReason ??
-                "输入法或选区状态已改变；原文保留。")
+                String(localized: "The input method or selection changed; the original text was kept.",
+                    table: "Learning", comment: """
+                    Error shown when input-method composition or selection safety changes before replacement.
+                    """))
         }
         let expected = (saved.value as NSString).replacingCharacters(in: saved.range, with: english)
         let isWeb = saved.context.isWebContentField || saved.usesTextMarkers
@@ -124,14 +144,26 @@ final class LearningSelectionReplacement: LearningSelectionReplacing {
             var writable = DarwinBoolean(false)
             guard AXUIElementIsAttributeSettable(saved.element, kAXSelectedTextAttribute as CFString, &writable) == .success,
                   writable.boolValue else {
-                throw LearningFailure.message("此字段不支持安全选区替换。请复制译文手动粘贴；原文保留。")
+                throw LearningFailure.message(String(localized: """
+                This field does not support safe selection replacement. Copy and paste the translation manually; the original text was \
+                kept.
+                """,
+                    table: "Learning", comment: """
+                    Recovery guidance when the host field does not allow safe replacement of the selected source.
+                    """))
             }
             // Capability reads are synchronous cross-process calls during which the host may edit.
             // Re-read the entire capture afterward, immediately before the single scoped mutation.
-            guard isCurrent(transaction) else { throw LearningFailure.message("选区已改变；原文保留。") }
+            guard isCurrent(transaction) else {
+                throw LearningFailure.message(String(localized: "The selection changed; the original text was kept.",
+                    table: "Learning", comment: "Error shown when the selection changes just before a confirmed replacement."))
+            }
             try Task.checkCancellation()
             guard AXUIElementSetAttributeValue(saved.element, kAXSelectedTextAttribute as CFString, english as CFString) == .success else {
-                throw LearningFailure.message("编辑器拒绝替换。请检查原文；可复制译文或原文恢复。")
+                throw LearningFailure.message(String(localized: """
+                The editor refused the replacement. Check the source text; you can copy the translation or restore the original.
+                """,
+                    table: "Learning", comment: "Recovery guidance when the editor rejects a confirmed selection replacement."))
             }
         }
         // Editors publish AX state asynchronously. Never roll back an unverified value: the user
@@ -145,13 +177,23 @@ final class LearningSelectionReplacement: LearningSelectionReplacing {
                 isWebContentField: isWeb, sameSession: sameSession) { return }
             if isWeb, !sameSession { break }
         }
-        throw LearningFailure.message("未能核对替换结果。请检查编辑器；卡片保留原文和译文复制入口，避免再次覆盖。")
+        throw LearningFailure.message(String(localized: """
+        Could not verify the replacement. Check the editor. The card keeps copy actions for the source and translation to avoid \
+        another overwrite.
+        """,
+            table: "Learning", comment: "Recovery guidance when Accessibility cannot confirm whether the editor applied the replacement."))
     }
 
     private func prepareSelection(_ saved: LearningSelectionCapture) throws -> LearningSelectionCapture {
         guard saved.supportsReplacement else {
             throw LearningFailure.message(saved.replacementUnavailableReason ??
-                "此编辑器只提供文本标记。请复制当前句子译文，或手动选择原文后再转换。")
+                String(localized: """
+                This editor only provides text markers. Copy the current sentence translation, or select the source manually and \
+                preview it again.
+                """,
+                    table: "Learning", comment: """
+                    Copy-only recovery guidance when the editor does not expose a safe text-selection replacement action.
+                    """))
         }
         if saved.originalSelection.length == 0 {
             // Generation never selects the host text. Only explicit confirmation may change the
@@ -160,12 +202,18 @@ final class LearningSelectionReplacement: LearningSelectionReplacing {
             var writable = DarwinBoolean(false)
             guard AXUIElementIsAttributeSettable(saved.element, kAXSelectedTextRangeAttribute as CFString, &writable) == .success,
                   writable.boolValue, isCurrent(saved) else {
-                throw LearningFailure.message("无法可靠选中当前句子，请复制译文或手动选择原文。")
+                throw LearningFailure.message(String(localized: """
+                Could not safely select the current sentence. Copy the translation or select the source manually.
+                """,
+                    table: "Learning", comment: "Recovery guidance when the current sentence cannot be selected safely for replacement."))
             }
             var range = CFRange(location: saved.range.location, length: saved.range.length)
             guard let axRange = AXValueCreate(.cfRange, &range),
                   AXUIElementSetAttributeValue(saved.element, kAXSelectedTextRangeAttribute as CFString, axRange) == .success else {
-                throw LearningFailure.message("编辑器无法选择当前句子，请手动选择或复制译文。")
+                throw LearningFailure.message(String(localized: """
+                The editor could not select the current sentence. Select the source manually or copy the translation.
+                """,
+                    table: "Learning", comment: "Recovery guidance when the editor refuses to select the current sentence."))
             }
             let selected = try capture()
             guard selected.context.sessionIdentity == saved.context.sessionIdentity,
@@ -176,7 +224,12 @@ final class LearningSelectionReplacement: LearningSelectionReplacing {
                   selected.inputMethodAssessment == saved.inputMethodAssessment,
                   selected.replacementUnavailableReason == saved.replacementUnavailableReason,
                   selected.hasSameReplacementSafety(as: saved) else {
-                throw LearningFailure.message("句子选区未能核对，未执行文本替换；请手动选择或复制译文。")
+                throw LearningFailure.message(String(localized: """
+                Could not verify the sentence selection. No text was replaced; select the source manually or copy the translation.
+                """,
+                    table: "Learning", comment: """
+                    Error shown when the selected sentence does not match the saved source; replacement has not run.
+                    """))
             }
             return selected
         }

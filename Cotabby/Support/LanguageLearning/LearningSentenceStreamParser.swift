@@ -30,7 +30,10 @@ nonisolated struct LearningSentenceStreamParser {
 
     mutating func append(_ delta: String) throws -> [LearningSentenceUpdate] {
         totalBytes += delta.utf8.count
-        guard totalBytes <= 48_000 else { throw LearningFailure.message("表达分析超过可显示范围。") }
+        guard totalBytes <= 48_000 else {
+            throw LearningFailure.message(String(localized: "Expression analysis exceeds the display limit.",
+                table: "Learning", comment: "Error shown when the streamed analysis output exceeds the supported display size."))
+        }
         pending += delta
         var updates: [LearningSentenceUpdate] = []
         while let newline = pending.firstIndex(of: "\n") {
@@ -48,8 +51,14 @@ nonisolated struct LearningSentenceStreamParser {
     }
 
     func result() throws -> LearningSentenceResult {
-        guard let translation else { throw LearningFailure.message("模型没有返回可用译文。") }
-        guard !chunks.isEmpty else { throw LearningFailure.message("译文已生成，语块对应尚不可用。") }
+        guard let translation else {
+            throw LearningFailure.message(String(localized: "The model did not return a usable translation.",
+                table: "Learning", comment: "Error shown when the model response contains no valid translation."))
+        }
+        guard !chunks.isEmpty else {
+            throw LearningFailure.message(String(localized: "The translation was generated, but phrase matches are unavailable.",
+                table: "Learning", comment: "Error shown when translation succeeded but no valid phrase matches were returned."))
+        }
         return .init(translation: translation, chunks: chunks.map(\.meaning))
     }
 
@@ -57,12 +66,14 @@ nonisolated struct LearningSentenceStreamParser {
         let line = line.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !line.isEmpty else { return nil }
         guard let data = line.data(using: .utf8), let record = try? JSONDecoder().decode(Record.self, from: data) else {
-            throw LearningFailure.message("译文分析格式不可用，请稍后重试。")
+            throw LearningFailure.message(String(localized: "The translation analysis format is unavailable. Try again later.",
+                table: "Learning", comment: "Error shown when the model's translation-analysis response cannot be parsed."))
         }
         switch record.type {
         case "translation":
             guard !fixedTranslation, translation == nil, chunks.isEmpty, let rawText = record.text else {
-                throw LearningFailure.message("模型重复或改变了本次译文。")
+                throw LearningFailure.message(String(localized: "The model repeated or changed the current translation.",
+                    table: "Learning", comment: "Error shown when streamed analysis does not preserve the already displayed translation."))
             }
             let text = try LearningExpressionOutputPolicy.validatedText(rawText)
             translation = text
@@ -72,7 +83,10 @@ nonisolated struct LearningSentenceStreamParser {
                   !sourceParts.isEmpty || !targetParts.isEmpty, chunks.count < 40,
                   sourceParts.count <= 8, targetParts.count <= 8,
                   let explanation = record.explanation, explanation.utf8.count <= 1_200 else {
-                throw LearningFailure.message("语块对应不完整。")
+                throw LearningFailure.message(String(localized: "Phrase matches are incomplete.",
+                    table: "Learning", comment: """
+                    Error shown when the returned phrase matches do not cover a valid complete analysis result.
+                    """))
             }
             let sourceRanges = try resolve(sourceParts, in: source, occupied: chunks.flatMap(\.sourceRanges))
             let targetRanges = try resolve(targetParts, in: translation, occupied: chunks.flatMap(\.targetRanges))
@@ -81,7 +95,8 @@ nonisolated struct LearningSentenceStreamParser {
             chunks.append(chunk)
             return .chunk(chunk.meaning)
         default:
-            throw LearningFailure.message("模型返回了未知的表达分析。")
+            throw LearningFailure.message(String(localized: "The model returned an unknown expression-analysis result.",
+                table: "Learning", comment: "Error shown when the model response contains an unsupported analysis result."))
         }
     }
 
@@ -90,7 +105,10 @@ nonisolated struct LearningSentenceStreamParser {
         var claimed = occupied
         var ranges: [NSRange] = []
         for part in parts {
-            guard !part.isEmpty else { throw LearningFailure.message("语块包含空的文字范围。") }
+            guard !part.isEmpty else {
+                throw LearningFailure.message(String(localized: "A phrase contains an empty text range.",
+                    table: "Learning", comment: "Error shown when an analysis item has no quoted text to align."))
+            }
             var search = NSRange(location: 0, length: value.length)
             var resolved: NSRange?
             while search.length > 0 {
@@ -106,7 +124,12 @@ nonisolated struct LearningSentenceStreamParser {
                 let next = NSMaxRange(value.rangeOfComposedCharacterSequence(at: match.location))
                 search = NSRange(location: next, length: value.length - next)
             }
-            guard let resolved else { throw LearningFailure.message("语块与本次原文或译文不一致。") }
+            guard let resolved else {
+                throw LearningFailure.message(String(localized: "A phrase does not match the current source or translation.",
+                    table: "Learning", comment: """
+                    Error shown when an exact phrase quote cannot be found in the current source or translation.
+                    """))
+            }
             claimed.append(resolved)
             ranges.append(resolved)
         }

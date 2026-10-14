@@ -63,7 +63,7 @@ struct LearningExpressionServiceTests {
         #expect(request.method == "GET")
         #expect(request.url?.path == "/v1/models")
         #expect(controller.endpointConnection.models.map(\.id) == ["test-model"])
-        #expect(controller.status == "未加载")
+        #expect(controller.status == String(localized: "Not loaded", table: "Learning"))
         controller.profile.endpointModel = "custom-identifier"
         #expect(controller.endpointConnection.models.count == 1)
         await controller.discoverEndpoint()
@@ -313,7 +313,7 @@ struct LearningExpressionServiceTests {
             )
             Issue.record("A source language outside the configured set must not reach the endpoint.")
         } catch let failure as LearningFailure {
-            #expect(failure.errorDescription?.contains("源语言") == true)
+            #expect(failure.errorDescription?.contains("source language") == true)
         }
         #expect(harness.exchange.requestCount == 0)
     }
