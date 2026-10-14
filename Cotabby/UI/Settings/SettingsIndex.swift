@@ -137,7 +137,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .fadeInSuggestions: return String(localized: "Fade In Suggestions")
         case .showFieldIndicator: return String(localized: "Show Field Indicator")
         case .showWordCount: return String(localized: "Show Word Count in Menu Bar")
-        case .showMenuBarIcon: return String(localized: "Show Cotabby in Menu Bar")
+        case .showMenuBarIcon: return String(localized: "Show Lingrove in Menu Bar", table: "Learning")
         case .showKeyHint: return String(localized: "Show Accept-Key Hint")
         case .ghostTextColor: return String(localized: "Ghost Text Color")
         case .ghostTextOpacity: return String(localized: "Ghost Text Opacity")
@@ -182,7 +182,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .acceptanceMode: return String(localized: "Acceptance Mode")
         case .acceptWord: return String(localized: "Accept Word")
         case .acceptEntireSuggestion: return String(localized: "Accept Entire Suggestion")
-        case .toggleTabby: return String(localized: "Toggle Cotabby")
+        case .toggleTabby: return String(localized: "Toggle Lingrove", table: "Learning")
         case .disabledApps: return String(localized: "Disabled Apps")
         case .suggestInIntegratedTerminals: return String(localized: "Suggest in Integrated Terminals")
         case .accessibility: return String(localized: "Accessibility")
@@ -193,7 +193,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .resourceUsage: return String(localized: "Live Resource Usage")
         case .recentRequests: return String(localized: "Recent Requests")
         case .checkForUpdates: return String(localized: "Check for Updates")
-        case .support: return String(localized: "Contribute to Cotabby")
+        case .support: return String(localized: "Contribute to Lingrove", table: "Learning")
         case .githubRepository: return String(localized: "GitHub Repository")
         case .wiki: return String(localized: "Contributor Guide")
         case .acknowledgements: return String(localized: "Acknowledgements")
@@ -334,11 +334,11 @@ enum SettingsItem: String, CaseIterable, Identifiable {
     /// phrasing the title doesn't carry ("looks too big", "on every keystroke").
     var summary: String {
         switch self {
-        case .enableGlobally: return String(localized: "Turn Cotabby on or off everywhere without quitting.")
+        case .enableGlobally: return String(localized: "Turn Lingrove on or off everywhere without quitting.", table: "Learning")
         case .useScreenContext: return String(localized: """
         Help suggestions understand surrounding text using screenshots of the focused window.
         """)
-        case .openAtLogin: return String(localized: "Start Cotabby automatically when you log in.")
+        case .openAtLogin: return String(localized: "Start Lingrove automatically when you log in.", table: "Learning")
         case .includeClipboardContext: return String(localized: "Let suggestions reference what you last copied.")
         case .includeAppContext: return String(localized: "Tell the model which app and window you are typing in.")
         case .allowMultiLine: return String(localized: "Allow continuations that span more than one line.")
@@ -354,8 +354,8 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .inlineMacros: return String(localized: "Type / for dates, math, units, currency, and randoms.")
         case .onboarding: return String(localized: "Replay the first-run setup walkthrough.")
         case .interfaceLanguage:
-            return String(localized: "Choose the language used in Cotabby's interface. Changes apply after restarting.")
-        case .resetAllSettings: return String(localized: "Restore every Cotabby setting to its original default.")
+            return String(localized: "Choose the language used in Lingrove's interface. Changes apply after restarting.", table: "Learning")
+        case .resetAllSettings: return String(localized: "Restore every Lingrove setting to its original default.", table: "Learning")
         #if DEBUG
         case .developmentDebugOverlays: return String(localized: "Show caret, field, focus polling, and screen-context debug panels.")
         #endif
@@ -364,7 +364,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .fadeInSuggestions: return String(localized: "Fade new suggestions in smoothly instead of all at once.")
         case .showFieldIndicator: return String(localized: "Show a small icon when a field is ready for suggestions.")
         case .showWordCount: return String(localized: "Count accepted words next to the menu bar icon.")
-        case .showMenuBarIcon: return String(localized: "Hide menu bar clutter while Cotabby keeps running.")
+        case .showMenuBarIcon: return String(localized: "Hide menu bar clutter while Lingrove keeps running.", table: "Learning")
         case .showKeyHint: return String(localized: "Show the accept-key badge beside the ghost text.")
         case .ghostTextColor: return String(localized: "Pick the color of the inline suggestion.")
         case .ghostTextOpacity: return String(localized: "How faint the suggestion looks before you accept it.")
@@ -377,8 +377,8 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .emojiSkinTone: return String(localized: "Prefer a skin tone in emoji suggestions.")
         case .emojiPeopleStyle: return String(localized: "Person, man, or woman variants when available.")
         case .emojiHistory: return String(localized: "Clear recently and frequently used emoji.")
-        case .length: return String(localized: "How many words Cotabby aims for per suggestion.")
-        case .name: return String(localized: "What Cotabby should call you.")
+        case .length: return String(localized: "How many words Lingrove aims for per suggestion.", table: "Learning")
+        case .name: return String(localized: "What Lingrove should call you.", table: "Learning")
         case .languages: return String(localized: "Languages suggestions should be written in.")
         case .customRules: return String(localized: "Your own style rules passed to the model.")
         case .hideSuggestionsOnTypo: return String(localized: "Pause completions while a word looks misspelled.")
@@ -406,15 +406,15 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .endpointBaseURL: return String(localized: "The OpenAI-compatible server address; /v1 is added when omitted.")
         case .endpointAPIMode: return String(localized: "Choose Chat Completions or Text Completions for this model.")
         case .endpointAPIKey: return String(localized: "Optional bearer token stored securely in Keychain.")
-        case .endpointStatus: return String(localized: "Whether Cotabby can reach the server and list its models.")
+        case .endpointStatus: return String(localized: "Whether Lingrove can reach the server and list its models.", table: "Learning")
         case .endpointModel: return String(localized: "The model identifier sent to the configured endpoint.")
         case .acceptanceMode: return String(localized: "Whether the accept key takes a word or a phrase.")
         case .acceptWord: return String(localized: "The key that inserts the next word.")
         case .acceptEntireSuggestion: return String(localized: """
         The key, or the Accept Word key pressed twice, that inserts the whole suggestion.
         """)
-        case .toggleTabby: return String(localized: "A global hotkey that turns Cotabby on or off.")
-        case .disabledApps: return String(localized: "Apps where Cotabby never autocompletes.")
+        case .toggleTabby: return String(localized: "A global hotkey that turns Lingrove on or off.", table: "Learning")
+        case .disabledApps: return String(localized: "Apps where Lingrove never autocompletes.", table: "Learning")
         case .suggestInIntegratedTerminals: return String(localized: "Ghost text in VS Code and Cursor terminals.")
         case .accessibility: return String(localized: "Required to read the focused field and caret.")
         case .inputMonitoring: return String(localized: "Required to see keystrokes and the accept key.")
@@ -423,12 +423,12 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .suggestionQualityStats: return String(localized: "Shown, accepted, and withheld counters.")
         case .resourceUsage: return String(localized: "Live CPU, memory, and GPU graphs for the app.")
         case .recentRequests: return String(localized: "Latency log of the most recent generations.")
-        case .checkForUpdates: return String(localized: "See if a newer Cotabby is available.")
+        case .checkForUpdates: return String(localized: "See if a newer Lingrove is available.", table: "Learning")
         case .support: return String(localized: "Report bugs, suggest features, or contribute code.")
         case .githubRepository: return String(localized: "Browse the source code and issues.")
         case .wiki: return String(localized: "Documentation and the contributor guide.")
-        case .acknowledgements: return String(localized: "Third-party packages Cotabby ships with.")
-        case .uninstall: return String(localized: "Remove Cotabby and its data from this Mac.")
+        case .acknowledgements: return String(localized: "Third-party packages Lingrove ships with.", table: "Learning")
+        case .uninstall: return String(localized: "Remove Lingrove and its data from this Mac.", table: "Learning")
         }
     }
 

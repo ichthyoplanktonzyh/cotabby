@@ -17,7 +17,7 @@ struct MenuBarStatusLabelView: View {
                 .renderingMode(.template)
                 // Match the asset's 18-point canvas so macOS uses its native 1x/2x strokes.
                 .frame(width: 18, height: 18)
-                .accessibilityLabel("Cotabby")
+                .accessibilityLabel(String(localized: "Lingrove", table: "Learning"))
 
             if suggestionSettings.isTemporarilyPaused || !suggestionSettings.isGloballyEnabled {
                 Image(systemName: "pause.fill")
@@ -39,6 +39,12 @@ struct MenuBarStatusLabelView: View {
     /// Global disable takes precedence when both states are present because it remains in effect
     /// after the temporary pause is cleared.
     private var inactiveAccessibilityLabel: String {
-        suggestionSettings.isGloballyEnabled ? String(localized: "Cotabby paused") : String(localized: "Cotabby disabled")
+        suggestionSettings.isGloballyEnabled ? String(
+            localized: "Lingrove paused",
+            table: "Learning"
+        ) : String(
+            localized: "Lingrove disabled",
+            table: "Learning"
+        )
     }
 }

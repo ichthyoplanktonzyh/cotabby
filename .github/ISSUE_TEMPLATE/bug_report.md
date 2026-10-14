@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a reproducible Cotabby bug
+about: Report a reproducible Lingrove bug
 title: "[Bug] "
 labels: bug
 assignees: ""
@@ -11,6 +11,8 @@ assignees: ""
 Check all that apply:
 
 - [ ] Keystroke / Input (Tab not working, keystrokes swallowed, input blocked)
+- [ ] Autocomplete (generation, ghost text, acceptance, or context)
+- [ ] Language Learning (translation, sentence preview, alignment, or dictionary lookup)
 - [ ] App Compatibility (bug only in a specific app: Word, Outlook, Mail, browser, etc.)
 - [ ] Performance / Crash (slow response, hang, or crash)
 
@@ -22,8 +24,11 @@ Describe the bug in one or two sentences.
 
 - macOS version:
 - Host app:
-- Cotabby engine: Apple Intelligence / Open Source
-- Model name (if Open Source):
+- Lingrove version and build:
+- Autocomplete engine: Apple Intelligence / Open Source / OpenAI-compatible
+- Autocomplete model name (if applicable):
+- Learning task and local/endpoint model (if applicable):
+- Learning source and target languages (if applicable):
 - Accessibility permission granted: yes / no
 - Input Monitoring permission granted: yes / no
 - Screen Recording permission granted: yes / no
@@ -36,7 +41,7 @@ Describe the bug in one or two sentences.
 
 ## Expected behavior
 
-Describe what you expected Cotabby to do.
+Describe what you expected Lingrove to do.
 
 ## Actual behavior
 

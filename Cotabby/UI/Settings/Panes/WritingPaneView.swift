@@ -22,9 +22,9 @@ struct WritingPaneView: View {
                     SettingsRowLabel(
                         title: String(localized: "Length"),
                         description: String(localized: """
-                        How many words Cotabby aims for per suggestion. Shorter is snappier; longer covers more thoughts but takes \
+                        How many words Lingrove aims for per suggestion. Shorter is snappier; longer covers more thoughts but takes \
                         longer to generate.
-                        """),
+                        """, table: "Learning"),
                         systemImage: "ruler"
                     )
                 }
@@ -43,10 +43,10 @@ struct WritingPaneView: View {
                     LabeledContent("Maximum") {
                         wordCountField(value: customHighBinding, label: String(localized: "Maximum word count"))
                     }
-                    Text("""
-                    Token budget scales by your selected language. Multiple languages or a language Cotabby doesn't recognize use the \
+                    Text(String(localized: """
+                    Token budget scales by your selected language. Multiple languages or a language Lingrove doesn't recognize use the \
                     English ratio.
-                    """)
+                    """, table: "Learning"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -153,7 +153,7 @@ struct WritingPaneView: View {
                         Text("Name")
                             .font(.system(size: 13, weight: .medium))
 
-                        TextField(String(localized: "What should Cotabby call you?"), text: Binding(
+                        TextField(String(localized: "What should Lingrove call you?", table: "Learning"), text: Binding(
                             get: { suggestionSettings.userName },
                             set: { suggestionSettings.setUserName($0) }
                         ))

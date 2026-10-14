@@ -19,9 +19,9 @@ struct ModelEndpointConnectionSection: View {
                 SettingsRowLabel(
                     title: String(localized: "Server URL"),
                     description: String(localized: """
-                    The OpenAI-compatible server address. Cotabby adds /v1 when the address has no path; Ollama uses \
+                    The OpenAI-compatible server address. Lingrove adds /v1 when the address has no path; Ollama uses \
                     http://127.0.0.1:11434 by default.
-                    """),
+                    """, table: "Learning"),
                     systemImage: "network"
                 )
                 HStack(spacing: 8) {

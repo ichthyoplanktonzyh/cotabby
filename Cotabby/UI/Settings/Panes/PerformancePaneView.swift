@@ -189,10 +189,10 @@ struct PerformancePaneView: View {
             Text(
                 String(localized: """
                 Updated every second while this pane is open. CPU can exceed 100% across multiple cores. Memory is the app's physical \
-                footprint. GPU is Cotabby's own share of the GPU, where the Open Source engine runs its model. Apple Intelligence and \
-                endpoint servers such as Ollama run outside Cotabby, so they don't count toward it. The line below the GPU graph \
+                footprint. GPU is Lingrove's own share of the GPU, where the Open Source engine runs its model. Apple Intelligence and \
+                endpoint servers such as Ollama run outside Lingrove, so they don't count toward it. The line below the GPU graph \
                 covers every app on this Mac.
-                """)
+                """, table: "Learning")
             )
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -240,7 +240,10 @@ struct PerformancePaneView: View {
     /// is not coming. The wording claims nothing about the Mac: a driver without the counters and a
     /// Cotabby process that has not opened the GPU yet both end up here.
     private var gpuEmptyMessage: String {
-        systemMetricsStore.samples.count >= 3 ? String(localized: "No GPU readings for Cotabby") : String(localized: "Collecting…")
+        systemMetricsStore.samples.count >= 3 ? String(
+            localized: "No GPU readings for Lingrove",
+            table: "Learning"
+        ) : String(localized: "Collecting…")
     }
 
     private var gpuCurrentLabel: String {

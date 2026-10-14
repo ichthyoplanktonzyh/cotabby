@@ -116,10 +116,9 @@ struct LanguageLearningSection: View {
                     )).disabled(language == settings.targetLanguage)
                 }
                 Text(String(localized: """
-                With one source language selected, translations follow that direction. With several selected, Cotabby detects the \
+                With one source language selected, translations follow that direction. With several selected, Lingrove detects the \
                 language of each source; if it is uncertain, adjust the settings or select more text.
-                """,
-                    table: "Learning", comment: "Explains fixed-direction translation versus automatic source-language detection."))
+                """, table: "Learning", comment: "Explains fixed-direction translation versus automatic source-language detection."))
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

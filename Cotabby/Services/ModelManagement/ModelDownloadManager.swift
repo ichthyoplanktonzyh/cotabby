@@ -366,7 +366,7 @@ final class ModelDownloadManager: ObservableObject {
         panel.allowsMultipleSelection = true
         panel.allowedContentTypes = [UTType(filenameExtension: "gguf") ?? .data]
         panel.prompt = String(localized: "Import")
-        panel.message = String(localized: "Choose .gguf models to import into Cotabby")
+        panel.message = String(localized: "Choose .gguf models to import into Lingrove", table: "Learning")
 
         guard panel.runModal() == .OK else {
             return

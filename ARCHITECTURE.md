@@ -1,12 +1,13 @@
-# Cotabby Architecture
+# Lingrove Architecture
 
-This is the ten-minute maintainer map for Cotabby. It explains the product loop, ownership
+This is the ten-minute maintainer map for Lingrove. It explains the product loops, ownership
 boundaries, reliability rules, and the best files to read before changing behavior. It is intentionally
 a roadmap rather than an encyclopedia.
 
-## What Cotabby Is
+## What Lingrove Is
 
-Cotabby is a macOS menu bar agent that provides inline autocomplete in other applications:
+Lingrove has two equally core capabilities: inline autocomplete and language learning in other
+applications. Internal source/module names remain Cotabby during migration. The autocomplete loop is:
 
 1. Find the focused editable field through macOS Accessibility.
 2. Observe global keyboard input without taking focus.
@@ -18,6 +19,12 @@ Cotabby is a macOS menu bar agent that provides inline autocomplete in other app
 7. Render inline ghost text or a mirror card near the caret.
 8. Reconcile typing against the active suggestion and insert accepted chunks through configurable
    shortcuts.
+
+The language-learning loop reads the current sentence or selected text, translates it using its
+configured local model or endpoint, optionally recognizes learning units and aligns source/target
+chunks, and presents correspondence and dictionary lookup beside the field. Its coordinators share
+the app-lifetime dependency graph and input/focus boundaries with autocomplete, while owning their
+own task identities, cancellation, runtime profiles, and presentation state.
 
 The product is local-first, not unconditionally offline. Apple Intelligence and the bundled
 open-source path run on the Mac. An endpoint can be loopback, on the local network, or a public HTTPS

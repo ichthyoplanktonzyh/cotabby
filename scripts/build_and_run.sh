@@ -7,8 +7,9 @@ case "$MODE" in run|--debug|debug|--logs|logs|--telemetry|telemetry|--verify|ver
   echo "usage: $0 [run|debug|logs|telemetry|verify] [Debug|Release]" >&2; exit 2;;
 esac
 case "$CONFIGURATION" in Debug|Release) ;; *) echo 'Use Debug or Release' >&2; exit 2;; esac
-APP_NAME="Cotabby Dev"
-BUNDLE_ID="com.jacobfu.tabby.dev"
+APP_NAME="Lingrove Dev"
+SCHEME="Cotabby Dev"
+BUNDLE_ID="io.ichthyoplanktonzyh.lingrove.dev"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # The runnable app lives outside DerivedData; keep generated build products checkout-scoped.
 # This run owns a private DerivedData directory, so cleanup (including after an early failure)
@@ -22,7 +23,7 @@ BUILT_APP="$DERIVED_DATA/Build/Products/$CONFIGURATION/$APP_NAME.app"
 # provider can reattach FinderInfo after verification and invalidate nested code.
 # Scope by checkout so worktrees do not overwrite one another's runnable product.
 CHECKOUT_ID=$(printf '%s' "$ROOT_DIR" | shasum -a 256 | cut -c1-12)
-# Stage under the dev app's own support folder, never the production app's "Cotabby" folder.
+# Stage under the dev app's own support folder, never the production app's "Lingrove" folder.
 RUN_DIR="$HOME/Library/Application Support/$APP_NAME/Development/$CHECKOUT_ID/$CONFIGURATION"
 APP_BUNDLE="$RUN_DIR/$APP_NAME.app"
 APP_BINARY="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
@@ -30,7 +31,7 @@ APP_BINARY="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 # The dev target owns a separate identity and never replaces the released app.
 # Sign outside Documents/iCloud to keep file-provider metadata out of the signature.
 INSTALLED_APP="$APP_BUNDLE"
-SIGNING_IDENTITY="${COTABBY_SIGNING_IDENTITY:-Apple Development}"
+SIGNING_IDENTITY="${LINGROVE_SIGNING_IDENTITY:-Apple Development}"
 INSTALLED_REQUIREMENT=""
 if [[ -d "$INSTALLED_APP" ]]; then
   SIGNING_DETAILS="$(codesign -d -r- --verbose=2 "$INSTALLED_APP" 2>&1)"
@@ -52,11 +53,11 @@ fi
 # Materialize binary package artifacts before building from a cleared DerivedData tree.
 xcodebuild -resolvePackageDependencies \
   -workspace "$ROOT_DIR/build/cotabby-dependencies/Cotabby.xcworkspace" \
-  -scheme "$APP_NAME" -onlyUsePackageVersionsFromResolvedFile -derivedDataPath "$DERIVED_DATA"
+  -scheme "$SCHEME" -onlyUsePackageVersionsFromResolvedFile -derivedDataPath "$DERIVED_DATA"
 xcodebuild \
   -workspace "$ROOT_DIR/build/cotabby-dependencies/Cotabby.xcworkspace" \
   -onlyUsePackageVersionsFromResolvedFile \
-  -scheme "$APP_NAME" \
+  -scheme "$SCHEME" \
   -configuration "$CONFIGURATION" \
   -destination "platform=macOS" \
   -derivedDataPath "$DERIVED_DATA" \
@@ -98,7 +99,7 @@ for attempt in {1..40}; do
   sleep 0.25
 done
 if [[ -n "$(dev_pids)" ]]; then
-  echo 'Existing Cotabby did not stop; leaving its app bundle intact.' >&2
+  echo 'Existing Lingrove Dev did not stop; leaving its app bundle intact.' >&2
   exit 1
 fi
 if [[ -d "$APP_BUNDLE" ]]; then mv "$APP_BUNDLE" "$staging_root/previous.app"; fi
@@ -113,7 +114,7 @@ wait_for_app() {
   local attempt
   for attempt in {1..20}; do
     if [[ -n "$(dev_pids)" ]]; then
-      echo "Cotabby is running from: $APP_BUNDLE"
+      echo "Lingrove Dev is running from: $APP_BUNDLE"
       return 0
     fi
     sleep 0.25

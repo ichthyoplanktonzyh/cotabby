@@ -45,10 +45,10 @@ struct ContextPaneView: View {
     private var livePreviewSection: some View {
         Section("Live preview") {
             VStack(alignment: .leading, spacing: 12) {
-                Text("""
-                Type below and Cotabby completes as you go, using the same engine and settings it uses everywhere. Press Tab to accept \
+                Text(String(localized: """
+                Type below and Lingrove completes as you go, using the same engine and settings it uses everywhere. Press Tab to accept \
                 the gray suggestion, Esc to dismiss.
-                """)
+                """, table: "Learning"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -91,8 +91,8 @@ struct ContextPaneView: View {
             return String(localized: "Nothing here is saved or shared; it only exercises the on-device model.")
         case .openAICompatible:
             return String(localized: """
-            Cotabby doesn't save this text, but like any other field it's sent to your configured endpoint, which may keep it.
-            """)
+            Lingrove doesn't save this text, but like any other field it's sent to your configured endpoint, which may keep it.
+            """, table: "Learning")
         }
     }
 
@@ -161,7 +161,10 @@ struct ContextPaneView: View {
                     String(localized: "Sent on every suggestion as reference material, not as instructions.")
                 )
                 bulletLine(
-                    String(localized: "Subordinate to Cotabby's base autocomplete rules, so it cannot override core behavior.")
+                    String(
+                        localized: "Subordinate to Lingrove's base autocomplete rules, so it cannot override core behavior.",
+                        table: "Learning"
+                    )
                 )
                 bulletLine(
                     String(localized: """

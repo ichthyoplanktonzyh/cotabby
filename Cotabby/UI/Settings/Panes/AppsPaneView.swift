@@ -24,7 +24,7 @@ struct AppsPaneView: View {
                     .foregroundStyle(.secondary)
 
                 if suggestionSettings.perAppShortcutOverrides.isEmpty {
-                    Text("No per-app shortcuts. Cotabby uses the global accept key everywhere.")
+                    Text(String(localized: "No per-app shortcuts. Lingrove uses the global accept key everywhere.", table: "Learning"))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 } else {
@@ -39,16 +39,16 @@ struct AppsPaneView: View {
             }
 
             Section("Disabled Apps") {
-                Text("""
-                Cotabby won't autocomplete in these apps. Add an app you can't disable from the menu bar, like a launcher that closes \
+                Text(String(localized: """
+                Lingrove won't autocomplete in these apps. Add an app you can't disable from the menu bar, like a launcher that closes \
                 the moment it loses focus.
-                """)
+                """, table: "Learning"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .settingsItem(.disabledApps)
 
                 if suggestionSettings.disabledAppRules.isEmpty {
-                    Text("No apps are disabled. Cotabby is active in every supported field.")
+                    Text(String(localized: "No apps are disabled. Lingrove is active in every supported field.", table: "Learning"))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 } else {
@@ -162,7 +162,7 @@ struct AppsPaneView: View {
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel("Remove per-app shortcuts for \(override.displayName)")
-                .help(String(localized: "Remove this app's overrides. Cotabby will use the global accept keys here."))
+                .help(String(localized: "Remove this app's overrides. Lingrove will use the global accept keys here.", table: "Learning"))
             }
 
             perAppBindingRow(
@@ -463,7 +463,7 @@ struct AppsPaneView: View {
         panel.canChooseFiles = true
         panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
         panel.prompt = String(localized: "Disable")
-        panel.message = String(localized: "Choose apps where Cotabby should not autocomplete.")
+        panel.message = String(localized: "Choose apps where Lingrove should not autocomplete.", table: "Learning")
 
         guard panel.runModal() == .OK else {
             return

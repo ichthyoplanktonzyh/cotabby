@@ -61,7 +61,10 @@ struct SettingsContainerView: View {
                 // AppKit-side write gets stomped on the next navigation update). Home is the
                 // landing surface rather than a pane of controls, so it titles the window with
                 // the app-wide name instead of the literal "Home".
-                .navigationTitle(navigation.selection == .home ? String(localized: "Cotabby Settings") : navigation.selection.label)
+                .navigationTitle(navigation.selection == .home ? String(
+                    localized: "Lingrove Settings",
+                    table: "Learning"
+                ) : navigation.selection.label)
         }
         .environment(\.settingsHighlightedItem, navigation.highlightedItem)
         // Window-level Cmd-F: jump to the search surface from any pane. The button renders

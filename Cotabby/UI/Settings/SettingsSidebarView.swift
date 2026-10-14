@@ -87,7 +87,7 @@ struct SettingsSidebarView: View {
     /// search field. The top padding clears the title bar (the search field used to own that space).
     private var appHeader: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text("Cotabby")
+            Text(ProductIdentity.appDisplayName)
                 .font(.title3.weight(.semibold))
             if let version = appVersionText {
                 Text(version)
@@ -113,7 +113,7 @@ struct SettingsSidebarView: View {
             Divider()
 
             Button(action: onQuit) {
-                Label("Quit Cotabby", systemImage: "power")
+                Label(String(localized: "Quit Lingrove", table: "Learning"), systemImage: "power")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)

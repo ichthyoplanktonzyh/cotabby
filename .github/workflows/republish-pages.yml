@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       custom_domain:
-        description: "Custom domain for the CNAME file (e.g. updates.cotabby.app)"
-        required: true
-        default: "updates.cotabby.app"
+        description: "Optional domain you control; leave empty for the repository's GitHub Pages URL"
+        required: false
+        default: ""
         type: string
 
 permissions:
@@ -26,6 +26,7 @@ concurrency:
 
 jobs:
   republish:
+    if: vars.LINGROVE_RELEASES_ENABLED == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -72,10 +73,12 @@ jobs:
           CUSTOM_DOMAIN: ${{ inputs.custom_domain }}
         run: |
           set -euo pipefail
-          mkdir -p pages/Cotabby
+          mkdir -p pages
           cp appcast.xml pages/appcast.xml
-          cp appcast.xml pages/Cotabby/appcast.xml
-          printf '%s\n' "${CUSTOM_DOMAIN}" > pages/CNAME
+          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><title>Lingrove updates</title><p><a href="appcast.xml">Lingrove update feed</a></p></html>' > pages/index.html
+          if [[ -n "${CUSTOM_DOMAIN}" ]]; then
+            printf '%s\n' "${CUSTOM_DOMAIN}" > pages/CNAME
+          fi
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0

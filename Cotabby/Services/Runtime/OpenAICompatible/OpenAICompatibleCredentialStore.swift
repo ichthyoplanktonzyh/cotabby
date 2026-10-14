@@ -11,7 +11,7 @@ final class KeychainOpenAICompatibleCredentialStore: OpenAICompatibleCredentialS
     private let service: String
     private let account = "api-key"
 
-    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.jacobfu.tabby", namespace: String? = nil) {
+    init(bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "io.ichthyoplanktonzyh.lingrove", namespace: String? = nil) {
         service = "\(bundleIdentifier).\(namespace ?? "openai-compatible-endpoint")"
     }
 

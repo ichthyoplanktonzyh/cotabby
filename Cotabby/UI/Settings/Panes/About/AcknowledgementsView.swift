@@ -54,16 +54,16 @@ struct AcknowledgementsView: View {
         AcknowledgementEntry(
             name: String(localized: "This build’s source & license"),
             summary: String(localized: "Source code, build instructions, and the GNU Affero General Public License v3.0."),
-            url: "https://github.com/FuJacob/cotabby"
+            url: ProductIdentity.repositoryURL.absoluteString
         ),
         AcknowledgementEntry(
             name: String(localized: "Sparkle"),
-            summary: String(localized: "Secure automatic updates for production builds of Cotabby."),
+            summary: String(localized: "Update framework for future Lingrove releases.", table: "Learning"),
             url: "https://github.com/sparkle-project/Sparkle"
         ),
         AcknowledgementEntry(
             name: "LaunchAtLogin",
-            summary: String(localized: "Login-item integration for starting Cotabby with macOS."),
+            summary: String(localized: "Login-item integration for starting Lingrove with macOS.", table: "Learning"),
             url: "https://github.com/sindresorhus/LaunchAtLogin-Modern"
         ),
         AcknowledgementEntry(
@@ -73,7 +73,7 @@ struct AcknowledgementsView: View {
         ),
         AcknowledgementEntry(
             name: "swift-log",
-            summary: String(localized: "Logging façade Cotabby uses across runtime, focus, and suggestion subsystems."),
+            summary: String(localized: "Logging façade Lingrove uses across runtime, focus, and suggestion subsystems.", table: "Learning"),
             url: "https://github.com/apple/swift-log"
         ),
         AcknowledgementEntry(
@@ -87,7 +87,10 @@ struct AcknowledgementsView: View {
         ),
         AcknowledgementEntry(
             name: "CotabbyInference",
-            summary: String(localized: "Swift wrapper around llama.cpp that exposes the inference API Cotabby links against."),
+            summary: String(
+                localized: "Swift wrapper around llama.cpp that exposes the inference API Lingrove links against.",
+                table: "Learning"
+            ),
             url: "https://github.com/FuJacob/cotabbyinference"
         )
     ]

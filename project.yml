@@ -1,6 +1,6 @@
 name: Cotabby
 options:
-  bundleIdPrefix: com.jacobfu
+  bundleIdPrefix: io.ichthyoplanktonzyh.lingrove
   defaultConfig: Release
   deploymentTarget:
     macOS: "14.0"
@@ -87,9 +87,8 @@ settings:
       MTL_ENABLE_DEBUG_INFO: NO
       SWIFT_COMPILATION_MODE: wholemodule
 # Signing lives in xcconfig files, not the generated project. `Config/Signing.xcconfig` (committed)
-# supplies Cotabby's team as the maintainer-friendly default and optionally includes the gitignored
-# `Config/Signing.local.xcconfig` that `scripts/dev-setup.sh` writes for contributors on another
-# team. It sits in a subdirectory on purpose: a root-level config file makes XcodeGen name a group
+# includes the gitignored `Config/Signing.local.xcconfig` that `scripts/dev-setup.sh` writes for
+# each developer's own team. It sits in a subdirectory on purpose: a root-level config file makes XcodeGen name a group
 # after the checkout directory, which drifts between clones and CI. DEVELOPMENT_TEAM must also stay
 # out of the build settings above: project/target settings outrank an xcconfig and would prevent the
 # local override from winning.
@@ -141,12 +140,12 @@ targetTemplates:
           - $(inherited)
           - "@executable_path/../Frameworks"
         MARKETING_VERSION: "1.0"
-        # PRODUCT_NAME follows the target name, so the prod target ships "Cotabby.app" while the dev
-        # target ships "Cotabby Dev.app" — two products that can coexist in /Applications, each with
-        # its own row in System Settings > Privacy. The per-target bundle identifier is set below.
-        PRODUCT_NAME: $(TARGET_NAME)
+        # Keep source/module and scheme names stable during the identity migration. PRODUCT_NAME
+        # owns the installed bundle, executable, and data-folder name; PRODUCT_MODULE_NAME keeps
+        # existing `@testable import Cotabby` references valid without a simultaneous source rename.
+        PRODUCT_NAME: Lingrove
+        PRODUCT_MODULE_NAME: Cotabby
         REGISTER_APP_GROUPS: YES
-        SPARKLE_PUBLIC_ED_KEY: efJeZNfUISOs6npbxI2MLLe7sBB5tT/sVnTk9t/qBSY=
         STRING_CATALOG_GENERATE_SYMBOLS: YES
         SWIFT_APPROACHABLE_CONCURRENCY: YES
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
@@ -160,7 +159,7 @@ targets:
       - CotabbyApp
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.jacobfu.tabby
+        PRODUCT_BUNDLE_IDENTIFIER: io.ichthyoplanktonzyh.lingrove
   # Local development build. Distinct bundle identifier + product name means a separate, stable
   # TCC identity (Accessibility, Input Monitoring, Screen Recording survive rebuilds), the dev app
   # icon makes it visually distinct, and the COTABBY_DEV compilation condition disables Sparkle so
@@ -171,9 +170,11 @@ targets:
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIconDev
+        PRODUCT_NAME: Lingrove Dev
         # Overridable so a contributor whose personal team rejects the shared id can set their own
-        # COTABBY_DEV_BUNDLE_ID in Signing.local.xcconfig; defaults to the canonical dev identity.
-        PRODUCT_BUNDLE_IDENTIFIER: "$(COTABBY_DEV_BUNDLE_ID:default=com.jacobfu.tabby.dev)"
+        # LINGROVE_DEV_BUNDLE_ID in Signing.local.xcconfig; a previous Cotabby override must not
+        # silently restore the upstream identity for a renamed Lingrove product.
+        PRODUCT_BUNDLE_IDENTIFIER: "$(LINGROVE_DEV_BUNDLE_ID:default=io.ichthyoplanktonzyh.lingrove.dev)"
         # Keep this under `base:` so COTABBY_DEV is defined in EVERY configuration, Release included.
         # Do not scope it to `configs: Debug:`. A Release-config dev build (the scheme's Profile and
         # Archive actions) must still compile Sparkle out; otherwise it could pull the prod appcast
@@ -200,13 +201,13 @@ targets:
           - "@executable_path/../Frameworks"
           - "@loader_path/../Frameworks"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        PRODUCT_BUNDLE_IDENTIFIER: com.jacobfu.tabby.CotabbyTests
+        PRODUCT_BUNDLE_IDENTIFIER: io.ichthyoplanktonzyh.lingrove.CotabbyTests
         PRODUCT_MODULE_NAME: $(TARGET_NAME)
         PRODUCT_NAME: $(TARGET_NAME)
         SDKROOT: macosx
         SWIFT_OBJC_INTEROP_MODE: objcxx
         SWIFT_VERSION: "5.0"
-        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Cotabby.app/Contents/MacOS/Cotabby
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Lingrove.app/Contents/MacOS/Lingrove
 schemes:
   Cotabby:
     build:
@@ -232,7 +233,7 @@ schemes:
       config: Release
   # Daily-driver scheme. Builds the dev-identity target so running from Xcode never touches the
   # released app's permissions. No test action here: CotabbyTests is bound to the prod `Cotabby`
-  # target (its TEST_HOST points at "Cotabby.app"), so tests continue to run from the Cotabby scheme.
+  # target (its TEST_HOST points at "Lingrove.app"), so tests continue to run from the Cotabby scheme.
   "Cotabby Dev":
     build:
       targets:

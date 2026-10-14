@@ -25,7 +25,10 @@ struct InterfaceLanguageSectionView: View {
             } label: {
                 SettingsRowLabel(
                     title: String(localized: "Interface Language"),
-                    description: String(localized: "Choose the language used in Cotabby's interface. Changes apply after restarting."),
+                    description: String(
+                        localized: "Choose the language used in Lingrove's interface. Changes apply after restarting.",
+                        table: "Learning"
+                    ),
                     systemImage: "globe"
                 )
             }
@@ -40,7 +43,8 @@ struct InterfaceLanguageSectionView: View {
                             restartErrorMessage = nil
                         } catch {
                             restartErrorMessage = String(
-                                localized: "Cotabby could not restart. Quit and reopen it to apply the selected language."
+                                localized: "Lingrove could not restart. Quit and reopen it to apply the selected language.",
+                                table: "Learning"
                             )
                         }
                     }
@@ -48,7 +52,7 @@ struct InterfaceLanguageSectionView: View {
                 } label: {
                     SettingsRowLabel(
                         title: String(localized: "Restart Required"),
-                        description: String(localized: "Restart Cotabby to apply the selected interface language."),
+                        description: String(localized: "Restart Lingrove to apply the selected interface language.", table: "Learning"),
                         systemImage: "arrow.clockwise"
                     )
                 }

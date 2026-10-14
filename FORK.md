@@ -7,12 +7,26 @@ a release. It complements CONTRIBUTING.md, which owns the build and test instruc
 
 - Fork: https://github.com/ichthyoplanktonzyh/cotabby
 - Upstream: https://github.com/FuJacob/cotabby
-- Product direction: translation and expression learning within everyday writing, with autocomplete
-  retained as a supporting capability.
+- Product direction: inline autocomplete and language learning are equally core capabilities.
+  Develop both together for everyday writing, including translation and expression learning.
 - Current priority: stabilize the Swift macOS experience. Rust shared logic and Flutter clients are
   a future direction, not part of the current migration.
-- Cotabby remains the provisional name. Original authorship and contributor attribution remain
-  intact; this fork does not claim ownership of upstream contributions.
+- Product name: **Lingrove** in English and **拾语** in Chinese. Use `lingrove` for new technical
+  identifiers. The name reflects learning expressions from everyday reading and writing.
+- App products are `Lingrove.app` and `Lingrove Dev.app`, with Bundle IDs
+  `io.ichthyoplanktonzyh.lingrove` and `io.ichthyoplanktonzyh.lingrove.dev`. The internal Xcode
+  schemes (`Cotabby`, `Cotabby Dev`), Swift module, source folders, and inference dependency keep
+  their existing names for now; these are build/code boundaries, not the installed app identity.
+- Models, encrypted typing history, and logs use separate `Lingrove` / `Lingrove Dev` folders.
+  Preferences and Keychain services use the new Bundle IDs. Existing Cotabby data stays untouched;
+  automatic import is not implemented. Encrypted history requires its original key for any future
+  migration, so copying only its archive is insufficient.
+- Sparkle stays disabled in every build until independent updates are configured. Manual update
+  checks open this repository's releases. User-facing brand copy and project links use Lingrove;
+  the inherited cat artwork remains until a separate visual-identity pass. See RELEASING.md for
+  the independent update plan.
+- Original authorship and contributor attribution remain intact; this fork does not claim ownership
+  of upstream contributions.
 - LICENSE remains AGPL v3. Third-party code, dictionaries, and model weights retain their own terms.
 
 ## Repository workflow
@@ -41,12 +55,14 @@ git push origin codex/language-learning
 
 ## Before the first independent release
 
-- Choose the product name, icons, Bundle IDs, and signing configuration for the fork.
-- Update in-app links for this build's source and license to the fork while retaining upstream credit.
-- Replace upstream website, download, support, and release badges in README with fork destinations.
-- Replace the production Sparkle feed and public key with the fork's update infrastructure.
-- Configure release workflows for the fork's domains, repositories, signing and notarization secrets;
-  the inherited workflows still contain upstream destinations. Do not publish with those defaults.
+- Design Lingrove's own icons and logo. Every developer supplies
+  their own signing team through the local xcconfig; there is no upstream team default.
+- Keep project destinations centralized in `ProductIdentity`, while retaining upstream credit.
+- Update README's installation instructions when the first independent download is available.
+- Configure Lingrove's Sparkle feed and public key, then enable automatic updates explicitly.
+- Configure the repository's signing and notarization secrets and Pages hosting before setting
+  `LINGROVE_RELEASES_ENABLED=true`. Release and Pages-republish jobs are paused by default; the
+  upstream Homebrew dispatch has been removed.
 - Review licenses for bundled dependencies, dictionaries, and any distributed model weights.
 - Publish corresponding source and required build instructions for each distributed version.
 - Validate the app's behavior, permissions, endpoint disclosure, and update flow before shipping.

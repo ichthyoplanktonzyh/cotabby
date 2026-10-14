@@ -730,6 +730,7 @@
 		946BCD0188340999CB702DD8 /* NativeLlamaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC922885EF0701E541CAFC1F /* NativeLlamaModels.swift */; };
 		948AD3BD25C113539DF12FD7 /* VisualContextModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A51B1559F4CE6728D39C959 /* VisualContextModels.swift */; };
 		949409B5B133BF4960691AE8 /* SuggestionRequestFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD834BCFF812935889E16D5A /* SuggestionRequestFactory.swift */; };
+		949CF96B450EA24DF1A2D599 /* ProductIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9932D8384853DD6792F8CF2C /* ProductIdentity.swift */; };
 		94A93C9AECB84D56E3347601 /* FocusPollBackoff.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD5C8648740E7050CCA657F /* FocusPollBackoff.swift */; };
 		94FA4632A562E454472BE1C6 /* HostBaselineCalibrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1ECBE9D1EDE855B57A913 /* HostBaselineCalibrator.swift */; };
 		952729C6514FBC40D6E7D1D4 /* CotabbyInference in Frameworks */ = {isa = PBXBuildFile; productRef = D11AB0F962CCC5BD79B630CA /* CotabbyInference */; };
@@ -1017,6 +1018,7 @@
 		D01A732060A64634619980B1 /* DateMacroEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94A26D86030FC5FA67371C52 /* DateMacroEvaluator.swift */; };
 		D03AFDB50A00B620BF936704 /* LearningDetailCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F3BEEC9910E5887874CA65 /* LearningDetailCardTests.swift */; };
 		D060C3A636D395CE9DE6BDAB /* HostMarkedTextPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF9FDA4F652DCC91A724314 /* HostMarkedTextPolicyTests.swift */; };
+		D060CD5031F6B4ED13A58E67 /* ProductIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9932D8384853DD6792F8CF2C /* ProductIdentity.swift */; };
 		D07ED62B4BB3EEBB6566C1ED /* FocusedInputContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB06531A54FDCDBAAD14E8B /* FocusedInputContext.swift */; };
 		D0B6C101862B3150C49777A2 /* LearningDetailPanelLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0511BD017E7D94758267E5 /* LearningDetailPanelLayout.swift */; };
 		D0BA4677F47C6943310B8A28 /* PopupChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87C6335EED41343595F17A08 /* PopupChrome.swift */; };
@@ -1702,6 +1704,7 @@
 		985923D188169FAFF6C4DCA8 /* LearningLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningLanguage.swift; sourceTree = "<group>"; };
 		98DC7007A763AA57CF890EED /* InterfaceLanguageSettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterfaceLanguageSettingsModel.swift; sourceTree = "<group>"; };
 		98F7AF02EAB8332479C9E9E7 /* PauseInLowPowerModeRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseInLowPowerModeRow.swift; sourceTree = "<group>"; };
+		9932D8384853DD6792F8CF2C /* ProductIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductIdentity.swift; sourceTree = "<group>"; };
 		99FBB636008490B66CF26772 /* frequency_dictionary_en_82_765.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = frequency_dictionary_en_82_765.txt; sourceTree = "<group>"; };
 		9A02F9151AEBBD825D64CEFA /* SuggestionDebugLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionDebugLoggerTests.swift; sourceTree = "<group>"; };
 		9A39920BD5E23E4D2E9AF037 /* GhostCaretRefinement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostCaretRefinement.swift; sourceTree = "<group>"; };
@@ -3253,6 +3256,7 @@
 				5154668C834FF09343FD3BE6 /* Settings */,
 				50D6C35B203AC5C0BF4BB1A8 /* Spelling */,
 				2D8E398BA5F2ED675A25AAFD /* Suggestion */,
+				9932D8384853DD6792F8CF2C /* ProductIdentity.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -4410,15 +4414,15 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					59F15B162977174E700D0CAA = {
-						DevelopmentTeam = G946M8K23B;
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					622CFE93F0FE48C8243E060C = {
-						DevelopmentTeam = G946M8K23B;
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					AB3DFA4CFA5EBC6161F02A30 = {
-						DevelopmentTeam = G946M8K23B;
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -4858,6 +4862,7 @@
 				D0BA4677F47C6943310B8A28 /* PopupChrome.swift in Sources */,
 				14816A290847D599769532E3 /* PostExhaustionAcceptanceState.swift in Sources */,
 				C607A624A0FB697486C56B8E /* PowerSourceMonitor.swift in Sources */,
+				D060CD5031F6B4ED13A58E67 /* ProductIdentity.swift in Sources */,
 				37BAD9C6AFAAF99E818D734D /* PromptContextSanitizer.swift in Sources */,
 				47EFFC4AEBA2848C933BB77C /* PromptSectionBudget.swift in Sources */,
 				A6A0F90E7BCAAFE28A274DAF /* RandomMacroEvaluator.swift in Sources */,
@@ -5279,6 +5284,7 @@
 				986C1339A8FBA3569FC129D6 /* PopupChrome.swift in Sources */,
 				05CFA72F4FF44A0CDBEFED3C /* PostExhaustionAcceptanceState.swift in Sources */,
 				50E1247BE6A952AB1B12C444 /* PowerSourceMonitor.swift in Sources */,
+				949CF96B450EA24DF1A2D599 /* ProductIdentity.swift in Sources */,
 				32A5095C89B598C9A959F435 /* PromptContextSanitizer.swift in Sources */,
 				21187878C7390AD639717B8F /* PromptSectionBudget.swift in Sources */,
 				4115E3AB3417BFA8DE43E6FD /* RandomMacroEvaluator.swift in Sources */,
@@ -5766,11 +5772,11 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(COTABBY_DEV_BUNDLE_ID:default=com.jacobfu.tabby.dev)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(LINGROVE_DEV_BUNDLE_ID:default=io.ichthyoplanktonzyh.lingrove.dev)";
+				PRODUCT_MODULE_NAME = Cotabby;
+				PRODUCT_NAME = "Lingrove Dev";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
-				SPARKLE_PUBLIC_ED_KEY = "efJeZNfUISOs6npbxI2MLLe7sBB5tT/sVnTk9t/qBSY=";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "COTABBY_DEV $(inherited)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -5805,11 +5811,11 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jacobfu.tabby;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = io.ichthyoplanktonzyh.lingrove;
+				PRODUCT_MODULE_NAME = Cotabby;
+				PRODUCT_NAME = Lingrove;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
-				SPARKLE_PUBLIC_ED_KEY = "efJeZNfUISOs6npbxI2MLLe7sBB5tT/sVnTk9t/qBSY=";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -5843,11 +5849,11 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "$(COTABBY_DEV_BUNDLE_ID:default=com.jacobfu.tabby.dev)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "$(LINGROVE_DEV_BUNDLE_ID:default=io.ichthyoplanktonzyh.lingrove.dev)";
+				PRODUCT_MODULE_NAME = Cotabby;
+				PRODUCT_NAME = "Lingrove Dev";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
-				SPARKLE_PUBLIC_ED_KEY = "efJeZNfUISOs6npbxI2MLLe7sBB5tT/sVnTk9t/qBSY=";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "COTABBY_DEV $(inherited)";
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -5999,13 +6005,13 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jacobfu.tabby.CotabbyTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.ichthyoplanktonzyh.lingrove.CotabbyTests;
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_OBJC_INTEROP_MODE = objcxx;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Cotabby.app/Contents/MacOS/Cotabby";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Lingrove.app/Contents/MacOS/Lingrove";
 			};
 			name = Debug;
 		};
@@ -6032,11 +6038,11 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jacobfu.tabby;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = io.ichthyoplanktonzyh.lingrove;
+				PRODUCT_MODULE_NAME = Cotabby;
+				PRODUCT_NAME = Lingrove;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
-				SPARKLE_PUBLIC_ED_KEY = "efJeZNfUISOs6npbxI2MLLe7sBB5tT/sVnTk9t/qBSY=";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -6062,13 +6068,13 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.jacobfu.tabby.CotabbyTests;
+				PRODUCT_BUNDLE_IDENTIFIER = io.ichthyoplanktonzyh.lingrove.CotabbyTests;
 				PRODUCT_MODULE_NAME = "$(TARGET_NAME)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_OBJC_INTEROP_MODE = objcxx;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Cotabby.app/Contents/MacOS/Cotabby";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Lingrove.app/Contents/MacOS/Lingrove";
 			};
 			name = Release;
 		};

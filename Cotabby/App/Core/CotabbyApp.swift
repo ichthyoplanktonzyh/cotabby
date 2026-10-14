@@ -33,13 +33,9 @@ struct CotabbyApp: App {
                 },
                 onReportFeedback: {
                     // Reports belong with this fork's source and releases.
-                    let feedbackURL = "https://github.com/FuJacob/cotabby/issues"
-                    guard let baseURL = URL(string: feedbackURL) else {
-                        return
-                    }
                     // Attach host details so the landing form can pre-fill the Environment block
                     // (Cotabby + macOS + hardware) and the user only has to write the actual report.
-                    let url = DeviceInfo.snapshot().appending(to: baseURL)
+                    let url = DeviceInfo.snapshot().appending(to: ProductIdentity.issuesURL)
                     NSWorkspace.shared.open(url)
                 }
             )

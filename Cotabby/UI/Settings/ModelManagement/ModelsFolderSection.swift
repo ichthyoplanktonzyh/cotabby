@@ -35,8 +35,8 @@ struct ModelsFolderSection: View {
                         ? String(localized: "Install LM Studio to load models from its library here.")
                         : String(localized: """
                         Add models from your LM Studio library (~/.lmstudio/models) to the picker above. Downloads still save to \
-                        Cotabby's own folder.
-                        """),
+                        Lingrove's own folder.
+                        """, table: "Learning"),
                     systemImage: "square.stack.3d.up"
                 )
             }

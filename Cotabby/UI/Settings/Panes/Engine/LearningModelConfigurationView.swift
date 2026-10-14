@@ -81,8 +81,11 @@ struct LearningModelConfigurationView: View {
             Button(String(localized: "Cancel", table: "Learning",
                 comment: "Cancels removing a downloaded local model."), role: .cancel) { pendingDeletion = nil }
         } message: { model in
-            Text(String(localized: "Remove \(model.displayName) from Cotabby's local models folder?",
-                table: "Learning", comment: "Confirmation message naming the local model file that will be removed."))
+            Text(String(
+                localized: "Remove \(model.displayName) from Lingrove's local models folder?",
+                table: "Learning",
+                comment: "Confirmation message naming the local model file that will be removed."
+            ))
         }
     }
 

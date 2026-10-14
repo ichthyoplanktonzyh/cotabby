@@ -3,9 +3,9 @@
      xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
      xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>Cotabby Updates</title>
+    <title>Lingrove Updates</title>
     <link>{{REPOSITORY_URL}}</link>
-    <description>Cotabby release feed</description>
+    <description>Lingrove release feed</description>
     <language>en</language>
     <item>
       <title>Version {{SHORT_VERSION}}</title>

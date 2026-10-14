@@ -412,14 +412,14 @@ def sign_test_hosts(products, output):
     temporary copy avoids both, needs no developer identity, and never changes the installed app
     or the binaries fingerprinted for build reuse. The context manager removes it even on failure.
     """
-    source = products / "Release/Cotabby.app"
+    source = products / "Release/Lingrove.app"
     if not source.is_dir():
         raise RuntimeError("No Release test host found for ad-hoc signing")
     entitlements = output / "test-host.entitlements"
     entitlements.write_bytes(plistlib.dumps({"com.apple.security.get-task-allow": True,
         "com.apple.security.cs.disable-library-validation": True}))
     with tempfile.TemporaryDirectory(prefix="cohamster-eval-", dir="/private/tmp") as staging:
-        host = pathlib.Path(staging) / "Cotabby.app"
+        host = pathlib.Path(staging) / "Lingrove.app"
         logged_command(["ditto", "--norsrc", "--noextattr", source, host], output / "sign-copy.log")
         logged_command(["xattr", "-cr", host], output / "sign-attributes.log")
         logged_command(["codesign", "--force", "--deep", "--sign", "-", "--timestamp=none",
@@ -431,7 +431,7 @@ def sign_test_hosts(products, output):
             # XCTest launches through launchd, outside xcodebuild's process group. Interrupting
             # that group alone can leave a blocked host (and its model) alive. Match only this
             # disposable executable, never the installed Cotabby app or another replay.
-            executable = host / "Contents/MacOS/Cotabby"
+            executable = host / "Contents/MacOS/Lingrove"
             subprocess.run(["pkill", "-TERM", "-f", "^" + re.escape(str(executable)) + "( |$)"],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 

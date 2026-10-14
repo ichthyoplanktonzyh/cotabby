@@ -346,21 +346,29 @@ final class BundledRuntimeLocatorTests: XCTestCase {
     }
 
     func test_userRuntimeDirectoryURL_keepsDevelopmentModelsSeparate() throws {
-        let bundle = try makeBundle(withInfo: ["CFBundleName": "Cotabby Dev"])
+        let bundle = try makeBundle(withInfo: ["CFBundleName": "Lingrove Dev"])
         let url = BundledRuntimeLocator.userRuntimeDirectoryURL(bundle: bundle)
-        XCTAssertEqual(url.deletingLastPathComponent().lastPathComponent, "Cotabby Dev")
+        XCTAssertEqual(url.deletingLastPathComponent().lastPathComponent, "Lingrove Dev")
         XCTAssertEqual(url.lastPathComponent, "LlamaRuntime")
+
+        let production = try makeBundle(withInfo: ["CFBundleName": "Lingrove"])
+        let upstream = try makeBundle(withInfo: ["CFBundleName": "Cotabby"])
+        let productionURL = BundledRuntimeLocator.userRuntimeDirectoryURL(bundle: production)
+        let upstreamURL = BundledRuntimeLocator.userRuntimeDirectoryURL(bundle: upstream)
+        XCTAssertNotEqual(url, productionURL)
+        XCTAssertNotEqual(productionURL, upstreamURL)
+        XCTAssertNotEqual(url, upstreamURL)
     }
 
-    func test_userRuntimeDirectoryURL_fallsBackToCotabbyFolderWhenBundleNameMissing() throws {
+    func test_userRuntimeDirectoryURL_fallsBackToLingroveFolderWhenBundleNameMissing() throws {
         // A bare directory bundle carries no Info.plist, so CFBundleName resolves to nil and the
-        // app-folder name must fall back to "Cotabby" rather than producing a nameless path.
+        // app-folder name must fall back to "Lingrove" rather than producing a nameless path.
         let bundle = try makeBundle(withInfo: nil)
 
         let url = BundledRuntimeLocator.userRuntimeDirectoryURL(bundle: bundle)
 
         XCTAssertEqual(url.lastPathComponent, BundledRuntimeLocator.runtimeFolderName)
-        XCTAssertEqual(url.deletingLastPathComponent().lastPathComponent, "Cotabby")
+        XCTAssertEqual(url.deletingLastPathComponent().lastPathComponent, "Lingrove")
     }
 
     // MARK: - Default candidate enumeration (nil runtimeDirectoryPath)

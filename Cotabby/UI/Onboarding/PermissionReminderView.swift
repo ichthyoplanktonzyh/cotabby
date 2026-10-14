@@ -31,7 +31,10 @@ struct PermissionReminderView: View {
                 systemImage: "exclamationmark.shield.fill",
                 tint: .orange,
                 title: String(localized: "Permissions needed"),
-                subtitle: String(localized: "Cotabby needs these permissions to work.\nGrant them in System Settings, then come back here.")
+                subtitle: String(
+                    localized: "Lingrove needs these permissions to work.\nGrant them in System Settings, then come back here.",
+                    table: "Learning"
+                )
             )
             .onboardingReveal(0)
 

@@ -154,7 +154,7 @@ final class WelcomeCoordinator: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = String(localized: "Welcome to Cotabby")
+        window.title = String(localized: "Welcome to Lingrove", table: "Learning")
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
@@ -226,7 +226,7 @@ final class WelcomeCoordinator: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = String(localized: "Cotabby — Permissions")
+        window.title = String(localized: "Lingrove — Permissions", table: "Learning")
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true

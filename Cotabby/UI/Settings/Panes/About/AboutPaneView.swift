@@ -13,7 +13,7 @@ struct AboutPaneView: View {
     var body: some View {
         SettingsPaneScaffold {
             Section { aboutHeader.settingsItem(.checkForUpdates) }
-            Section("Support") { supportRow.settingsItem(.support) }
+            Section("Contribute") { supportRow.settingsItem(.support) }
             Section("Resources") { resourceRows }
             Section("Uninstall") { uninstallText.settingsItem(.uninstall) }
         }
@@ -32,10 +32,10 @@ struct AboutPaneView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Cotabby")
+                Text(ProductIdentity.appDisplayName)
                     .font(.system(size: 16, weight: .semibold, design: .rounded))
 
-                Text("Local macOS AI Autocomplete")
+                Text(String(localized: "Autocomplete and language learning", table: "Learning"))
                     .font(.system(size: 12, design: .rounded))
                     .foregroundStyle(.secondary)
 
@@ -64,29 +64,21 @@ struct AboutPaneView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(
-                    String(localized: """
-                    Cotabby started from a simple belief: AI should run on your device, respect your privacy, and remain open to \
-                    everyone.
-                    """)
+                    String(localized: "Get inline completions, translate sentences, and learn expressions.", table: "Learning")
                 )
 
                 Text(
-                    String(localized: """
-                    We're building Cotabby in our spare time, one release at a time. If Cotabby has helped you, your support helps us \
-                    keep improving it.
-                    """)
+                    String(localized: "Help improve Lingrove by reporting issues or sharing ideas.", table: "Learning")
                 )
             }
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
 
-            if let supportURL = URL(string: "https://ko-fi.com/cotabby") {
-                Link(destination: supportURL) {
-                    Label("Support Cotabby", systemImage: "heart.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
+            Link(destination: ProductIdentity.issuesURL) {
+                Label("Contribute", systemImage: "person.2")
             }
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
         }
     }
 
@@ -94,17 +86,16 @@ struct AboutPaneView: View {
     /// search can scroll to and pulse individually.
     @ViewBuilder
     private var resourceRows: some View {
-        if let repoURL = URL(string: "https://github.com/FuJacob/Cotabby") {
-            Link(destination: repoURL) {
-                Label("GitHub Repository", systemImage: "chevron.left.forwardslash.chevron.right")
-            }
-            .settingsItem(.githubRepository)
+        Link(destination: ProductIdentity.repositoryURL) {
+            Label("GitHub Repository", systemImage: "chevron.left.forwardslash.chevron.right")
         }
-        if let wikiURL = URL(string: "https://github.com/FuJacob/Cotabby/wiki") {
-            Link(destination: wikiURL) {
-                Label("Wiki & Contributor Guide", systemImage: "book")
-            }
-            .settingsItem(.wiki)
+        .settingsItem(.githubRepository)
+        Link(destination: ProductIdentity.contributorGuideURL) {
+            Label("Contributor Guide", systemImage: "book")
+        }
+        .settingsItem(.wiki)
+        Link(destination: ProductIdentity.helpURL) {
+            Label("Help", systemImage: "questionmark.circle")
         }
         Button {
             isShowingAcknowledgements = true
@@ -118,7 +109,10 @@ struct AboutPaneView: View {
     @ViewBuilder
     private var uninstallText: some View {
         let dataDirectory = BundledRuntimeLocator.userRuntimeDirectoryURL().deletingLastPathComponent().path
-        Text("Remove Cotabby from Applications. To fully clean up model data, delete \(dataDirectory).")
+        Text(String(
+            localized: "Remove Lingrove from Applications. To fully clean up model data, delete \(dataDirectory).",
+            table: "Learning"
+        ))
         .font(.caption)
         .foregroundStyle(.secondary)
     }

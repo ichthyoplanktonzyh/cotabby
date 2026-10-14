@@ -1,8 +1,11 @@
-# Cotabby Codex Instructions
+# Lingrove Codex Instructions
 
 ## Project Identity
 
-Cotabby is a macOS menu bar app for local-first inline autocomplete. The core loop is:
+Lingrove (拾语) is a macOS menu bar app with two equally core capabilities: local-first inline
+autocomplete and language learning while writing. Develop both as first-class product features;
+translation and expression learning do not make autocomplete a secondary capability. Internal
+source/module names remain Cotabby during migration. The autocomplete core loop is:
 
 1. Track the currently focused editable field through Accessibility.
 2. Monitor global keyboard input without stealing focus.
@@ -314,8 +317,12 @@ symptom → category map. Do not ask the user to re-explain symptoms before chec
 Build, run, and test with Xcode as documented in
 [`CONTRIBUTING.md`](CONTRIBUTING.md). Prepare the pinned inference workspace with
 `scripts/prepare_cotabby_workspace.sh` first. Local launches use the developer's own signing
-team configured through `scripts/dev-setup.sh` and the isolated `Cotabby Dev` scheme; production
-uses `Cotabby`, its upstream bundle identity, and Sparkle updates. Shared CI uses unsigned compile checks and
+team configured through `scripts/dev-setup.sh` and the isolated `Cotabby Dev` scheme, producing
+`Lingrove Dev.app` (`io.ichthyoplanktonzyh.lingrove.dev`). Production uses the `Cotabby` scheme to
+build `Lingrove.app` (`io.ichthyoplanktonzyh.lingrove`). Internal schemes and the Swift module keep
+their existing names during migration. Sparkle remains disabled until the independent update feed
+and signing key are configured; release jobs require `LINGROVE_RELEASES_ENABLED=true`.
+Shared CI uses unsigned compile checks and
 app-hosted tests.
 
 Use the narrowest meaningful validation first, then broaden if the change touches shared behavior.
@@ -353,7 +360,7 @@ Quote latency only from a Release build; Debug inflates per-token Swift work by 
 Any change to prompt content, context budgets, sampling, or the model should be justified with a
 before/after on both suites over identical cases.
 
-The dev app is a SEPARATE target and scheme, `Cotabby Dev` (product `Cotabby Dev.app`). Building the
+The dev app is a SEPARATE target and scheme, `Cotabby Dev` (product `Lingrove Dev.app`). Building the
 `Cotabby` scheme leaves the dev bundle stale, so build the dev app explicitly and confirm the binary
 timestamp moved before testing against it:
 

@@ -69,9 +69,9 @@ enum OnboardingTemplate: String, CaseIterable, Identifiable, Equatable, Sendable
             return String(localized: "Longer suggestions and higher quality on harder prompts.")
         case .custom:
             return String(localized: """
-            Returning users keep every setting they've already tuned. New users start from Cotabby's lean defaults and fine-tune \
+            Returning users keep every setting they've already tuned. New users start from Lingrove's lean defaults and fine-tune \
             length, model, and behavior in Settings.
-            """)
+            """, table: "Learning")
         }
     }
 

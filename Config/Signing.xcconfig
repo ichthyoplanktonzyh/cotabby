@@ -1,9 +1,8 @@
 // Code signing for local development.
 //
-// The shared default is Cotabby's development team so maintainers can pull main and immediately
-// run the app without Xcode writing a personal choice into the generated project.pbxproj. A
-// contributor who is not on that team overrides it once in Config/Signing.local.xcconfig
-// (gitignored). Generate that override with
+// Lingrove does not inherit the upstream maintainer's development team. Each developer supplies
+// their own team in Config/Signing.local.xcconfig (gitignored), keeping personal signing settings
+// out of the generated project.pbxproj. Generate that override with
 //
 //   scripts/dev-setup.sh
 //
@@ -20,6 +19,6 @@
 // DEVELOPMENT_TEAM must not be set in project.yml's build settings either: project-level build
 // settings outrank an xcconfig, so a value there would silently override this file.
 
-DEVELOPMENT_TEAM = G946M8K23B
+DEVELOPMENT_TEAM =
 
 #include? "Signing.local.xcconfig"

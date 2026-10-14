@@ -111,7 +111,7 @@ struct HomePaneView: View {
                 .opacity(hasAppeared ? 1 : 0)
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("Cotabby")
+                Text(ProductIdentity.appDisplayName)
                     .font(.system(size: 26, weight: .bold, design: .rounded))
                 if let version = appVersionText {
                     Text(version)
@@ -127,7 +127,8 @@ struct HomePaneView: View {
             // the ghost text Cotabby draws at the caret.
             let preview = CompletionPreviewText(
                 resolvedSentence: String(
-                    localized: "Write faster, ¦everywhere you type",
+                    localized: "Autocomplete. ¦Learn as you write.",
+                    table: "Learning",
                     comment: """
                     Home hero tagline preview. Keep exactly one ¦ to mark where typed text ends and ghost text begins; move it to fit \
                     the translated sentence naturally.
@@ -267,7 +268,7 @@ struct HomePaneView: View {
         HomeStatusCard(
             systemImage: "power",
             tint: suggestionSettings.isGloballyEnabled ? .green : .gray,
-            title: "Cotabby",
+            title: ProductIdentity.localizedName(),
             caption: suggestionSettings.isGloballyEnabled ? String(localized: "Active") : String(localized: "Paused")
         ) {
             Toggle("", isOn: globallyEnabledBinding)
@@ -275,7 +276,7 @@ struct HomePaneView: View {
                 .controlSize(.small)
                 .labelsHidden()
                 .tint(.green)
-                .accessibilityLabel("Enable Cotabby globally")
+                .accessibilityLabel(String(localized: "Enable Lingrove globally", table: "Learning"))
         }
     }
 
@@ -399,21 +400,15 @@ struct HomePaneView: View {
         HStack(spacing: 6) {
             Text("Free & open source")
             footerDot
-            if let repoURL = URL(string: "https://github.com/FuJacob/cotabby") {
-                Link("GitHub", destination: repoURL)
+            Link("GitHub", destination: ProductIdentity.repositoryURL)
+            footerDot
+            Link(destination: ProductIdentity.issuesURL) {
+                Label("Contribute", systemImage: "person.2")
+                    .labelStyle(.titleAndIcon)
+                    .foregroundStyle(.pink)
             }
             footerDot
-            if let supportURL = URL(string: "https://github.com/FuJacob/cotabby/issues") {
-                Link(destination: supportURL) {
-                    Label("Contribute", systemImage: "person.2")
-                        .labelStyle(.titleAndIcon)
-                        .foregroundStyle(.pink)
-                }
-            }
-            footerDot
-            if let wikiURL = URL(string: "https://github.com/FuJacob/cotabby/blob/main/CONTRIBUTING.md") {
-                Link("Contributor Guide", destination: wikiURL)
-            }
+            Link("Contributor Guide", destination: ProductIdentity.contributorGuideURL)
         }
         .font(.caption)
         .foregroundStyle(.secondary)

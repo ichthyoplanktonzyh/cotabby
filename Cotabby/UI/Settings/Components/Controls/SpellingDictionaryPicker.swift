@@ -17,9 +17,9 @@ struct SpellingDictionaryPicker: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(
                 String(localized: """
-                Choose which bundled dictionaries Cotabby may use for frequency-ranked corrections. With several enabled, Cotabby \
+                Choose which bundled dictionaries Lingrove may use for frequency-ranked corrections. With several enabled, Lingrove \
                 selects one from the surrounding text.
-                """)
+                """, table: "Learning")
             )
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -47,9 +47,9 @@ struct SpellingDictionaryPicker: View {
 
             Text(
                 String(localized: """
-                Indexes load on demand and Cotabby keeps at most two in memory. If no bundled dictionary matches, macOS supplies the \
+                Indexes load on demand and Lingrove keeps at most two in memory. If no bundled dictionary matches, macOS supplies the \
                 correction.
-                """)
+                """, table: "Learning")
             )
             .font(.caption2)
             .foregroundStyle(.tertiary)

@@ -86,7 +86,10 @@ struct AppearancePaneView: View {
                 Toggle(isOn: showIndicatorBinding) {
                     SettingsRowLabel(
                         title: String(localized: "Show Field Indicator"),
-                        description: String(localized: "Show a small icon at the edge of a field when Cotabby is ready to suggest."),
+                        description: String(
+                            localized: "Show a small icon at the edge of a field when Lingrove is ready to suggest.",
+                            table: "Learning"
+                        ),
                         systemImage: "dot.viewfinder"
                     )
                 }
@@ -104,10 +107,10 @@ struct AppearancePaneView: View {
 
                 Toggle(isOn: menuBarIconVisibleBinding) {
                     SettingsRowLabel(
-                        title: String(localized: "Show Cotabby in Menu Bar"),
+                        title: String(localized: "Show Lingrove in Menu Bar", table: "Learning"),
                         description: String(localized: """
-                        Keep Cotabby's icon in the menu bar. If hidden, open Cotabby again to show Settings.
-                        """),
+                        Keep Lingrove's icon in the menu bar. If hidden, open Lingrove again to show Settings.
+                        """, table: "Learning"),
                         systemImage: "menubar.rectangle"
                     )
                 }

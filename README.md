@@ -1,198 +1,119 @@
-> **Independent fork in development:** This repository is maintained by
-> [ichthyoplanktonzyh](https://github.com/ichthyoplanktonzyh/cotabby) and derives from
-> [FuJacob/Cotabby](https://github.com/FuJacob/cotabby). Its direction is translation and
-> expression learning during everyday writing, while retaining the existing autocomplete.
-> The current milestone is a mature macOS experience in Swift; cross-platform work is planned
-> for later. The product name is provisional. Existing website, download, donation, and release
-> links below refer to the upstream project, not a release of this fork.
->
-> Active work lives on `codex/language-learning` until reviewed and validated for the fork's
-> `main` branch. See [FORK.md](FORK.md) for repository ownership and release preparation.
+# Lingrove · 拾语
 
-<p align="center">
-  <a href="https://cotabby.app" target="_blank">
-    <img height="150" alt="Cotabby logo" src=".github/assets/readme/logo.png" />
-  </a>
-</p>
+Inline autocomplete and language learning, wherever you write. Get continuations beside your
+cursor, translate sentences, and learn useful expressions without leaving your editor.
 
-<h1 align="center">Cotabby [beta]</h1>
+Lingrove is an open-source macOS menu bar app maintained by
+[ichthyoplanktonzyh](https://github.com/ichthyoplanktonzyh), derived from
+[FuJacob/Cotabby](https://github.com/FuJacob/cotabby) and its contributors. Inline autocomplete and
+language learning are its two core capabilities, developed together.
 
-<p align="center"><em>Open-source, local-first AI autocomplete for macOS.</em></p>
+> **In development.** Work is on `codex/language-learning` until reviewed and validated for `main`.
+> Independent releases and automatic updates are not yet available. The existing cat artwork is
+> inherited from Cotabby while Lingrove's visual identity is being designed.
 
-<p align="center">
-  <a href="https://cotabby.app">
-  <img width="200" alt="landing-page" src="https://github.com/user-attachments/assets/c28fbb4b-6dfb-4403-a040-1df61daf4df2" /></a>
+[Source](https://github.com/ichthyoplanktonzyh/cotabby) ·
+[Feedback](https://github.com/ichthyoplanktonzyh/cotabby/issues) ·
+[Releases](https://github.com/ichthyoplanktonzyh/cotabby/releases) ·
+[FAQ](FAQ.md) · [AGPLv3 license](LICENSE)
 
+## Two core capabilities
 
-<a href="https://github.com/FuJacob/cotabby/releases/latest/download/Cotabby.dmg">
-<img width="200" alt="download" src="https://github.com/user-attachments/assets/d5cb4454-d2ab-41d3-9d36-171d44ebfc52" /></a>
+### Inline autocomplete
 
+- **Ghost-text continuations:** receive suggestions beside the cursor in supported macOS fields;
+  accept a word, phrase, or whole suggestion with your configured shortcuts.
+- **Choice of backend:** use Apple Intelligence, in-process local GGUF inference, or an
+  OpenAI-compatible endpoint you configure.
+- **Context and control:** choose suggestion length, within-word prediction, streaming, and
+  optional screen/clipboard context. Pause globally or disable it for specific apps.
 
-<a href="https://ko-fi.com/cotabby" target="_blank">
-<img width="200" alt="support" src=".github/assets/readme/support-cotabby.png" />
-</a></p>
+### Language learning
 
-<p align="center">
-  <a href="https://github.com/FuJacob/cotabby/actions/workflows/build.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/FuJacob/cotabby/build.yml?branch=main" /></a>
-  <a href="LICENSE"><img alt="License: AGPL v3" src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" /></a>
-  <a href="https://github.com/FuJacob/cotabby/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/FuJacob/cotabby" /></a>
-  <a href="https://github.com/FuJacob/cotabby/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/FuJacob/cotabby/total" /></a>
-  <a href="https://github.com/FuJacob/cotabby/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/FuJacob/cotabby?style=flat" /></a>
-  <img alt="Swift" src="https://img.shields.io/badge/Swift-F05138?logo=swift&amp;logoColor=white" />
-  <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey" />
-</p>
+- **Translation beside your text:** translate a completed sentence or a paused draft into your
+  chosen language while continuing to write in the same field.
+- **Sentence understanding:** inspect source/target correspondences and identify reusable phrases
+  and grammatical constructions through optional learning-unit recognition and chunk alignment.
+- **Expression and word lookup:** inspect an expression or word using the bundled expression
+  lexicon and the dictionaries enabled on your Mac.
+- **Independent learning models:** configure translation, learning-unit recognition, and chunk
+  alignment separately, using local models or endpoints you explicitly choose.
 
-<p align="center">
-  <sub>Cotabby is free and open-source — maintained by two students. If it's useful to you, please consider supporting Cotabby's future.</sub>
-</p>
+### Additional writing tools
 
----
+Autocorrect, emoji insertion, and slash macros for calculations/conversions complement both core
+capabilities.
 
-## What It Does
+The menu bar controls global pause and opens Settings. Configure source/target languages and
+learning models in Settings before enabling language learning. Tab and Return keep their ordinary
+behavior in the learning card; Escape dismisses it. Autocomplete's acceptance keys are configurable.
 
-Cotabby adds AI autocomplete to almost any text field on your Mac. As you type, a gray suggestion appears inline next to your cursor. Press `Tab` to accept it a word at a time, or keep typing to ignore it.
+## Privacy and local storage
 
-The default Apple Intelligence and Open Source engines run on your Mac. No account or telemetry is
-required. An optional OpenAI-compatible engine can connect to a server you configure.
+- Apple Intelligence and local GGUF inference run on your Mac. Translation and analysis can also
+  run locally once their models are installed.
+- An explicitly configured endpoint receives the request for its task, which can include typed
+  text and enabled context. Autocomplete and learning tasks have their own model/server settings;
+  use the local path when you want that task to remain on-device.
+- Screenshots and OCR run on-device. If screen context is enabled for endpoint autocomplete, its
+  bounded text excerpt can be included in that endpoint request.
+- Input-history recording is off by default. When enabled, the recorded text is stored in an
+  encrypted archive on this Mac with its key in Keychain. You can clear the history in Settings.
+- Developer mode (`-cotabby-debug`) can write full model inputs/outputs to local diagnostic logs.
+  Model download/search uses the network. Automatic app updates remain disabled during migration;
+  the manual update action opens this project's Releases page.
+- There is no hosted account requirement, analytics, or remote crash reporting built into the app.
 
-## Demo
+Lingrove and Lingrove Dev use separate preferences, Keychain services, model/history folders, and
+logs. Existing Cotabby data is preserved and is not imported automatically. See [FORK.md](FORK.md).
 
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=p3TIgxQFQGE"><strong>Watch on YouTube →</strong></a>
-</p>
+## Install and develop
 
-<div align="center">
+Requires macOS 14 or later. Apple Silicon is recommended for local inference. Autocomplete can use
+Apple Intelligence on supported Macs with macOS 26 or later, an installed local GGUF model, or an
+OpenAI-compatible endpoint. Translation and analysis use their separately configured learning models.
 
-|  |  |
-|:---:|:---:|
-| <img src="gifs/slack.gif" alt="Cotabby emoji autocomplete demo" width="400" height="225" /> | <img src="gifs/imessage.gif" alt="Cotabby autocomplete demo" width="400" height="225" /> |
-| <img src="gifs/autocorrect.gif" alt="Cotabby autocorrect demo" width="400" height="225" /> | <img src="gifs/macros.gif" alt="Cotabby inline macros demo" width="400" height="225" /> |
-
-</div>
-
-## Features
-
-- **Ghost-text autocomplete** — AI suggestions inline in almost any macOS text field; `Tab` accepts a word at a time
-- **Emoji autocomplete** — type `:rocket:` and accept it without leaving the field
-- **Inline macros** — type `/` for quick math, unit and currency conversion, dates, and random values
-- **One-key autocorrect** — fix a likely typo with a single keystroke
-- **Prediction controls** — choose whether to predict ahead, suggest within words, and show following words
-- **Optional screen context** — control visual context independently of the local prediction settings
-
-## Privacy
-
-Privacy is the whole point, so Cotabby's default engines keep generation on your Mac:
-
-- Apple Intelligence and Open Source generation run on-device.
-- The optional OpenAI-compatible engine sends a bounded request only to the endpoint you configure;
-  that endpoint can be loopback, on your local network, or a public HTTPS service.
-- No analytics, no telemetry, no crash reporting.
-- A normal install never writes what you type to disk.
-- Apart from a configured endpoint, the network is used for model downloads and update checks, not
-  suggestion generation.
-
-## Engines
-
-Cotabby generates suggestions in three ways. You choose which in Settings → Engine:
-
-- **Apple Intelligence** — Apple's model, built into macOS 26 or later on supported Macs. Nothing to download.
-- **Open Source** — a small AI model you download that runs entirely on your Mac. Works on any supported Mac (macOS 14+), with or without Apple Intelligence.
-- **OpenAI-compatible** — a completion or chat endpoint you configure, including local Ollama,
-  another LAN host, or a public HTTPS service. Endpoint credentials are stored in Keychain.
-
-If your Mac supports Apple Intelligence, that's the easiest place to start. Otherwise, use the Open Source engine and pick one of the built-in models:
-
-| Model          | Size    | Good for                          |
-| -------------- | ------- | --------------------------------- |
-| `tabby-2-nano` | ~0.8 GB | Older or low-memory Macs; fastest |
-| `tabby-2-mini` | ~1.4 GB | A solid everyday balance          |
-| `tabby-2-base` | ~4.5 GB | Higher-quality suggestions        |
-| `tabby-2-pro`  | ~5.0 GB | Best quality                      |
-
-Download any of them straight from Cotabby's menu bar.
-
-<details>
-<summary><strong>Advanced:</strong> model files, custom models, and how generation works</summary>
-
-<br />
-
-Under the hood, the Open Source engine runs local GGUF *base* models in-process through [llama.cpp](https://github.com/ggerganov/llama.cpp) (via [CotabbyInference](https://github.com/FuJacob/cotabbyinference)). Instead of prompting an instruction-tuned chat model, Cotabby treats the model as a pure text continuer and conditions it on your name, writing style, language, and on-screen context.
-
-| Model          | File                             | Size    | Source                                                                       |
-| -------------- | -------------------------------- | ------- | ---------------------------------------------------------------------------- |
-| `tabby-2-nano` | `Qwen3.5-0.8B-Base.i1-Q6_K.gguf` | ~0.8 GB | [Hugging Face](https://huggingface.co/mradermacher/Qwen3.5-0.8B-Base-i1-GGUF) |
-| `tabby-2-mini` | `Qwen3.5-2B-Base.i1-Q4_K_M.gguf` | ~1.4 GB | [Hugging Face](https://huggingface.co/mradermacher/Qwen3.5-2B-Base-i1-GGUF)   |
-| `tabby-2-base` | `gemma-4-E2B.i1-Q6_K.gguf`       | ~4.5 GB | [Hugging Face](https://huggingface.co/mradermacher/gemma-4-E2B-i1-GGUF)       |
-| `tabby-2-pro`  | `gemma-4-E4B.i1-Q4_K_M.gguf`     | ~5.0 GB | [Hugging Face](https://huggingface.co/mradermacher/gemma-4-E4B-i1-GGUF)       |
-
-**Bring your own model.** Any GGUF small enough to run on-device works. Drop a `.gguf` file into Cotabby's models folder and refresh the model list from the menu bar. Browse the [unsloth GGUF collection](https://huggingface.co/unsloth) for more variants — smaller quants (`Q3_K_M`, `Q4_K_S`) trade quality for size; larger models give better completions at the cost of memory and per-token latency.
-
-For the full suggestion pipeline, see [ARCHITECTURE.md](ARCHITECTURE.md).
-
-</details>
-
-## Install
-
-**Compatibility:** macOS 14.0 or later. The Apple Intelligence engine needs macOS 26 or later on a supported Mac; on older systems, use the Open Source engine.
-
-### Homebrew
+There is no Lingrove Homebrew cask or independent production download established yet. Follow
+[this repository's Releases](https://github.com/ichthyoplanktonzyh/cotabby/releases) for future builds.
+For now, build from source:
 
 ```sh
-brew tap FuJacob/cotabby
-brew install --cask cotabby
-```
-
-Upgrade later with `brew upgrade --cask cotabby`. The tap lives at [FuJacob/homebrew-cotabby](https://github.com/FuJacob/homebrew-cotabby).
-
-### Manual download
-
-Grab the latest release from [cotabby.app](https://cotabby.app) and drag Cotabby into your Applications folder.
-
-## Using Cotabby
-
-Start typing in almost any text field. When a gray suggestion appears:
-
-- **`Tab`** — accept the next word. (Prefer whole phrases? Switch this in Settings → Acceptance Mode.)
-- **`` ` `` (backtick)** — accept the entire suggestion at once.
-- **`Esc`**, or just keep typing — dismiss it.
-
-Every shortcut is rebindable under Settings → Shortcuts.
-
-Choose the interface language under Settings → General → Interface Language. Cotabby supports
-English and 14 translated languages, or Follow System. Changes apply after restarting; the
-Restart Now button reopens Cotabby and Settings. This choice affects the interface independently
-of the languages used for autocomplete.
-
-## Permissions
-
-Cotabby works inside other apps, so macOS asks for a few permissions. Each one maps to a specific feature, and Cotabby walks you through them on first launch:
-
-- **Accessibility** — read the text and cursor position in the field you're typing in, and insert what you accept.
-- **Input Monitoring** — notice your typing so it knows when to suggest, and detect the accept keys.
-- **Screen Recording** *(optional)* — capture the area around your cursor for visual context, and to match the ghost text's font, size, and position to the app's own text where the app doesn't report them. Leave it off and everything else still works.
-
-Cotabby blocks generation, presentation, and insertion in password and other secure fields.
-
-## Local Development
-
-Requires Xcode and Command Line Tools. Apple Silicon is strongly recommended for local model performance. For setup, build, test, and contribution workflow details, start with [CONTRIBUTING.md](CONTRIBUTING.md).
-
-```bash
-git clone https://github.com/FuJacob/cotabby.git Cotabby
-cd Cotabby
+git clone https://github.com/ichthyoplanktonzyh/cotabby.git
+cd cotabby
+git switch codex/language-learning
+scripts/dev-setup.sh
 scripts/prepare_cotabby_workspace.sh
 open build/cotabby-dependencies/Cotabby.xcworkspace
 ```
 
-Use the **Cotabby Dev** scheme for local work. The workspace temporarily supplies the native
-APIs in our pending CotabbyInference patch; preparation is automatic in CI and release builds.
+Select **Cotabby Dev** in Xcode; this internal scheme builds **Lingrove Dev.app**. Production uses
+the **Cotabby** scheme and produces **Lingrove.app**. Internal module and source-folder names stay
+unchanged during the product migration. Local signing uses your own team in the gitignored xcconfig.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for build/test instructions and [RELEASING.md](RELEASING.md)
+for the independent update plan.
 
-If you want to understand the runtime and suggestion pipeline before contributing, read [ARCHITECTURE.md](ARCHITECTURE.md).
+## Permissions
 
-## Cross-language expression learning
+Grant Accessibility and Input Monitoring for text access, typing detection, and insertion.
+Screen Recording is optional for screenshot-based context. Generation and insertion remain blocked
+in secure fields. Follow the permission guidance using the installed app's actual name in System
+Settings.
 
-Cotabby keeps its existing inline autocomplete and offers cross-language expression learning as a
-separate, opt-in feature. In **Settings → Writing**, choose one or more source languages, a target
+## Interface language
+
+Choose Settings → General → Interface Language. English and 14 translated locales are available.
+Simplified Chinese displays 拾语, Traditional Chinese displays 拾語, and other locales use Lingrove.
+Restart to apply an interface-language change; this setting is separate from autocomplete languages
+and learning source/target languages. The stable English bundle names keep storage paths unchanged.
+
+## Learning behavior and model details
+
+<details>
+<summary>Translation, correspondence, dictionaries, models, and request metrics</summary>
+
+
+Language learning can be enabled independently of inline autocomplete. In **Settings → Writing**,
+choose one or more source languages, a target
 language and a detail shortcut (default **Option+T**). Model summaries link to their configuration
 in **Settings → Engine & Model**.
 The master feature is off by default; enabling it enables automatic sentence preview.
@@ -293,25 +214,32 @@ contexts, and resuming keeps the eligible local translator warm. Local analysis 
 releases after 60 seconds idle. Endpoint tasks keep their separate server/key configuration. The
 redundant passive word-hint workflow has been removed; legacy hint preferences are ignored.
 
-## Contributing
+</details>
 
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, build, and PR guidelines, and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community expectations. For a tour of the runtime and suggestion pipeline, read [ARCHITECTURE.md](ARCHITECTURE.md).
+## Contribute
 
-## Acknowledgments
+[Report an issue or share an idea](https://github.com/ichthyoplanktonzyh/cotabby/issues).
+See [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md),
+[ARCHITECTURE.md](ARCHITECTURE.md), and [SOURCE_LAYOUT.md](SOURCE_LAYOUT.md) for development guidance.
 
-- [llama.cpp](https://github.com/ggerganov/llama.cpp), [CotabbyInference](https://github.com/FuJacob/cotabbyinference), [Sparkle](https://github.com/sparkle-project/Sparkle), and [swift-log](https://github.com/apple/swift-log) for runtime, updates, and logging.
-- [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin-Modern) for macOS login-item integration.
-- Apple's FoundationModels, Accessibility, SwiftUI, and AppKit for on-device generation and macOS integration.
-- [GitHub gemoji](https://github.com/github/gemoji) and Hugging Face for the emoji data and downloadable models.
-- [SymSpell](https://github.com/wolfgarbe/SymSpell) by Wolf Garbe (MIT) for multilingual autocorrect; frequency dictionaries derive from [Google Ngrams](https://books.google.com/ngrams) (CC BY 3.0) and licensed SCOWL/Hunspell word lists.
-- Everyone who filed issues, tested prereleases, and sent pull requests.
+## Maintainer and origins
 
-## Created by
+Lingrove is maintained by [ichthyoplanktonzyh](https://github.com/ichthyoplanktonzyh).
+The original Cotabby project was created by [FuJacob](https://github.com/FuJacob) and developed with
+[jam-cai](https://github.com/jam-cai), [akramj13](https://github.com/akramj13), McHamster, and other
+contributors. Their authorship and contributions remain credited.
 
-Originally created by <a href="https://github.com/FuJacob">@FuJacob</a>, now developed and maintained by <a href="https://github.com/FuJacob">@FuJacob</a>, <a href="https://github.com/jam-cai">@jam-cai</a>. and <a href="https://github.com/akramj13">@akramj13</a>
+Dependencies and data retain their own attribution and licenses, including
+[CotabbyInference](https://github.com/FuJacob/cotabbyinference),
+[llama.cpp](https://github.com/ggml-org/llama.cpp), [Sparkle](https://github.com/sparkle-project/Sparkle),
+[swift-log](https://github.com/apple/swift-log),
+[LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin-Modern),
+[SymSpell](https://github.com/wolfgarbe/SymSpell), and [GitHub gemoji](https://github.com/github/gemoji).
+Bundled dictionaries and expression data are documented in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)
+and [learning-expression notices](Cotabby/Resources/learning-expressions.NOTICE.md).
 
 ## License
 
-Cotabby is licensed under the [GNU Affero General Public License v3.0](LICENSE). You can use, study, modify, and redistribute the app, but if you distribute a modified version or make one available to users over a network, you must provide the corresponding source code under the same license.
-
-Third-party dependencies, emoji data, and downloadable model weights keep their own licenses and usage terms. Bundled third-party notices (SymSpell and the autocorrect frequency dictionary) are reproduced in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+Lingrove retains the [GNU Affero General Public License v3.0](LICENSE). See the license for
+redistribution and corresponding-source requirements. Third-party code, dictionaries, and model
+weights retain their own terms.

@@ -125,7 +125,7 @@ struct ShortcutsPaneView: View {
                         shouldShowReset: false,
                         onClear: { suggestionSettings.clearGlobalToggleKey() },
                         clearLabel: String(localized: "Clear"),
-                        clearHelp: String(localized: "Unbind this shortcut. No key will toggle Cotabby on or off."),
+                        clearHelp: String(localized: "Unbind this shortcut. No key will toggle Lingrove on or off.", table: "Learning"),
                         conflictChecker: { keyCode, modifiers in
                             suggestionSettings.conflictingShortcutName(
                                 keyCode: keyCode,
@@ -136,8 +136,8 @@ struct ShortcutsPaneView: View {
                     )
                 } label: {
                     SettingsRowLabel(
-                        title: String(localized: "Toggle Cotabby"),
-                        description: String(localized: "Turn Cotabby on or off globally without opening the menu bar."),
+                        title: String(localized: "Toggle Lingrove", table: "Learning"),
+                        description: String(localized: "Turn Lingrove on or off globally without opening the menu bar.", table: "Learning"),
                         systemImage: "power.circle"
                     )
                 }

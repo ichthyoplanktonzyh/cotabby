@@ -28,11 +28,13 @@ nonisolated struct TypingHistoryVault: Sendable {
 
     /// The production vault: `Application Support/<app name>/TypingHistory.sealed`, keyed per bundle
     /// identifier so the release app and the dev build never share (or clobber) each other's key.
+    /// Lingrove's new product name also separates the file from Cotabby's encrypted archive: a new
+    /// bundle ID must not open that old file with a freshly generated, unrelated encryption key.
     static func standard(bundle: Bundle = .main) -> TypingHistoryVault {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
-        let appName = (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String) ?? "Cotabby"
-        let identifier = bundle.bundleIdentifier ?? "com.jacobfu.tabby"
+        let appName = (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String) ?? "Lingrove"
+        let identifier = bundle.bundleIdentifier ?? "io.ichthyoplanktonzyh.lingrove"
         return TypingHistoryVault(
             fileURL: support.appendingPathComponent(appName).appendingPathComponent("TypingHistory.sealed"),
             keyStore: KeychainTypingHistoryKeyStore(service: "\(identifier).typing-history")
@@ -116,7 +118,7 @@ nonisolated struct KeychainTypingHistoryKeyStore: TypingHistoryKeyStore {
         var attributes = baseQuery
         attributes[kSecValueData as String] = key.withUnsafeBytes { Data($0) }
         attributes[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        attributes[kSecAttrLabel as String] = "Cotabby typing history key"
+        attributes[kSecAttrLabel as String] = "Lingrove typing history key"
         let status = SecItemAdd(attributes as CFDictionary, nil)
         guard status == errSecSuccess else { throw TypingHistoryVault.VaultError.keychain(status) }
         return key

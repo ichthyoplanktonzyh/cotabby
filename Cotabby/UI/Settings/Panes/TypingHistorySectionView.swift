@@ -29,9 +29,9 @@ struct TypingHistorySectionView: View {
                 SettingsRowLabel(
                     title: String(localized: "Record What I Type"),
                     description: String(localized: """
-                    Saves the text of fields where Cotabby is active, encrypted on this Mac. Password fields, terminals, and disabled \
+                    Saves the text of fields where Lingrove is active, encrypted on this Mac. Password fields, terminals, and disabled \
                     apps are never recorded.
-                    """),
+                    """, table: "Learning"),
                     systemImage: "record.circle"
                 )
             }

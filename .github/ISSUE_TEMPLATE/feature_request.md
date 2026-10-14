@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an improvement to Cotabby
+about: Suggest an improvement to Lingrove
 title: "[Feature] "
 labels: enhancement
 assignees: ""
@@ -9,6 +9,8 @@ assignees: ""
 ## Summary
 
 Describe the improvement you want.
+
+Which area does it affect: autocomplete, language learning, shared writing tools, or app behavior?
 
 ## Problem
 

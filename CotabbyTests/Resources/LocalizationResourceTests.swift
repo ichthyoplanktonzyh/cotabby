@@ -12,6 +12,37 @@ struct LocalizationResourceTests {
         "it", "ru", "ar", "hi", "id", "tr"
     ]
 
+    @Test(arguments: ["en"] + translatedLanguages)
+    func productBrandingResolvesFromTheForkTable(language: String) throws {
+        let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"))
+        let bundle = try #require(Bundle(path: path))
+        let locale = Locale(identifier: language)
+        let expectedName = switch language {
+        case "zh-Hans": "拾语"
+        case "zh-Hant": "拾語"
+        default: "Lingrove"
+        }
+        #expect(ProductIdentity.localizedName(bundle: bundle, locale: locale) == expectedName)
+
+        let welcome = String(localized: "Welcome to Lingrove", table: "Learning", bundle: bundle, locale: locale)
+        #expect(welcome.contains(expectedName))
+        #expect(!welcome.contains("Cotabby"))
+        let preview = String(localized: "Autocomplete. ¦Learn as you write.", table: "Learning", bundle: bundle, locale: locale)
+        #expect(preview.components(separatedBy: "¦").count == 2)
+        if language != "en" {
+            #expect(preview != "Autocomplete. ¦Learn as you write.")
+        }
+
+        let folder = "/fixture/model-folder"
+        let uninstall = String(
+            localized: "Remove Lingrove from Applications. To fully clean up model data, delete \(folder).",
+            table: "Learning", bundle: bundle, locale: locale
+        )
+        #expect(uninstall.contains(expectedName))
+        #expect(uninstall.contains(folder))
+        #expect(!uninstall.contains("%@"))
+    }
+
     @Test(arguments: translatedLanguages)
     func compiledInterfaceResourcesResolve(language: String) throws {
         let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"))

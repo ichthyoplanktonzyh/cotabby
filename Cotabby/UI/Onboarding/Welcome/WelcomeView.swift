@@ -255,7 +255,7 @@ extension WelcomeView {
             WelcomeNavigation(
                 canGoBack: true,
                 canContinue: !suggestionSettings.responseLanguages.isEmpty,
-                disabledHint: String(localized: "Add at least one language so Cotabby knows what to write in."),
+                disabledHint: String(localized: "Add at least one language so Lingrove knows what to write in.", table: "Learning"),
                 onBack: { go(to: .template) },
                 onContinue: { go(to: .keybind) }
             )
@@ -289,10 +289,13 @@ extension WelcomeView {
                     .onboardingReveal(0)
 
                 VStack(spacing: 8) {
-                    Text("Welcome to Cotabby")
+                    Text(String(localized: "Welcome to Lingrove", table: "Learning"))
                         .font(.system(size: 30, weight: .bold, design: .rounded))
 
-                    Text("Ghost-text autocomplete in every app,\ngenerated entirely on your Mac.")
+                    Text(String(
+                        localized: "Autocomplete, translation, and expression learning.\nLocal models or a server you choose.",
+                        table: "Learning"
+                    ))
                         .font(.system(size: 15, design: .rounded))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -380,7 +383,7 @@ extension WelcomeView {
             VStack(spacing: 12) {
                 doneStepModelStatus
 
-                WelcomeButton(title: String(localized: "Start Using Cotabby")) {
+                WelcomeButton(title: String(localized: "Start Using Lingrove", table: "Learning")) {
                     onDismiss()
                 }
             }
@@ -429,7 +432,7 @@ extension WelcomeView {
             .frame(width: 44, height: 30)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Cotabby lives in your menu bar")
+                Text(String(localized: "Lingrove lives in your menu bar", table: "Learning"))
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
 
                 Text("Click the cat to pause suggestions, switch models, or open Settings.")

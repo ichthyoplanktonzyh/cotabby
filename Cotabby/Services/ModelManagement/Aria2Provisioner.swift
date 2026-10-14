@@ -9,11 +9,11 @@ nonisolated enum Aria2ProvisioningError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .homebrewUnavailable:
-            return String(localized: "Homebrew is not available, so Cotabby will use its standard downloader.")
+            return String(localized: "Homebrew is not available, so Lingrove will use its standard downloader.", table: "Learning")
         case .installFailed:
-            return String(localized: "Homebrew could not install aria2. Cotabby will use its standard downloader.")
+            return String(localized: "Homebrew could not install aria2. Lingrove will use its standard downloader.", table: "Learning")
         case .installTimedOut:
-            return String(localized: "Installing aria2 timed out. Cotabby will use its standard downloader.")
+            return String(localized: "Installing aria2 timed out. Lingrove will use its standard downloader.", table: "Learning")
         }
     }
 }

@@ -92,7 +92,7 @@ enum SettingsCategory: String, CaseIterable, Hashable, Identifiable {
         case .context: return String(localized: "What the model can reference")
         case .engineAndModel: return String(localized: "Choose the engine and models")
         case .shortcuts: return String(localized: "Keys that accept suggestions")
-        case .apps: return String(localized: "Where Cotabby stays quiet")
+        case .apps: return String(localized: "Where Lingrove stays quiet", table: "Learning")
         case .permissions: return String(localized: "System access and privacy")
         case .performance: return String(localized: "Latency, quality, and resources")
         case .about: return String(localized: "Version, support, and licenses")

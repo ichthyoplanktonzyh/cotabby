@@ -64,7 +64,7 @@ struct MenuBarView: View {
     @ViewBuilder
     private var headerSection: some View {
         HStack(alignment: .center) {
-            Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Cotabby")
+            Text(ProductIdentity.appDisplayName)
                 .font(.headline)
 
             if let appShortVersion {
@@ -75,11 +75,9 @@ struct MenuBarView: View {
             }
 
             // A plain source link keeps project information separate from the product title.
-            if let projectURL = URL(string: "https://github.com/FuJacob/cotabby") {
-                Link("GitHub", destination: projectURL)
-                    .buttonStyle(.borderless)
-                    .font(.subheadline)
-            }
+            Link("GitHub", destination: ProductIdentity.repositoryURL)
+                .buttonStyle(.borderless)
+                .font(.subheadline)
 
             Spacer(minLength: 0)
 
@@ -117,7 +115,7 @@ struct MenuBarView: View {
                     Button {
                         suggestionSettings.enableCotabby()
                     } label: {
-                        Label("Enable Cotabby", systemImage: "play.fill")
+                        Label(String(localized: "Enable Lingrove", table: "Learning"), systemImage: "play.fill")
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.borderless)
@@ -127,7 +125,7 @@ struct MenuBarView: View {
                             .font(.caption)
                             .foregroundStyle(.orange)
                     } else {
-                        Text("Cotabby is turned off")
+                        Text(String(localized: "Lingrove is turned off", table: "Learning"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -139,7 +137,7 @@ struct MenuBarView: View {
                             }
                         }
                     } label: {
-                        Label("Pause Cotabby", systemImage: "pause.fill")
+                        Label(String(localized: "Pause Lingrove", table: "Learning"), systemImage: "pause.fill")
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .menuStyle(.borderlessButton)

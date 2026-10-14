@@ -126,7 +126,7 @@ struct EngineAndModelPaneView: View {
             Button("Delete") { deleteModel(model) }
             Button("Cancel", role: .cancel) {}
         } message: { model in
-            Text("Remove \(model.displayName) from Cotabby's local models folder?")
+            Text(String(localized: "Remove \(model.displayName) from Lingrove's local models folder?", table: "Learning"))
         }
     }
 

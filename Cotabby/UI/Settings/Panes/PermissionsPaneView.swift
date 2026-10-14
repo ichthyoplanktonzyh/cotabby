@@ -12,18 +12,18 @@ struct PermissionsPaneView: View {
     var body: some View {
         SettingsPaneScaffold(callout: callout) {
             Section("Permissions") {
-                Text("""
-                Cotabby needs Accessibility and Input Monitoring for autocomplete. Screen Recording is optional and adds on-screen \
+                Text(String(localized: """
+                Lingrove needs Accessibility and Input Monitoring for autocomplete. Screen Recording is optional and adds on-screen \
                 visual context.
-                """)
+                """, table: "Learning"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 SettingsPermissionRow(
                     permission: .accessibility,
                     description: String(localized: """
-                    Lets Cotabby see which text field has focus and read its contents so it knows what to continue.
-                    """),
+                    Lets Lingrove see which text field has focus and read its contents so it knows what to continue.
+                    """, table: "Learning"),
                     granted: permissionManager.accessibilityGranted,
                     permissionGuidanceController: permissionGuidanceController
                 )
@@ -32,8 +32,8 @@ struct PermissionsPaneView: View {
                 SettingsPermissionRow(
                     permission: .inputMonitoring,
                     description: String(localized: """
-                    Lets Cotabby see your keystrokes so it can detect when to suggest and which key you used to accept.
-                    """),
+                    Lets Lingrove see your keystrokes so it can detect when to suggest and which key you used to accept.
+                    """, table: "Learning"),
                     granted: permissionManager.inputMonitoringGranted,
                     permissionGuidanceController: permissionGuidanceController
                 )
@@ -42,9 +42,9 @@ struct PermissionsPaneView: View {
                 SettingsPermissionRow(
                     permission: .screenRecording,
                     description: String(localized: """
-                    Optional. Lets Cotabby screenshot the focused window for extra context. Without it, suggestions still work, but \
+                    Optional. Lets Lingrove screenshot the focused window for extra context. Without it, suggestions still work, but \
                     screen context is unavailable.
-                    """),
+                    """, table: "Learning"),
                     granted: permissionManager.screenRecordingGranted,
                     permissionGuidanceController: permissionGuidanceController
                 )
@@ -70,7 +70,10 @@ struct PermissionsPaneView: View {
         }
         return SettingsPaneCallout(
             tone: .warning,
-            message: String(localized: "Cotabby needs more access to run. Grant the permissions below to enable autocomplete.")
+            message: String(
+                localized: "Lingrove needs more access to run. Grant the permissions below to enable autocomplete.",
+                table: "Learning"
+            )
         )
     }
 

@@ -35,9 +35,9 @@ struct WelcomePermissionStepView: View {
                 systemImage: "lock.shield.fill",
                 title: String(localized: "Two quick permissions"),
                 subtitle: String(localized: """
-                Cotabby needs to read the field you're typing in and watch for the accept key.\nThe optional one unlocks smarter, \
+                Lingrove needs to read the field you're typing in and watch for the accept key.\nThe optional one unlocks smarter, \
                 screen-aware suggestions.
-                """)
+                """, table: "Learning")
             )
             .onboardingReveal(0)
 

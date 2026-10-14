@@ -33,6 +33,7 @@ Cotabby/
 │       ├── SettingsCoordinator.swift
 │       └── WelcomeCoordinator.swift
 ├── Models/
+│   ├── ProductIdentity.swift         localized brand names and independent project destinations
 │   ├── Context/                      bounded context and visual-context values
 │   ├── Emoji/                        picker and usage values
 │   ├── Focus/                        focus snapshots and tracking state

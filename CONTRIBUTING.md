@@ -1,9 +1,10 @@
-# Contributing To Cotabby
+# Contributing To Lingrove
 
-Thanks for helping improve Cotabby. This guide is the contributor entry point for local setup,
+Thanks for helping improve Lingrove. This guide is the contributor entry point for local setup,
 validation, and codebase orientation.
 
-Cotabby is a macOS menu bar app that provides on-device inline autocomplete in other apps. The repo
+Lingrove is a macOS menu bar app with two equally core capabilities: inline autocomplete and language
+learning, including translation and expression learning while writing. The repo
 is split by responsibility so contributors can make small, reviewable changes without spreading
 platform-specific behavior across unrelated layers.
 
@@ -31,8 +32,7 @@ You need:
 - Xcode with Command Line Tools installed.
 - An Apple ID added to Xcode (Settings > Accounts) if you want to launch the app from the IDE. A
   free account is enough; the paid Apple Developer Program is not required for local development.
-  Contributors outside Cotabby's default development team run `scripts/dev-setup.sh` once to
-  configure a local override (see Local Setup).
+  Run `scripts/dev-setup.sh` once to configure your own signing team (see Local Setup).
 - SwiftLint for local lint checks. CI installs it with Homebrew when needed.
 - XcodeGen if you need to change the project structure (targets, build settings, dependencies,
   or scheme). Install it with `brew install xcodegen`. CI installs it the same way.
@@ -41,33 +41,34 @@ Apple Silicon is strongly recommended for local model-runtime work.
 
 ## Local Setup
 
-Clone the repo and open the project. If your Apple ID is not on Cotabby's development team, run the
-one-time signing setup first:
+Clone the repo and open the project. Run the one-time signing setup first:
 
 ```sh
-git clone https://github.com/FuJacob/Cotabby.git
-cd Cotabby
+git clone https://github.com/ichthyoplanktonzyh/cotabby.git
+cd cotabby
 scripts/dev-setup.sh
 scripts/prepare_cotabby_workspace.sh
 open build/cotabby-dependencies/Cotabby.xcworkspace
 ```
 
-The committed `Config/Signing.xcconfig` defaults to Cotabby's development team, which lets team
-members build immediately without Xcode modifying the generated project. `scripts/dev-setup.sh`
-writes a gitignored `Config/Signing.local.xcconfig` with a contributor's own Apple Development team
-id; that local value overrides the shared default and persists across pulls and project
+The committed `Config/Signing.xcconfig` has no shared development-team default. `scripts/dev-setup.sh`
+writes a gitignored `Config/Signing.local.xcconfig` with your own Apple Development team
+id; that local value persists across pulls and project
 regeneration. If you have not added an Apple ID to Xcode yet, do that first under Settings >
 Accounts (a free account is enough), then re-run the script. To set the team by hand instead, copy
 `Config/Signing.local.xcconfig.example` to `Config/Signing.local.xcconfig`, or pass it explicitly:
 `DEVELOPMENT_TEAM=XXXXXXXXXX scripts/dev-setup.sh`.
 
-You do not need a paid Apple Developer account to build or run Cotabby locally; a free personal
+You do not need a paid Apple Developer account to build or run Lingrove locally; a free personal
 team can sign and launch it. The paid program is only needed to distribute notarized builds.
 
 For everyday local work, use the **Cotabby Dev** scheme rather than `Cotabby`. It builds a separate
-app identity (`com.jacobfu.tabby.dev`, its own icon, auto-update disabled), so the permissions you
+app named **Lingrove Dev** (`io.ichthyoplanktonzyh.lingrove.dev`, its own icon, auto-update disabled), so the permissions you
 grant your dev build never collide with a released copy of Cotabby you have installed, and your
-Accessibility grant survives rebuilds. See [Run](#run).
+Accessibility grant survives rebuilds. The production scheme builds **Lingrove.app** under
+`io.ichthyoplanktonzyh.lingrove`. Scheme and Swift module names remain `Cotabby` during this migration.
+Data uses the separate `Lingrove` and `Lingrove Dev` folders; existing Cotabby data is not imported
+automatically. See [Run](#run).
 
 ## The Xcode Project Is Generated
 
@@ -130,7 +131,7 @@ xcodebuild \
 ```
 
 `CODE_SIGNING_ALLOWED=NO` keeps the build command usable on machines that do not have the project
-owner's signing certificate. Use the shared team or your gitignored local override when you need to
+owner's signing certificate. Use your gitignored local override when you need to
 launch the app locally.
 
 ## Run
@@ -139,9 +140,9 @@ From Xcode:
 
 1. Select the **Cotabby Dev** scheme (see [Local Setup](#local-setup) for why).
 2. Choose your Mac as the run destination.
-3. Build and run. The dev build is named "Cotabby Dev" and has its own menu bar icon.
+3. Build and run. The dev build is named "Lingrove Dev" and has its own menu bar icon.
 4. Complete onboarding.
-5. Grant **Accessibility** and **Input Monitoring** to "Cotabby Dev" when prompted, and optionally
+5. Grant **Accessibility** and **Input Monitoring** to "Lingrove Dev" when prompted, and optionally
    **Screen Recording** for visual context. These map to the features in
    [README.md](README.md#permissions).
 6. Pick Apple Intelligence if available, or use the Open Source engine with a downloaded GGUF
@@ -153,8 +154,8 @@ switching signing identity, or when an earlier unsigned build left a stale entry
 grant again:
 
 ```sh
-tccutil reset Accessibility com.jacobfu.tabby.dev
-tccutil reset ListenEvent com.jacobfu.tabby.dev
+tccutil reset Accessibility io.ichthyoplanktonzyh.lingrove.dev
+tccutil reset ListenEvent io.ichthyoplanktonzyh.lingrove.dev
 ```
 
 Then toggle the app back on in System Settings > Privacy & Security. Avoid ad-hoc "Sign to Run
@@ -226,7 +227,7 @@ xcodebuild build-for-testing \
   CODE_SIGNING_ALLOWED=NO
 ```
 
-By default the suites use the model available in Cotabby's normal runtime directory. To evaluate
+By default the suites use the model available in Lingrove's normal runtime directory. To evaluate
 a repo-local or other explicitly chosen model without changing app settings, set
 `COTABBY_EVAL_MODEL_PATH` in the generated **test process environment**. Exporting a shell variable
 before `xcodebuild` does not forward it into the app-hosted test runner. Find the generated run
@@ -265,7 +266,7 @@ as documented in [AGENTS.md](AGENTS.md). No new background writing-history colle
 
 ### Paired CotabbyInference Changes
 
-Cotabby currently uses the pinned CotabbyInference source plus
+Lingrove currently uses the pinned CotabbyInference source plus
 `patches/cotabbyinference-upstream-pending.patch`. The plain remote package does not yet expose all the
 APIs used by the app. Prepare the matching dependency and workspace before building:
 
@@ -341,7 +342,7 @@ infrastructure noise, note that clearly in the PR description.
 ## UI Localization
 
 Choose an interface language under Settings → General → Interface Language. Follow System uses
-the macOS language preference; an explicit choice overrides it for Cotabby only. A changed choice
+the macOS language preference; an explicit choice overrides it for Lingrove only. A changed choice
 takes effect after restarting the app. Restart Now uses the normal shutdown path before reopening
 the same app bundle and Settings, so runtime resources are released before the next instance starts.
 English is the source language;
@@ -357,7 +358,9 @@ search uses localized titles and summaries, with the existing English keywords a
 `Cotabby/Resources/Localizable.xcstrings` owns the common interface and stays identical to the
 upstream localization catalog. This fork uses a subset of its copy; preserve common keys used by
 upstream even when this fork no longer displays that row. `Learning.xcstrings` owns learning UI,
-its errors/statuses, and fork-specific integration copy such as the shared task-history extension.
+its errors/statuses, and fork-specific integration copy such as the shared task-history extension
+and Lingrove branding. Branded common phrases have Lingrove counterparts in this table rather
+than editing the upstream catalog; Chinese copy uses 拾语 / 拾語 and other locales use Lingrove.
 Lookups into it use an explicit `table` or `tableName`. The same wording can have different meanings
 in these tables, such as Word acceptance versus a dictionary word. Reuse common copy when its
 meaning is the same instead of adding a second translation.

@@ -11,7 +11,7 @@ struct InterfaceLanguageSettingsStore {
 
     init(
         userDefaults: UserDefaults = .standard,
-        bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "com.jacobfu.tabby"
+        bundleIdentifier: String = Bundle.main.bundleIdentifier ?? "io.ichthyoplanktonzyh.lingrove"
     ) {
         self.userDefaults = userDefaults
         self.bundleIdentifier = bundleIdentifier

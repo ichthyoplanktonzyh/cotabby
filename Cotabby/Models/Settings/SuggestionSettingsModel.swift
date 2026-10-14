@@ -14,7 +14,7 @@ enum ShortcutAction: CaseIterable {
         switch self {
         case .acceptWord: return String(localized: "Accept Word")
         case .acceptEntireSuggestion: return String(localized: "Accept Entire Suggestion")
-        case .toggleTabby: return String(localized: "Toggle Cotabby")
+        case .toggleTabby: return String(localized: "Toggle Lingrove", table: "Learning")
         }
     }
 }

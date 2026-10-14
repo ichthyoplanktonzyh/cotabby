@@ -28,7 +28,7 @@ struct GeneralPaneView: View {
                 Toggle(isOn: globallyEnabledBinding) {
                     SettingsRowLabel(
                         title: String(localized: "Enable Globally"),
-                        description: String(localized: "Turn Cotabby off everywhere without quitting the app."),
+                        description: String(localized: "Turn Lingrove off everywhere without quitting the app.", table: "Learning"),
                         systemImage: "power"
                     )
                 }
@@ -40,7 +40,7 @@ struct GeneralPaneView: View {
                 LaunchAtLogin.Toggle {
                     SettingsRowLabel(
                         title: String(localized: "Open at Login"),
-                        description: String(localized: "Start Cotabby automatically when you log in to your Mac."),
+                        description: String(localized: "Start Lingrove automatically when you log in to your Mac.", table: "Learning"),
                         systemImage: "arrow.right.circle"
                     )
                 }
@@ -186,9 +186,9 @@ struct GeneralPaneView: View {
                     SettingsRowLabel(
                         title: String(localized: "Reset All Settings"),
                         description: String(localized: """
-                        Restore every Cotabby setting to its original default. This does not change macOS permissions, your Open at \
+                        Restore every Lingrove setting to its original default. This does not change macOS permissions, your Open at \
                         Login choice, or your accepted-word count.
-                        """),
+                        """, table: "Learning"),
                         systemImage: "arrow.counterclockwise"
                     )
                 }
@@ -206,7 +206,7 @@ struct GeneralPaneView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Every Cotabby setting returns to its original default. This can't be undone.")
+            Text(String(localized: "Every Lingrove setting returns to its original default. This can't be undone.", table: "Learning"))
         }
     }
 

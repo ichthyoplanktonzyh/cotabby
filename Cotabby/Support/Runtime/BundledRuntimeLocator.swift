@@ -39,6 +39,8 @@ struct BundledRuntimeLocator {
 
     /// Returns the user-writable runtime directory used for on-demand model downloads.
     /// This keeps large GGUF assets out of the app bundle and allows independent model updates.
+    /// Use the stable English bundle name rather than a localized display label so changing the
+    /// interface language never moves models. Lingrove and Lingrove Dev have separate folders.
     static func userRuntimeDirectoryURL(bundle: Bundle = .main) -> URL {
         let appSupportRoot =
             FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
@@ -47,7 +49,7 @@ struct BundledRuntimeLocator {
             .appendingPathComponent("Application Support", isDirectory: true)
         let appFolderName =
             (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
-            ?? "Cotabby"
+            ?? "Lingrove"
         return
             appSupportRoot
             .appendingPathComponent(appFolderName, isDirectory: true)
