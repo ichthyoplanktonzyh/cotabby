@@ -1,11 +1,11 @@
-# Fork ownership and development
+# Repository origin and development
 
-This document records how this independent fork relates to upstream and how development becomes
-a release. It complements CONTRIBUTING.md, which owns the build and test instructions.
+This document records Lingrove's relationship to Cotabby and how development reaches a release. It
+complements CONTRIBUTING.md, which owns the build and test instructions.
 
 ## Direction and attribution
 
-- Fork: https://github.com/ichthyoplanktonzyh/cotabby
+- Repository: https://github.com/ichthyoplanktonzyh/lingrove
 - Upstream: https://github.com/FuJacob/cotabby
 - Product direction: inline autocomplete and language learning are equally core capabilities.
   Develop both together for everyday writing, including translation and expression learning.
@@ -29,33 +29,47 @@ a release. It complements CONTRIBUTING.md, which owns the build and test instruc
 - Sparkle stays disabled in every build until independent updates are configured. Manual update
   checks open this repository's releases. User-facing brand copy and project links use Lingrove.
   See RELEASING.md for the independent update plan.
-- Original authorship and contributor attribution remain intact; this fork does not claim ownership
+- Original authorship and contributor attribution remain intact; Lingrove does not claim ownership
   of upstream contributions.
 - LICENSE remains AGPL v3. Third-party code, dictionaries, and model weights retain their own terms.
 
 ## Repository workflow
 
-`origin` points to this fork; `upstream` points to FuJacob/Cotabby. This fork's `main` is the active
-in-development integration branch. Review changes before integrating them there; upstream changes
-are inputs to evaluate, not automatic product decisions.
+`origin` points to `ichthyoplanktonzyh/lingrove`; `upstream` points to FuJacob/Cotabby. Lingrove's
+`main` is the active in-development integration branch. Review upstream changes before applying
+them; upstream changes are inputs to evaluate, not automatic product decisions.
+
+Before adopting an unmerged upstream pull request, review its GitHub page: confirm its base branch,
+head repository and branch, full diff, and whether it depends on other pull requests or unmerged
+commits. Fetch only the PR head ref with tags disabled, then inspect and record its head SHA. Create
+a topic branch from Lingrove's `main` before cherry-picking reviewed commit(s). The `-x` option adds
+each source commit SHA to the resulting commit message:
+
+```sh
+git fetch --no-tags upstream refs/pull/123/head
+git show --stat --oneline FETCH_HEAD
+git rev-parse FETCH_HEAD
+git switch -c codex/adopt-pr-123 main
+git cherry-pick -x REVIEWED_COMMIT_SHA
+```
+
+Replace `123` with the pull request number and `REVIEWED_COMMIT_SHA` with a reviewed commit ID.
+Record the PR URL, captured PR head SHA, selected commit SHA(s), dependencies, and adoption or
+rejection result in the integration PR or review notes. If local comparison with the PR base is
+needed, fetch only that specific upstream base ref with `--no-tags`. This is a manual review
+workflow; it does not automatically merge upstream changes. Avoid rebasing or force-pushing a
+shared development branch.
 
 The original `codex/language-learning` branch was a checkpoint of the local learning implementation
 and related input, insertion, endpoint, and settings work. The approved work from that checkpoint is
-now part of this fork's `main` branch. The branch name records an intermediate development step;
-the checkpoint itself was not a release-validation signoff.
-
-Fetch upstream changes explicitly and review them before merging. Avoid rebasing or force-pushing a
-shared development branch.
+now part of Lingrove's `main` branch. The branch name records an intermediate development step; the
+checkpoint itself was not a release-validation signoff.
 
 Interface localization follows the same boundary: `Localizable.xcstrings` is the upstream common
-catalog, while `Learning.xcstrings` contains this fork's learning and integration copy. English is
+catalog, while `Learning.xcstrings` contains Lingrove's learning and integration copy. English is
 the UI source language with 14 translated locales. Interface language, autocomplete languages,
 and learning source/target languages remain separate preferences. See CONTRIBUTING.md for catalog
 ownership, translation imports, and compiled-resource checks.
-
-```sh
-git fetch upstream
-```
 
 ## Before the first independent release
 

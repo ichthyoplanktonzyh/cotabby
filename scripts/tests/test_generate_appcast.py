@@ -36,7 +36,7 @@ class AppcastDestinationTests(unittest.TestCase):
 
     def test_default_feed_downloads_this_projects_build(self):
         document = self.generate()
-        repository = "https://github.com/ichthyoplanktonzyh/cotabby"
+        repository = "https://github.com/ichthyoplanktonzyh/lingrove"
         self.assertEqual(document.findtext("channel/title"), "Lingrove Updates")
         self.assertEqual(document.findtext("channel/link"), repository)
         item = document.find("channel/item")

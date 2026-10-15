@@ -25,7 +25,7 @@ import sys
 
 
 DEFAULT_OWNER = "ichthyoplanktonzyh"
-DEFAULT_REPOSITORY = "cotabby"
+DEFAULT_REPOSITORY = "lingrove"
 # Sparkle's <releaseNotesLink> is fetched by the update alert's embedded WKWebView.
 # Use this project's releases until a dedicated, compact notes page exists. A future repository
 # rename is handled by the owner/repository arguments; a dedicated site can override this URL.

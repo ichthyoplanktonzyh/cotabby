@@ -14,7 +14,7 @@ tools. It derives from Cotabby and is independently maintained by
 Lingrove is still in development. Build from source using [CONTRIBUTING.md](CONTRIBUTING.md), selecting
 the internal **Cotabby Dev** scheme to produce **Lingrove Dev.app**. The production **Cotabby**
 scheme produces **Lingrove.app**. Watch
-[this repository's Releases](https://github.com/ichthyoplanktonzyh/cotabby/releases) for future builds.
+[this repository's Releases](https://github.com/ichthyoplanktonzyh/lingrove/releases) for future builds.
 There is no independent Homebrew cask or production download established yet.
 
 ## How do I start learning?
@@ -91,7 +91,7 @@ are ready. Check for Updates currently opens this repository's Releases page. Se
 
 ## Where should I report a problem or contribute?
 
-Use [Lingrove's Issues](https://github.com/ichthyoplanktonzyh/cotabby/issues) and
+Use [Lingrove's Issues](https://github.com/ichthyoplanktonzyh/lingrove/issues) and
 [contributor guide](CONTRIBUTING.md). The repository's README and app acknowledgements retain the
 original Cotabby authors and third-party credits. Lingrove retains [AGPLv3](LICENSE); dependencies,
 dictionaries, and model weights keep their own terms. A configured third-party endpoint may charge

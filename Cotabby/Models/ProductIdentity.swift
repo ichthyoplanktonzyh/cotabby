@@ -9,7 +9,7 @@ import Foundation
 nonisolated enum ProductIdentity {
     // This is a fixed, checked HTTPS literal; appending path components keeps every destination
     // under the same repository without separate strings drifting across presentation files.
-    static let repositoryURL = URL(string: "https://github.com/ichthyoplanktonzyh/cotabby")!
+    static let repositoryURL = URL(string: "https://github.com/ichthyoplanktonzyh/lingrove")!
     static let issuesURL = repositoryURL.appendingPathComponent("issues")
     static let releasesURL = repositoryURL.appendingPathComponent("releases")
     static let contributorGuideURL = repositoryURL.appendingPathComponent("blob/main/CONTRIBUTING.md")

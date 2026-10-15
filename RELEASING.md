@@ -27,7 +27,7 @@ jobs paused until its certificates and notarization credentials are available.
 Keep Sparkle as the updater. GitHub Releases stores the signed, notarized `Lingrove.dmg`, while
 GitHub Pages hosts `appcast.xml`. No application server or custom domain is required for this plan.
 With the current repository name, the intended standard Pages feed is
-`https://ichthyoplanktonzyh.github.io/cotabby/appcast.xml`; this is a planned address, not a deployed
+`https://ichthyoplanktonzyh.github.io/lingrove/appcast.xml`; this is a planned address, not a deployed
 service. Confirm the actual URL after enabling Pages. Optionally set `LINGROVE_UPDATES_DOMAIN` to a
 domain we control; release CI then writes its CNAME.
 

@@ -15,9 +15,9 @@ language learning are its two core capabilities, developed together.
 > **In development.** Lingrove V0.5 is being developed on this repository's `main` branch.
 > Independent production releases and automatic updates are not yet available.
 
-[Source](https://github.com/ichthyoplanktonzyh/cotabby) ·
-[Feedback](https://github.com/ichthyoplanktonzyh/cotabby/issues) ·
-[Releases](https://github.com/ichthyoplanktonzyh/cotabby/releases) ·
+[Source](https://github.com/ichthyoplanktonzyh/lingrove) ·
+[Feedback](https://github.com/ichthyoplanktonzyh/lingrove/issues) ·
+[Releases](https://github.com/ichthyoplanktonzyh/lingrove/releases) ·
 [FAQ](FAQ.md) · [AGPLv3 license](LICENSE)
 
 ## Two core capabilities
@@ -77,12 +77,12 @@ Apple Intelligence on supported Macs with macOS 26 or later, an installed local 
 OpenAI-compatible endpoint. Translation and analysis use their separately configured learning models.
 
 There is no Lingrove Homebrew cask or independent production download established yet. Follow
-[this repository's Releases](https://github.com/ichthyoplanktonzyh/cotabby/releases) for future builds.
+[this repository's Releases](https://github.com/ichthyoplanktonzyh/lingrove/releases) for future builds.
 For now, build from source:
 
 ```sh
-git clone https://github.com/ichthyoplanktonzyh/cotabby.git
-cd cotabby
+git clone https://github.com/ichthyoplanktonzyh/lingrove.git
+cd lingrove
 scripts/dev-setup.sh
 scripts/prepare_cotabby_workspace.sh
 open build/cotabby-dependencies/Cotabby.xcworkspace
@@ -220,7 +220,7 @@ redundant passive word-hint workflow has been removed; legacy hint preferences a
 
 ## Contribute
 
-[Report an issue or share an idea](https://github.com/ichthyoplanktonzyh/cotabby/issues).
+[Report an issue or share an idea](https://github.com/ichthyoplanktonzyh/lingrove/issues).
 See [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md),
 [ARCHITECTURE.md](ARCHITECTURE.md), and [SOURCE_LAYOUT.md](SOURCE_LAYOUT.md) for development guidance.
 

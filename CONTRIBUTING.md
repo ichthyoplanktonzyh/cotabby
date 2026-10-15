@@ -44,8 +44,8 @@ Apple Silicon is strongly recommended for local model-runtime work.
 Clone the repo and open the project. Run the one-time signing setup first:
 
 ```sh
-git clone https://github.com/ichthyoplanktonzyh/cotabby.git
-cd cotabby
+git clone https://github.com/ichthyoplanktonzyh/lingrove.git
+cd lingrove
 scripts/dev-setup.sh
 scripts/prepare_cotabby_workspace.sh
 open build/cotabby-dependencies/Cotabby.xcworkspace

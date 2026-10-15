@@ -53,7 +53,7 @@ an appointed representative at an online or offline event.
 Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project
 maintainer, [ichthyoplanktonzyh](https://github.com/ichthyoplanktonzyh). A private reporting address
 for Lingrove has not yet been established. For help arranging a private report, open an issue in
-[this repository](https://github.com/ichthyoplanktonzyh/cotabby/issues) without personal or sensitive
+[this repository](https://github.com/ichthyoplanktonzyh/lingrove/issues) without personal or sensitive
 incident details. Reports belong to Lingrove's maintainer. All complaints will be reviewed and
 investigated promptly and fairly.
 
