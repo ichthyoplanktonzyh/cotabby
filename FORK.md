@@ -35,6 +35,10 @@ complements CONTRIBUTING.md, which owns the build and test instructions.
 
 ## Repository workflow
 
+The GitHub fork-network relationship to FuJacob/Cotabby is intentionally retained. Lingrove keeps
+its own product direction and repository identity; the visible fork link preserves the repository's
+existing collaboration records and does not enable automatic upstream merges.
+
 `origin` points to `ichthyoplanktonzyh/lingrove`; `upstream` points to FuJacob/Cotabby. Lingrove's
 `main` is the active in-development integration branch. Review upstream changes before applying
 them; upstream changes are inputs to evaluate, not automatic product decisions.
