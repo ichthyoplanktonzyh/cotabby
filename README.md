@@ -81,6 +81,7 @@ There is no Lingrove Homebrew cask or independent production download establishe
 Download the v0.5 test DMG from the [v0.5-test.1 prerelease](https://github.com/ichthyoplanktonzyh/lingrove/releases/tag/v0.5-test.1).
 This is an ad-hoc-signed, unnotarized test build with manual updates. Follow the
 [Simplified Chinese install guide](assets/testing/INSTALL.zh-CN.txt), included in the DMG as `INSTALL.txt`.
+Ordinary installation only needs the DMG; checksum verification is optional and no terminal is required.
 To build from source:
 
 ```sh

@@ -6,7 +6,8 @@ Lingrove（拾语）v0.5（build 1）测试预发布版
 
 此版本通过 Lingrove 自己仓库的 GitHub Releases 公开提供，供自愿参与测试的用户使用；
 它不是正式稳定版，也没有自动更新。包内应用使用 ad-hoc（临时）签名，尚未使用 Apple
-Developer ID 签名或公证。请从下面的官方预发布页面取得安装包、安装说明和校验文件：
+Developer ID 签名或公证。普通安装只需从下面的官方预发布页面下载 DMG，无需使用终端。
+本说明已附在 DMG 内，也可以单独下载：
 https://github.com/ichthyoplanktonzyh/lingrove/releases/tag/v0.5-test.1
 
 此应用要求 macOS 14 或更新版本。通用版本包含 Apple Silicon（arm64）和 Intel（x86_64）
@@ -22,32 +23,22 @@ macOS 26 或更新版本；否则可下载兼容的 GGUF 模型，或自行明�
 DMG 根目录还附有 LICENSE、THIRD_PARTY_LICENSES.md、SpellingDictionaries-NOTICE.md、
 LearningExpressions-NOTICE.md，以及 ThirdPartyLicenses/ 第三方许可资料目录。
 
-一、验证安装包
+一、安装并启动
 
-收到 DMG 和校验文件 SHA256SUMS.txt 后，将它们放在同一个文件夹。在“终端”中进入该
-文件夹并运行：
-
-    shasum -a 256 -c SHA256SUMS.txt
-
-确认结果显示 Lingrove DMG 为 OK 后再安装。如果校验失败，停止安装并联系提供安装包的
-测试团队。
-
-二、安装并启动
-
-1. 双击打开 Lingrove-0.5-test-universal.dmg。
-2. 在打开的磁盘映像窗口中，将 Lingrove.app 拖到 Applications（应用程序）快捷方式。
+1. 从上面的官方预发布页面下载 Lingrove-0.5-test-universal.dmg。
+2. 双击打开 DMG，将 Lingrove.app 拖到 Applications（应用程序）快捷方式。
 3. 安装完成后，在 Finder 侧边栏中推出 Lingrove 磁盘映像。
 4. 从“应用程序”文件夹启动 Lingrove。不要直接从已挂载的 DMG 运行它。
 
 因为这是尚未公证的测试版，macOS 可能提示无法验证开发者。如果你确认安装包来自上述
-官方预发布页面，且校验值正确，可以先尝试打开一次，再到“系统设置”→“隐私与安全性”
+官方预发布页面，可以先尝试打开一次，再到“系统设置”→“隐私与安全性”
 页面靠下的“安全性”区域选择“仍要打开”（Open Anyway），然后按系统提示确认。也可先查看
 Apple 的 Gatekeeper 说明：https://support.apple.com/en-us/102445
 
-如果 macOS 提示应用“将损坏你的电脑”，或提示签名损坏、文件已损坏，请停止操作并重新
-核对校验值，再联系测试团队。不要绕过这类提示，不要移除隔离标记，不要关闭 Gatekeeper。
+如果 macOS 提示应用“将损坏你的电脑”，或提示签名损坏、文件已损坏，请停止操作并联系
+测试团队。不要绕过这类提示，不要移除隔离标记，不要关闭 Gatekeeper。
 
-三、首次授权
+二、首次授权
 
 补全功能需要 macOS 的“辅助功能”（Accessibility）和“输入监控”（Input Monitoring）
 权限。首次启动后，按系统提示打开“系统设置”→“隐私与安全性”，分别允许 Lingrove 使用
@@ -63,7 +54,7 @@ Lingrove 与 Lingrove Dev 是两个独立应用，使用不同的设置和模型
 替换后 macOS 可能要求再次授予权限。未来的正式版需要先完成 Apple Developer ID 签名与
 公证设置；签名切换后也请检查权限状态。
 
-四、体验自动补全
+三、体验自动补全
 
 1. 从菜单栏打开 Lingrove 设置，在“引擎与模型”（Engine & Model）中选择一种补全方式。
    Apple Intelligence 仅适用于受支持的 Mac 和 macOS 26 或更新版本；本地方式需要你自行
@@ -74,7 +65,7 @@ Lingrove 与 Lingrove Dev 是两个独立应用，使用不同的设置和模型
 4. 如果希望看到当前输入框的焦点指示，可在“外观”（Appearance）中打开“显示字段指示器”
    （Show Field Indicator）。
 
-五、体验边写边学
+四、体验边写边学
 
 在“写作”（Writing）设置的“语言学习”（Language Learning）区域中，启用表达翻译，选择
 目标语言，并按需启用暂停后显示句子表达。首次启用后，只会处理之后在当前输入框中新输入
@@ -85,7 +76,7 @@ Lingrove 与 Lingrove Dev 是两个独立应用，使用不同的设置和模型
 自动补全与语言学习是本次测试的两项核心功能。你可以分别体验它们；无需为了试用其中一项
 而启用另一项。
 
-六、替换测试版本与反馈
+五、替换测试版本与反馈
 
 新测试版不会自动安装。更新时先退出 Lingrove，再将新 DMG 中的 Lingrove.app 拖入“应用
 程序”并选择替换；随后推出 DMG，再从“应用程序”启动新版本。重要数据请自行备份。
@@ -95,5 +86,16 @@ Lingrove 与 Lingrove Dev 是两个独立应用，使用不同的设置和模型
 请附上应用版本和 build、macOS 版本、Mac 芯片型号，以及能够重复问题的步骤。不要附上
 完整模型提示词、包含私人输入的日志、密码或服务端密钥。如需提供诊断片段，请先删除其中的
 个人文字和凭据。
+
+六、可选：文件完整性检查（技术用户）
+
+普通安装不需要下载 SHA256SUMS.txt，也不需要运行终端命令。遇到下载问题，或希望自行
+核对文件时，可以额外下载该校验文件，与 DMG 放在同一个文件夹，在“终端”中进入该目录
+并运行：
+
+    shasum -a 256 -c SHA256SUMS.txt
+
+显示 OK 表示 DMG 与发布方记录的文件一致；校验失败时请从官方页面重新下载，或联系
+测试团队。此检查仅验证文件一致性，不代表软件安全，也不能替代 Apple 签名或公证。
 
 Apple Developer ID 分发说明：https://developer.apple.com/developer-id/

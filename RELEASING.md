@@ -55,21 +55,14 @@ supported Mac running macOS 26 or later. Otherwise, testers can download a compa
 credentials are bundled. Translation and optional chunk alignment use their own independently
 configured local models or endpoints.
 
-Before installation, verify the DMG against the accompanying checksum file from the same trusted
-delivery:
-
-```sh
-cd build/distributions
-shasum -a 256 -c SHA256SUMS.txt
-```
-
-Open the DMG, drag `Lingrove.app` to its `Applications` shortcut, eject the mounted disk image in
+Ordinary installation requires only the DMG download; no terminal commands or checksum-file download
+are required. Open the DMG, drag `Lingrove.app` to its `Applications` shortcut, eject the mounted disk image in
 Finder, then launch Lingrove from Applications. Do not run the app from the mounted DMG. Because
 this test build is not Developer ID signed or notarized, Gatekeeper may require the user to open it
 once, dismiss the first warning, then choose **Open Anyway** under System Settings → Privacy &
-Security. Continue only for a package downloaded from this repository's Releases with a matching
-checksum. If macOS says the app “will damage your computer,” or reports a broken/corrupt signature,
-stop and verify the checksum with the distributor; do not bypass the warning, remove quarantine, or
+Security. Continue only for a package downloaded from this repository's Releases.
+If macOS says the app “will damage your computer,” or reports a broken/corrupt signature,
+stop and contact the distributor; do not bypass the warning, remove quarantine, or
 disable Gatekeeper. See Apple's [Gatekeeper guidance](https://support.apple.com/en-us/102445).
 
 Accessibility and Input Monitoring are required for autocomplete. Screen Recording is optional and
@@ -101,6 +94,19 @@ logs, or private input; remove personal text and credentials from any diagnostic
 sharing it. A later formal distribution will require the Developer ID membership, signing and
 notarization setup below. Although the production bundle identifier is already set, the ad-hoc test
 signature is not the stable Developer ID distribution identity.
+
+### Optional integrity check for technical users
+
+`SHA256SUMS.txt` remains an optional release attachment for troubleshooting or comparing the downloaded
+DMG with the published file. Users who want this check can put the DMG and checksum file in the same
+directory and run:
+
+```sh
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+`OK` confirms file consistency. A matching checksum does not establish software safety or replace
+Developer ID signing and notarization. Keep this command out of the default installation steps.
 
 ## Independent update architecture
 
