@@ -17,21 +17,22 @@ installed copies discover it. App lifecycle stays in `AppUpdateManager`, packagi
   Leave it unset until the steps below are complete. The upstream Homebrew dispatch is removed.
 - Developer signing has no shared team default. Each developer uses `Config/Signing.local.xcconfig`;
   CI supplies its own distribution team and certificate.
-- The v0.5 build 1 test package is a limited, ad-hoc-signed DMG for a small trusted test group. It
+- The v0.5 build 1 test app is ad-hoc signed and packaged in a DMG for the public `v0.5-test.1` prerelease. It
   is not Developer ID signed, notarized, or connected to automatic updates; this does not enable
   the production release or Pages workflows.
 
 Local development can continue without a paid Apple Developer Program membership. The production
 Developer ID signing and notarization flow described here requires that membership; keep release
 jobs paused until its certificates and notarization credentials are available. The ad-hoc v0.5
-test package also does not require a paid membership; its limited trust scope and Gatekeeper steps
+test package also does not require a paid membership; its test status and Gatekeeper steps
 are documented below.
 
-## v0.5 test package (limited distribution)
+## v0.5 test package (public prerelease)
 
 The current test artifact is `build/distributions/Lingrove-0.5-test-universal.dmg`, accompanied by
-`SHA256SUMS.txt` and `build-info.json`. Share it directly only with the small trusted test group.
-It is an ad-hoc-signed, unnotarized test build, has no automatic updates, and is not a public
+`SHA256SUMS.txt` and `build-info.json`. The DMG, Chinese install guide, checksum, and build metadata
+are published at the [v0.5-test.1 prerelease](https://github.com/ichthyoplanktonzyh/lingrove/releases/tag/v0.5-test.1).
+The app is an ad-hoc-signed, unnotarized test build, has no automatic updates, and is not a public
 production release. The DMG includes the Simplified Chinese `INSTALL.txt` guide (copied from the
 source file `assets/testing/INSTALL.zh-CN.txt`), the app, an Applications shortcut, and license
 materials: `LICENSE`, `THIRD_PARTY_LICENSES.md`, `SpellingDictionaries-NOTICE.md`,
@@ -66,7 +67,7 @@ Open the DMG, drag `Lingrove.app` to its `Applications` shortcut, eject the moun
 Finder, then launch Lingrove from Applications. Do not run the app from the mounted DMG. Because
 this test build is not Developer ID signed or notarized, Gatekeeper may require the user to open it
 once, dismiss the first warning, then choose **Open Anyway** under System Settings → Privacy &
-Security. Continue only for a package received through the trusted test channel and with a matching
+Security. Continue only for a package downloaded from this repository's Releases with a matching
 checksum. If macOS says the app “will damage your computer,” or reports a broken/corrupt signature,
 stop and verify the checksum with the distributor; do not bypass the warning, remove quarantine, or
 disable Gatekeeper. See Apple's [Gatekeeper guidance](https://support.apple.com/en-us/102445).

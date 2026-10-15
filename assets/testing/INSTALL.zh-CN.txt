@@ -1,12 +1,13 @@
-Lingrove（拾语）v0.5（build 1）私测版
+Lingrove（拾语）v0.5（build 1）测试预发布版
 安装与快速体验
 本说明在 DMG 根目录中的文件名为 INSTALL.txt。
 
 适用范围
 
-此版本仅供 Lingrove 团队提供给小范围可信测试者使用，不是公开正式版，也没有自动更新。
-DMG 使用 ad-hoc（临时）签名，尚未使用 Apple Developer ID 签名或公证。请只从测试团队
-提供的可信渠道取得安装包。
+此版本通过 Lingrove 自己仓库的 GitHub Releases 公开提供，供自愿参与测试的用户使用；
+它不是正式稳定版，也没有自动更新。包内应用使用 ad-hoc（临时）签名，尚未使用 Apple
+Developer ID 签名或公证。请从下面的官方预发布页面取得安装包、安装说明和校验文件：
+https://github.com/ichthyoplanktonzyh/lingrove/releases/tag/v0.5-test.1
 
 此应用要求 macOS 14 或更新版本。通用版本包含 Apple Silicon（arm64）和 Intel（x86_64）
 两种处理器架构。本包在 Apple Silicon 本机进行构建、包完整性检查和基础启动验证；Intel
@@ -38,8 +39,8 @@ LearningExpressions-NOTICE.md，以及 ThirdPartyLicenses/ 第三方许可资料
 3. 安装完成后，在 Finder 侧边栏中推出 Lingrove 磁盘映像。
 4. 从“应用程序”文件夹启动 Lingrove。不要直接从已挂载的 DMG 运行它。
 
-因为这是尚未公证的私测版，macOS 可能提示无法验证开发者。如果你确认安装包来自测试
-团队提供的可信渠道，且校验值正确，可以先尝试打开一次，再到“系统设置”→“隐私与安全性”
+因为这是尚未公证的测试版，macOS 可能提示无法验证开发者。如果你确认安装包来自上述
+官方预发布页面，且校验值正确，可以先尝试打开一次，再到“系统设置”→“隐私与安全性”
 页面靠下的“安全性”区域选择“仍要打开”（Open Anyway），然后按系统提示确认。也可先查看
 Apple 的 Gatekeeper 说明：https://support.apple.com/en-us/102445
 
@@ -57,7 +58,7 @@ Apple 的 Gatekeeper 说明：https://support.apple.com/en-us/102445
 无需授权。请只授予你实际使用的功能所需权限。
 
 Lingrove 与 Lingrove Dev 是两个独立应用，使用不同的设置和模型存储位置；测试版不会自动
-导入 Dev 版的数据。测试本私测包时，请先退出 Lingrove Dev，并确保同时只运行一个 Lingrove
+导入 Dev 版的数据。测试本安装包时，请先退出 Lingrove Dev，并确保同时只运行一个 Lingrove
 实例，以免重复注册全局键盘监听；无需卸载 Dev 版。由于测试包使用临时签名，重新安装或
 替换后 macOS 可能要求再次授予权限。未来的正式版需要先完成 Apple Developer ID 签名与
 公证设置；签名切换后也请检查权限状态。
