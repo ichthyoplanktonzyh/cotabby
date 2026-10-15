@@ -232,3 +232,100 @@ Validation on Xcode 26.5 / Apple Silicon, using the prepared pinned inference wo
 - Test logs, xcresult summaries and the install receipt are retained under the gitignored
   `build/upstream-batch2/`. Production/test source hashes were verified unchanged after validation.
   Repo-local `build/DerivedData` was removed and its absence verified before completion.
+
+## Reviewed upstream per-app settings adoption — 2026-10-15
+
+The maintainer approved selective adoption of [#842](https://github.com/FuJacob/cotabby/pull/842)
+after a dedicated review. Integration started from Lingrove `a99fc134` on
+`codex/unify-per-app-settings`. The exact upstream head was
+`senadaruc/cotabby:feat/per-app-settings` at
+`cc77eb64c9f510a805e5dd7201554f6b0993a9af`, based on
+`7724926b3e93f14e3b576ba46ff52c4f64d9712d`.
+
+The per-app feature commit `e86b259d5b957cea3d3b86e2511965e1f666174b` was cherry-picked
+with original authorship and a full `-x` source trailer, then adapted in `4beaa2e3`.
+Selected list/UI corrections from the captured head were retained. Its stacked older #841 history
+implementation and old history-fix commit were not replayed: Lingrove already has a newer history
+store with message identity, cross-caret and card-number redaction, disabled-domain recording gates,
+endpoint isolation and unavailable-archive/global-deletion recovery. #843 and #673 remain deferred.
+
+The Apps pane now combines configured, historical, excluded and running apps in one searchable
+list, with one detail page for completion availability, mid-line behavior, typo checks, acceptance
+shortcuts, app instructions, history collection and app-scoped deletion. The list derives its data
+from the existing stores rather than introducing another settings owner. Optional behavior fields
+extend the existing per-app JSON record, preserving saved shortcuts and disabled-app rules.
+
+The UI reuses `SettingsPaneScaffold`, grouped settings sections, `SettingsRowLabel`,
+`SettingsCalloutView`, `KeybindRow` and `KeyRecorderView`. New list/detail composition remains in
+`UI/Settings`, pure inheritance/list rules in `Support/Settings`, and durable values in
+`Models/Settings`. Settings search retains the old Disabled Apps and Per-App Shortcuts aliases.
+New copy uses the `Learning` catalog in English and all 14 translated locales; the common
+`Localizable.xcstrings` catalog remains byte-identical to `a99fc134`.
+
+The integration fixes the three confirmed upstream P2 findings and related acceptance gaps:
+
+- App-scoped history deletion invalidates pending imports and synchronously retires the old index,
+  phrase predictor and lookup cache. The existing serialized encrypted writer commits the filtered
+  snapshot off MainActor; failure leaves records visible and retryable. A pending snapshot lets quit
+  flush the intended deletion. Global deletion waits for an app deletion, and app errors do not hide
+  an unresolved global archive/key deletion failure.
+- App instructions are a separate bounded request value and prompt section, so a full global notes
+  section cannot silently truncate them. Both Apple and base renderers receive the value. Empty app
+  instructions emit no additional prompt bytes. The UI discloses that instructions reach whichever
+  engine the user has selected, including an existing configured endpoint.
+- Ordinary, speculative and rebased predictions apply the same per-app mid-line and committed-word
+  typo rules. Existing visible-tail reconciliation is preserved. Autocorrect On retains the global
+  auto-fix choice; Off disables all typo checks for that app. The inherited full-accept shortcut label
+  still reflects global double-tap behavior and an app-specific accept-word shortcut.
+- Final review reproduced an additional settings-cache gap: editing app instructions at an unchanged
+  prefix restored old cached text without another request, and a suspended old prefetch could write
+  back after the edit. `e20d8204` replaces the anchor cache on settings changes, model switches and
+  shutdown. Each cache lifetime has an immutable identity; prefetch writes require the same identity.
+  This also respects existing screen-context cache invalidation. Three coordinator regressions
+  demonstrate both failures against the pre-fix binary and preserve valid unchanged-cache prefetching.
+
+Two independent GPT-6 Luna reviewers (max reasoning), requested by the maintainer, re-reviewed
+history/privacy and UI/settings/policy respectively. Both final reviews found no remaining P1/P2
+blocker after the cache correction.
+
+Validation on Xcode 26.5 / Apple Silicon, using the prepared pinned inference workspace:
+
+- Release `build-for-testing` passed. The final targeted run passed all 318 test items, with no skips
+  or failures. This includes the three cache regressions, ordinary/rebased per-app gates, settings
+  persistence/publication, double-tap acceptance, prompt sections and deletion races.
+- Final complete execution passed: 3150 test items, 3136 passed and 14 environment/opt-in skips,
+  zero failures (2900 XCTest and 250 Swift Testing items). The host's diagnostic debug launch flag
+  was omitted to avoid the previously documented Desktop debug-capture I/O issue.
+- The first post-cache full attempt encountered the previously documented aria2 fake-process
+  progress timeout and an unchanged endpoint test fixture's duplicate expectation-fulfillment
+  crash. The next attempt completed with only the aria2 timeout. Both unchanged suites then passed
+  all 33 cases when isolated on both baseline `a99fc134` and the integrated binary. The earlier
+  pre-cache integration full run also passed all 3147 items (14 environment skips). Failure bundles
+  and logs are retained alongside subsequent verification; neither aria2 nor endpoint production or
+  fixture source was changed for this adoption.
+- Both String Catalogs validate: 1114 source keys across 15 languages. All five localization tool
+  tests passed, and compiled resource tests cover the new per-app copy in every translated locale.
+  Eight opt-in offscreen renders of the real Apps list/detail views were generated and visually
+  checked in English/Simplified Chinese and light/dark appearances, with isolated settings/history
+  fixtures rather than edits to the user's preferences or encrypted archive.
+- Strict SwiftLint on changed Swift files reports the same single inherited
+  `implicit_optional_initialization` finding as baseline `a99fc134`, with no new findings.
+  `git diff --check` passed. Repeated XcodeGen generation produced identical project bytes.
+
+- Both local model suites ran before and after the final integration in Release with the same
+  `gemma-4-E2B.i1-Q6_K.gguf` and seed 42. All 117 continuation and 23 recall cases retained identical
+  raw/displayed output, outcome and suppression stage. Quality scores remained 0.882051 and 0.739130
+  respectively. These default-settings evals establish compatibility; the dedicated prompt tests
+  separately check full app notes, app scoping and both renderer shapes.
+- The separate `Cotabby Dev` Release build passed. Its signed candidate matched the installed
+  development designated requirement before replacement. The binary timestamp advanced, exactly
+  one installed dev process launched, Accessibility/Input Monitoring remained granted, all services
+  started and the local runtime reached ready state. Native UI inspection confirmed the Chinese
+  Apps list and Obsidian detail page in the real settings window; inherited values and the shared
+  shortcut controls rendered correctly. This inspection navigated the UI without editing the user's
+  app policies, instructions, shortcuts or history.
+- Test logs, xcresult bundles, baseline/integrated eval JSON, UI renders and the verified install
+  receipt are retained under gitignored `build/pr842-integration/`. All 827 tracked production/test
+  and project/configuration file hashes remained unchanged after validation. Both the current
+  repo-scoped `build/DerivedData` and the isolated baseline's `build/DerivedData` were removed and
+  their absence verified before completion.

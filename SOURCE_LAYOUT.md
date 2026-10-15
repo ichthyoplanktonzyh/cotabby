@@ -129,6 +129,7 @@ Cotabby/
         ├── ModelManagement/           shared catalog, browser, folder, installed-file and connection views
         └── Panes/
             ├── About/                 product and acknowledgement panes
+            ├── Apps/                  app detail presentation and reusable per-app shortcut rows
             └── Engine/                engine pane and backend-specific extensions
 ~~~
 
@@ -155,6 +156,29 @@ CotabbyTests/App/Coordinators/Suggestion/SuggestionCoordinatorPredictionTests.sw
 
 Tests that exercise several production values may stay at the nearest shared subsystem root. Evals
 remain under `CotabbyTests/Evals`, and shared fixtures remain under `CotabbyTests/TestSupport`.
+
+## Per-App Settings
+
+- `Models/Settings/PerAppBehavior.swift` describes optional app overrides. The existing
+  `PerAppShortcutOverride` persistence record carries them alongside shortcuts, preserving old
+  settings data. `SuggestionSettingsModel` publishes the UI state and projects immutable behavior
+  maps into `SuggestionSettingsSnapshot`.
+- `Support/Settings/PerAppSettingsResolver.swift` resolves inherited mid-line and typo behavior;
+  `AppSettingsList.swift` merges configured, historical, excluded and running applications without
+  owning AppKit state. Their direct tests live under `CotabbyTests/Support/Settings/`.
+- `UI/Settings/Panes/AppsPaneView.swift` presents that list. `Panes/Apps/AppSettingsDetailView.swift`
+  edits one app through the environment-owned settings and history stores;
+  `PerAppShortcutRowsView.swift` reuses the shared keybind and recorder components. These views
+  use the existing settings scaffold, rows and callouts. Opt-in rendering checks live under
+  `CotabbyTests/UI/Settings/`.
+- `SuggestionRequestFactory` carries app instructions separately from global notes. Both prompt
+  renderers consume the same immutable request value, and the base renderer gives app notes their
+  own bounded section. `CotabbyTests/Support/Settings/PerAppInstructionsTests.swift` checks that
+  boundary and default-prompt compatibility.
+- `TypingHistoryStore` owns app-scoped encrypted deletion and the existing full-history lifecycle.
+  Its generation and write-sequence guards invalidate older imports and queries before publishing
+  a successful delete. `CotabbyTests/Services/History/PerAppHistoryDeletionTests.swift` covers races,
+  write failure, quit flushing and global-deletion error isolation.
 
 ## Unfinished-Word Interaction
 
