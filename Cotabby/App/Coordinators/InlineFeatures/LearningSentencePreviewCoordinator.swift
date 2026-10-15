@@ -57,6 +57,8 @@ final class LearningSentencePreviewCoordinator {
             comment: "Status shown in the sentence card while a translation is being generated.")
         var previousSentence: PreviousSentence?
         var isStale = false
+        /// An explicit shortcut may keep a preview in a search field; a passive preview cannot.
+        var explicitlyRequested = false
     }
 
     /// A previous result carries its source evidence, so editing earlier text cannot relabel an
@@ -168,13 +170,21 @@ final class LearningSentencePreviewCoordinator {
     private func changed(_ context: FocusedInputSnapshot?) {
         let old = previousContext
         previousContext = context
+        guard LearningCapturePolicy.permitsPreview(focus.snapshot.capability,
+            explicitlyRequested: document?.explicitlyRequested == true) else {
+            // Capability can change on a reused AX node without changing its text or identity.
+            // Retire passive work before the content-only early returns below can preserve it.
+            clear()
+            return
+        }
         guard old?.sessionIdentity == context?.sessionIdentity else { clear(); return }
         guard let old, let context else { return }
         let changed = old.contentSignature != context.contentSignature || old.documentSelection != context.documentSelection ||
             old.hasHostMarkedText != context.hasHostMarkedText
         guard changed else { return }
         suspendPreview()
-        guard enabled, availability() == nil, !context.isSecure, !context.isIntegratedTerminal,
+        guard enabled, availability() == nil, LearningCapturePolicy.permitsAutomaticCapture(focus.snapshot.capability),
+              !context.isSecure, !context.isIntegratedTerminal,
               context.documentSelection.length == 0,
               LearningCommittedTextChangePolicy.hasMutation(from: old, to: context) else {
             // Caret navigation is not consent to translate existing text. Also remove a preview
@@ -183,6 +193,12 @@ final class LearningSentencePreviewCoordinator {
             return
         }
         dismissedSource = nil
+        scheduleAutomaticPreview(for: context)
+    }
+
+    /// Owns one edit's debounce task. The request identity and post-capture capability check keep
+    /// a delayed callback from reopening a passive preview after the host reclassifies its field.
+    private func scheduleAutomaticPreview(for context: FocusedInputSnapshot) {
         guard !context.hasHostMarkedText else { return }
         let identifier = requestID
         work = Task { [weak self] in
@@ -191,7 +207,10 @@ final class LearningSentencePreviewCoordinator {
                 try await self.waitForPause(self.debounce)
                 guard self.requestID == identifier, !Task.isCancelled, self.enabled, self.availability() == nil else { return }
                 let capture = try self.reader.capture()
-                guard capture.originalSelection.length == 0, !capture.context.hasHostMarkedText,
+                // Capture refreshes AX. Recheck the passive gate after that refresh, since the
+                // field may have become a search box during the debounce without changing text.
+                guard LearningCapturePolicy.permitsAutomaticCapture(self.focus.snapshot.capability),
+                      capture.originalSelection.length == 0, !capture.context.hasHostMarkedText,
                       capture.context.sessionIdentity == context.sessionIdentity,
                       self.reader.isCurrent(capture), self.requestID == identifier, !Task.isCancelled else { return }
                 // This debounce is handing ownership to the generation/cache path. Remove its
@@ -209,6 +228,7 @@ final class LearningSentencePreviewCoordinator {
         guard enabled, availability() == nil else { return }
         focus.refreshNow()
         if let document, !document.isStale, reader.isCurrent(document.capture) {
+            self.document?.explicitlyRequested = true
             expanded.toggle()
             dismissedSource = nil
             render()
@@ -240,6 +260,7 @@ final class LearningSentencePreviewCoordinator {
         let prior = precedingSentence(from: old, capture: capture)
         document = Document(id: identifier, traceID: RequestID.generate(), capture: capture, sourceLanguage: language,
             targetLanguage: settings.targetLanguage, previousSentence: prior)
+        document?.explicitlyRequested = expanded
         self.expanded = expanded
         let key = language.rawValue + ":" + settings.targetLanguage.rawValue + ":" + capture.source
         if let cached = cache[key] {

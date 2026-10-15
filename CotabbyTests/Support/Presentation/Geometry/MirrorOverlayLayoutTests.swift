@@ -120,7 +120,6 @@ final class MirrorOverlayLayoutTests: XCTestCase {
         }
     }
 
-
     // MARK: - Horizontal anchor
 
     func test_make_alignsLeftCardEdgeToLTRCaret() {

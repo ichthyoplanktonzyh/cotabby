@@ -867,7 +867,9 @@ extension SuggestionCoordinator {
         // live content now matches the signature the speculation was built against, the bet paid
         // off and the result is exactly current.
         let isPaidOffSpeculation = pendingSpeculativeContext.map { speculated in
-            liveContext.sessionIdentity.continues(speculated.sessionIdentity)
+            // Speculation is a new result, not an already visible tail. Unknown surface facts
+            // cannot prove it belongs to this conversation, even when the draft is identical.
+            liveContext.sessionIdentity == speculated.sessionIdentity
                 && liveContext.contentSignature == speculated.contentSignature
         } ?? false
         if isPaidOffSpeculation {
@@ -888,7 +890,13 @@ extension SuggestionCoordinator {
                 rawOutput: result.rawText,
                 normalizedOutput: result.text
             )
-            hideOverlay(reason: "Overlay hidden because a stale result was dropped.")
+            // Dropping a late final must not withdraw the valid partial the user already saw.
+            // Reconcile that tail independently; an actual edit or navigation still invalidates it.
+            if overlayState.isVisible, interactionState.activeSession != nil {
+                reconcileActiveSession(with: snapshot)
+            } else {
+                hideOverlay(reason: "Overlay hidden because a stale result was dropped.")
+            }
             return
         }
 

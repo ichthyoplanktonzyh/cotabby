@@ -1,4 +1,5 @@
 import XCTest
+import Testing
 @testable import Cotabby
 
 /// Replays two chats with the same composer, draft and caret through the real coordinator.
@@ -115,5 +116,54 @@ final class SuggestionConversationIsolationTests: XCTestCase {
             applicationName: snapshot.applicationName, bundleIdentifier: snapshot.bundleIdentifier,
             capability: .supported, context: snapshot
         )
+    }
+}
+
+/// Async results need an exact surface even while an already visible tail tolerates an AX timeout.
+@MainActor
+struct SuggestionUnknownSurfaceTests {
+    @Test(arguments: [false, true])
+    func unknownSurfaceCannotAuthorizeAnAsyncResult(speculative: Bool) async throws {
+        let rig = makeCoordinatorRig(snapshot: CotabbyTestFixtures.focusedInputSnapshot(windowTitle: "This conversation"))
+        defer { rig.coordinator.stop() }
+        let source = rig.interactionState.materializeContext(from: try #require(rig.focusProvider.snapshot.context))
+        if speculative { rig.coordinator.pendingSpeculativeContext = source }
+        let unknown = CotabbyTestFixtures.focusedInputSnapshot()
+        rig.focusProvider.snapshot = FocusSnapshot(
+            applicationName: unknown.applicationName, bundleIdentifier: unknown.bundleIdentifier,
+            capability: .supported, context: unknown
+        )
+
+        await rig.coordinator.apply(result: SuggestionResult(
+            generation: source.generation, rawText: " old chat", text: " old chat", latency: 0.01
+        ), workID: rig.coordinator.currentWorkID)
+
+        #expect(!rig.coordinator.overlayState.isVisible)
+        #expect(rig.interactionState.activeSession == nil)
+    }
+
+    @Test
+    func unknownSurfaceDropsFinalWithoutWithdrawingTheVisibleTail() async throws {
+        let rig = makeCoordinatorRig(snapshot: CotabbyTestFixtures.focusedInputSnapshot(windowTitle: "This conversation"))
+        defer { rig.coordinator.stop() }
+        let source = rig.interactionState.materializeContext(from: try #require(rig.focusProvider.snapshot.context))
+        await rig.coordinator.apply(result: SuggestionResult(
+            generation: source.generation, rawText: " world again", text: " world again", latency: 0.01
+        ), workID: rig.coordinator.currentWorkID)
+        #expect(rig.coordinator.overlayState.isVisible)
+        let unknown = CotabbyTestFixtures.focusedInputSnapshot()
+        rig.focusProvider.snapshot = FocusSnapshot(
+            applicationName: unknown.applicationName, bundleIdentifier: unknown.bundleIdentifier,
+            capability: .supported, context: unknown
+        )
+
+        await rig.coordinator.apply(result: SuggestionResult(
+            generation: source.generation, rawText: " unrelated final", text: " unrelated final", latency: 0.02
+        ), workID: rig.coordinator.currentWorkID)
+
+        #expect(rig.coordinator.overlayState.isVisible)
+        #expect(rig.interactionState.activeSession?.remainingText == " world again")
+        #expect(rig.coordinator.acceptCurrentSuggestion())
+        #expect(!rig.inserter.insertedChunks.isEmpty)
     }
 }

@@ -208,6 +208,11 @@ struct GhostTextLayout: Equatable {
         var penX = firstPenX
         var baselineY = firstBaselineY
         while start < total {
+            // Check every entry, including the empty-caret-row path that moves a whole word to
+            // the next line. Checking only after appending text lets that path cross the floor.
+            if let floor = input.rowFloor, !rowFits(baselineY: baselineY, floor: floor, input) {
+                return headEndingAtTheFloor(rows, attributed: attributed)
+            }
             guard rows.count < maximumRows else { return nil }
             let budget: CGFloat
             if let band = input.wrapBand {
@@ -238,9 +243,6 @@ struct GhostTextLayout: Equatable {
             rows.append(row(attributed, range: NSRange(location: start, length: breakIndex - start), penX: penX, baselineY: baselineY))
             start = breakIndex
             if start < total, let pitch = input.linePitch, let band = input.wrapBand {
-                if let floor = input.rowFloor, !rowFits(baselineY: baselineY - pitch, floor: floor, input) {
-                    return headEndingAtTheFloor(rows, attributed: attributed)
-                }
                 penX = band.lowerBound
                 baselineY -= pitch
             }

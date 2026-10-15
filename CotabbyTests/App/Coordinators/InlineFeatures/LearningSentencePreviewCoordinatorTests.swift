@@ -10,6 +10,63 @@ import Testing
 @Suite(.timeLimit(.minutes(1)))
 @MainActor
 struct LearningSentencePreviewCoordinatorTests {
+    @Test
+    func searchFieldRequiresAnExplicitLearningShortcut() async throws {
+        let rig = try Rig()
+        defer { rig.cleanup() }
+        rig.coordinator.start()
+        try rig.edit("我能做到", capability: .blocked(SearchFieldDetector.blockedReason))
+        for _ in 0..<20 { await Task.yield() }
+        #expect(rig.service.requests.isEmpty)
+        #expect(!rig.panel.isVisible)
+
+        #expect(rig.coordinator.decide(.init(keyCode: 17, flags: .maskAlternate)) == .consume)
+        await waitUntil { rig.service.requests.count == 1 }
+        #expect(rig.service.requests.first?.source == "我能做到")
+    }
+
+    @Test
+    func searchRestrictionArrivingDuringThePauseStopsAutomaticLearning() async throws {
+        let pause = PauseGate(), rig = try Rig(pause: pause)
+        defer { rig.cleanup() }
+        rig.coordinator.start()
+        try rig.edit("我能做到")
+        await waitUntil { pause.pending.count == 1 }
+        let snapshot = rig.focus.snapshot
+        rig.focus.snapshot = FocusSnapshot(applicationName: snapshot.applicationName,
+            bundleIdentifier: snapshot.bundleIdentifier, capability: .blocked(SearchFieldDetector.blockedReason),
+            context: snapshot.context)
+        pause.release(0)
+        for _ in 0..<20 { await Task.yield() }
+        #expect(rig.service.requests.isEmpty)
+        #expect(!rig.panel.isVisible)
+    }
+
+    @Test
+    func searchReclassificationWithdrawsAPassivePreviewWithoutATextEdit() async throws {
+        let rig = try Rig()
+        defer { rig.cleanup() }
+        rig.coordinator.start()
+        try rig.edit("我能做到")
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I can do it."))
+        await waitUntil { rig.panel.last?.translation.isEmpty == false }
+        let snapshot = rig.focus.snapshot
+        rig.focus.snapshot = FocusSnapshot(applicationName: snapshot.applicationName,
+            bundleIdentifier: snapshot.bundleIdentifier, capability: .blocked(SearchFieldDetector.blockedReason),
+            context: snapshot.context)
+        rig.focus.snapshotSubject.send(rig.focus.snapshot)
+        #expect(!rig.panel.isVisible)
+        #expect(rig.reader.replaceCount == 0)
+
+        #expect(rig.coordinator.decide(.init(keyCode: 17, flags: .maskAlternate)) == .consume)
+        await waitUntil { rig.service.requests.count == 2 }
+        rig.service.emit(.translation("I can do it."))
+        await waitUntil { rig.panel.last?.translation.isEmpty == false }
+        rig.focus.snapshotSubject.send(rig.focus.snapshot)
+        #expect(rig.panel.isVisible, "An explicitly requested preview survives an unchanged search snapshot.")
+    }
+
     @Test(arguments: [true, false])
     func alignmentAndRecognitionPublishIndependentlyInEitherArrivalOrder(_ alignmentFirst: Bool) async throws {
         let gate = UnitGate(), rig = try Rig(unitRecognizer: gate)
@@ -531,13 +588,14 @@ struct LearningSentencePreviewCoordinatorTests {
                 }, isFrontmost: { _ in isFrontmost() }, availability: availability)
         }
 
-        func edit(_ text: String, element: String = "field", marked: NSRange? = nil) throws {
+        func edit(_ text: String, element: String = "field", marked: NSRange? = nil,
+                  capability: FocusCapability = .supported) throws {
             let old = focus.snapshot.context
             let sequence = (old?.focusChangeSequence ?? 1) + (old?.elementIdentifier == element ? 0 : 1)
             let context = CotabbyTestFixtures.focusedInputSnapshot(elementIdentifier: element, precedingText: text,
                 focusChangeSequence: sequence, hostMarkedTextRange: marked, documentLength: text.utf16.count)
             focus.snapshot = FocusSnapshot(applicationName: context.applicationName, bundleIdentifier: context.bundleIdentifier,
-                capability: .supported, context: context)
+                capability: capability, context: context)
             focus.snapshotSubject.send(focus.snapshot)
         }
 

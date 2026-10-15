@@ -1,6 +1,7 @@
 import AppKit
 import CoreText
 import XCTest
+import Testing
 @testable import Cotabby
 
 final class GhostTextLayoutTests: XCTestCase {
@@ -226,5 +227,27 @@ final class GhostTextLayoutTests: XCTestCase {
         XCTAssertNil(layout?.keycapFrame)
         XCTAssertEqual(layout?.rows.count, 1)
         XCTAssertEqual(layout?.remainingText, " jumps")
+    }
+}
+
+/// A word that moves off an empty caret row must obey the same floor as ordinary wrapped rows.
+@MainActor
+struct GhostTextFloorRegressionTests {
+    @Test(arguments: [CGFloat(182), CGFloat(166)])
+    func wholeWordWrapChecksTheNextRowsBottom(floor: CGFloat) throws {
+        let font = try #require(NSFont(name: "Menlo-Regular", size: 14))
+        let layout = GhostTextLayout.make(GhostTextLayout.Input(
+            fullText: "extraordinary", consumedUTF16: 0, font: font,
+            anchorTopLeft: CGPoint(x: 395, y: 200), boxHeight: 16, baselineOffsetFromTop: 13,
+            linePitch: 16, wrapBand: 100...400, rowFloor: floor
+        ))
+        if floor == 182 {
+            #expect(layout == nil, "The only visible word would land below the field.")
+        } else {
+            let visible = try #require(layout)
+            #expect(visible.rows.count == 2)
+            #expect(visible.rows.last?.text == "extraordinary")
+            #expect(visible.rows.allSatisfy { $0.baselineY - 3 >= floor })
+        }
     }
 }

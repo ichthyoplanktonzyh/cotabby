@@ -52,9 +52,7 @@ final class LearningSelectionReplacement: LearningSelectionReplacing {
 
     func capture() throws -> LearningSelectionCapture {
         focus.refreshNow()
-        let capability = focus.snapshot.capability
-        let supported = capability == .supported || capability == .blocked(FocusCapability.selectedTextReason)
-        guard supported, let context = focus.snapshot.context,
+        guard LearningCapturePolicy.permitsExplicitCapture(focus.snapshot.capability), let context = focus.snapshot.context,
               !context.isSecure, !context.isIntegratedTerminal,
               let element = AXHelper.focusedElement(forApplicationPID: context.processIdentifier),
               AXHelper.elementIdentifier(for: element, bundleIdentifier: context.bundleIdentifier) == context.elementIdentifier,

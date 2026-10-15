@@ -28,15 +28,15 @@ final class ContextBufferNavigationTests: XCTestCase {
         XCTAssertGreaterThan(navigated.generation, first.generation)
     }
 
-    /// A poll whose title read timed out is the same session: bumping the generation for it would
-    /// retire an in-flight suggestion for text that never changed.
-    func test_unreadableSurfaceFactKeepsGeneration() {
+    /// Retaining a visible tail and authorizing a late async result have different evidence needs.
+    /// A missing title retires the old request even while the tail can survive that unreadable poll.
+    func test_unreadableSurfaceFactRetiresInFlightGeneration() {
         let buffer = makeBuffer()
         let first = buffer.materialize(from: CotabbyTestFixtures.focusedInputSnapshot(windowTitle: "This chat"))
         let blankRead = buffer.materialize(from: CotabbyTestFixtures.focusedInputSnapshot())
         let readable = buffer.materialize(from: CotabbyTestFixtures.focusedInputSnapshot(windowTitle: "This chat"))
-        XCTAssertEqual(first.generation, blankRead.generation)
-        XCTAssertEqual(first.generation, readable.generation)
+        XCTAssertGreaterThan(blankRead.generation, first.generation)
+        XCTAssertGreaterThan(readable.generation, blankRead.generation)
     }
 
     func test_wrapperChurnAloneKeepsGeneration() {

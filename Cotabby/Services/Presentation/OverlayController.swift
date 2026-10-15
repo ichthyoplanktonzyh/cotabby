@@ -1429,10 +1429,16 @@ final class OverlayController: SuggestionOverlayControlling {
 
     /// The lowest y a ghost row may reach: the field's bottom edge, else the screen's.
     private func rowFloor(for geometry: SuggestionOverlayGeometry) -> CGFloat {
-        GhostWrapBandPolicy.rowFloor(
+        // Monaco's hidden textarea represents the current line, not the editor's vertical extent.
+        // Apply the same trust rule as wrapBand so a one-line AX proxy cannot clip the whole ghost.
+        let isCodeEditor = AppSurfaceClassifier.classify(
+            bundleIdentifier: geometry.bundleIdentifier,
+            isIntegratedTerminal: false
+        ) == .codeEditor
+        return GhostWrapBandPolicy.rowFloor(
             GhostWrapBandPolicy.Input(
                 caretRect: geometry.caretRect,
-                elementFrame: geometry.elementFrameRect,
+                elementFrame: isCodeEditor ? nil : geometry.elementFrameRect,
                 inputFrame: geometry.inputFrameRect,
                 lineLeft: geometry.hostTextMetrics?.lineRect?.minX,
                 screenVisibleFrame: targetScreenVisibleFrame(for: geometry.caretRect)

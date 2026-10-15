@@ -125,7 +125,9 @@ struct WindowScreenshotService: WindowScreenshotCapturing {
 
         let image = try await captureImage(filter: filter, configuration: configuration)
         try Task.checkCancellation()
-        let field = convertBetweenAppKitAndCG(rect: context.inputFrameRect ?? context.caretRect)
+        // OCR exclusion needs the field's real column. inputFrameRect is widened for card layout
+        // and can include a neighboring sidebar whose context must remain available.
+        let field = convertBetweenAppKitAndCG(rect: context.elementFrameRect ?? context.inputFrameRect ?? context.caretRect)
         let caret = convertBetweenAppKitAndCG(rect: context.caretRect)
         // Vision uses bottom-left unit coordinates; AX/SCK use display points. Carry only this
         // small geometric value into selection, never the AX element or window itself.
