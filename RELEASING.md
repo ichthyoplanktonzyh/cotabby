@@ -17,10 +17,89 @@ installed copies discover it. App lifecycle stays in `AppUpdateManager`, packagi
   Leave it unset until the steps below are complete. The upstream Homebrew dispatch is removed.
 - Developer signing has no shared team default. Each developer uses `Config/Signing.local.xcconfig`;
   CI supplies its own distribution team and certificate.
+- The v0.5 build 1 test package is a limited, ad-hoc-signed DMG for a small trusted test group. It
+  is not Developer ID signed, notarized, or connected to automatic updates; this does not enable
+  the production release or Pages workflows.
 
 Local development can continue without a paid Apple Developer Program membership. The production
 Developer ID signing and notarization flow described here requires that membership; keep release
-jobs paused until its certificates and notarization credentials are available.
+jobs paused until its certificates and notarization credentials are available. The ad-hoc v0.5
+test package also does not require a paid membership; its limited trust scope and Gatekeeper steps
+are documented below.
+
+## v0.5 test package (limited distribution)
+
+The current test artifact is `build/distributions/Lingrove-0.5-test-universal.dmg`, accompanied by
+`SHA256SUMS.txt` and `build-info.json`. Share it directly only with the small trusted test group.
+It is an ad-hoc-signed, unnotarized test build, has no automatic updates, and is not a public
+production release. The DMG includes the Simplified Chinese `INSTALL.txt` guide (copied from the
+source file `assets/testing/INSTALL.zh-CN.txt`), the app, an Applications shortcut, and license
+materials: `LICENSE`, `THIRD_PARTY_LICENSES.md`, `SpellingDictionaries-NOTICE.md`,
+`LearningExpressions-NOTICE.md`, and `ThirdPartyLicenses/`. It does not include user preferences,
+credentials, or downloaded inference/learning model weights.
+
+`build-info.json` records the package's product/bundle identity, version/build, source commit,
+actual architecture slices, minimum macOS version, signing/notarization state, and creation time.
+Its `sourceDirty` flag reports whether tracked or untracked app build inputs were modified;
+`workingTreeDirty` reports whether anything in the full checkout was modified. The checkout can
+therefore be dirty because of documentation or packaging work while the built app inputs remain
+clean.
+
+The Xcode deployment target is macOS 14.0. The universal app contains `arm64` and `x86_64` slices.
+Build, package-integrity, and basic-launch checks run locally on Apple Silicon; Intel hardware and
+the downloaded first-install flow on other Macs remain for testers to validate. This does not claim
+a fresh-machine Gatekeeper flow has been validated. Apple Intelligence autocomplete requires a
+supported Mac running macOS 26 or later. Otherwise, testers can download a compatible GGUF model
+(which may take several GB) or explicitly configure an OpenAI-compatible endpoint. No provider
+credentials are bundled. Translation and optional chunk alignment use their own independently
+configured local models or endpoints.
+
+Before installation, verify the DMG against the accompanying checksum file from the same trusted
+delivery:
+
+```sh
+cd build/distributions
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+Open the DMG, drag `Lingrove.app` to its `Applications` shortcut, eject the mounted disk image in
+Finder, then launch Lingrove from Applications. Do not run the app from the mounted DMG. Because
+this test build is not Developer ID signed or notarized, Gatekeeper may require the user to open it
+once, dismiss the first warning, then choose **Open Anyway** under System Settings → Privacy &
+Security. Continue only for a package received through the trusted test channel and with a matching
+checksum. If macOS says the app “will damage your computer,” or reports a broken/corrupt signature,
+stop and verify the checksum with the distributor; do not bypass the warning, remove quarantine, or
+disable Gatekeeper. See Apple's [Gatekeeper guidance](https://support.apple.com/en-us/102445).
+
+Accessibility and Input Monitoring are required for autocomplete. Screen Recording is optional and
+is needed only when a tester enables screenshot-based visual context. After granting the first two
+permissions the first time, quit Lingrove and reopen it once so the input listener starts with the
+updated permission state. This package uses the production bundle identifier, while Lingrove Dev
+uses a separate identifier and separate preferences/model storage; settings and models are not
+imported from the dev app. During production-app testing, quit Lingrove Dev so only one app instance
+owns the global keyboard monitor; uninstalling the dev app is unnecessary. Replacing an ad-hoc build
+may require granting macOS permissions again.
+
+Updates to this test build are manual: quit Lingrove, replace the app in Applications with the new
+test copy, eject the DMG, and launch the replacement. Back up anything important before replacing
+test builds. Input-history recording is optional, encrypted, and off by default; no history is
+automatically imported from Lingrove Dev.
+
+For autocomplete, use Settings → Appearance → **Show Field Indicator** if the focus indicator is
+helpful, then type in a supported text field and press **Tab** to accept the suggestion. Acceptance
+keys can be changed in Settings → Shortcuts. To try language learning, open Settings → Writing,
+enable expression translation and (optionally) sentence previews, choose a target language, and
+configure a translation model in Engine & Model. A pause after newly typed text can show its target
+expression; the configured learning-detail shortcut expands source/translation alignment when that
+feature and its separate model are enabled. Double-click an expression to try dictionary lookup.
+Autocomplete and language learning are both core test areas.
+
+Send feedback at [GitHub Issues](https://github.com/ichthyoplanktonzyh/lingrove/issues) with the
+app version/build, macOS version, chip, and reproducible steps. Do not attach full prompts, model
+logs, or private input; remove personal text and credentials from any diagnostic excerpt before
+sharing it. A later formal distribution will require the Developer ID membership, signing and
+notarization setup below. Although the production bundle identifier is already set, the ad-hoc test
+signature is not the stable Developer ID distribution identity.
 
 ## Independent update architecture
 

@@ -78,6 +78,9 @@ OpenAI-compatible endpoint. Translation and analysis use their separately config
 
 There is no Lingrove Homebrew cask or independent production download established yet. Follow
 [this repository's Releases](https://github.com/ichthyoplanktonzyh/lingrove/releases) for future builds.
+The v0.5 test DMG is shared only with a small trusted group and is not a production release; if you
+received one from the project, see the [Simplified Chinese install guide](assets/testing/INSTALL.zh-CN.txt)
+included in the DMG as `INSTALL.txt`.
 For now, build from source:
 
 ```sh

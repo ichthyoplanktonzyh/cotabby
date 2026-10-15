@@ -4,6 +4,9 @@
 Xcode's compile output stays in repo-scoped DerivedData. A temporary metadata-free
 copy is the signing boundary because a file provider can restore FinderInfo while
 codesign is running. build_and_run.sh calls this helper before launching the app.
+The test-DMG packager also uses it for a staged ad-hoc app, with an explicit
+ad-hoc-only option to omit hardened runtime. Developer certificate behavior
+stays unchanged, and the test-package path never grants XCTest entitlements.
 """
 import argparse
 from pathlib import Path
@@ -17,13 +20,32 @@ def run(*args):
     subprocess.run(args, check=True)
 
 
+def codesign_arguments(identity, *, no_hardened_runtime=False):
+    """Build the common codesign prefix while preserving certificate defaults."""
+
+    command = ["codesign", "--force"]
+    if not no_hardened_runtime:
+        command.extend(["--options", "runtime"])
+    command.extend(["--timestamp=none", "--sign", identity])
+    return command
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("app", type=Path)
     parser.add_argument("--identity", required=True)
     parser.add_argument("--testing", action="store_true")
     parser.add_argument("--debug", action="store_true")
+    parser.add_argument(
+        "--no-hardened-runtime",
+        action="store_true",
+        help="Omit hardened runtime only for an ad-hoc test package.",
+    )
     args = parser.parse_args()
+    if args.no_hardened_runtime and args.identity != "-":
+        parser.error("--no-hardened-runtime is allowed only with ad-hoc identity '-'")
+    if args.no_hardened_runtime and (args.debug or args.testing):
+        parser.error("--no-hardened-runtime cannot be combined with debug or testing entitlements")
     original = args.app.resolve()
     if original.suffix != ".app" or not (original / "Contents/Info.plist").is_file():
         parser.error("Expected a built .app bundle")
@@ -46,7 +68,9 @@ def main():
                 with path.open("rb") as stream:
                     if stream.read(4) in magic:
                         candidates.append(path)
-        sign = ["codesign", "--force", "--options", "runtime", "--timestamp=none", "--sign", args.identity]
+        sign = codesign_arguments(
+            args.identity, no_hardened_runtime=args.no_hardened_runtime
+        )
         for path in sorted(candidates, key=lambda item: len(item.parts), reverse=True):
             run(*sign, str(path))
         entitlements = {}
@@ -58,7 +82,10 @@ def main():
             entitlements["com.apple.security.cs.disable-library-validation"] = True
         entitlement_file = Path(temporary) / "local.entitlements"
         entitlement_file.write_bytes(plistlib.dumps(entitlements))
-        run(*sign, "--entitlements", str(entitlement_file), str(app))
+        if entitlements:
+            run(*sign, "--entitlements", str(entitlement_file), str(app))
+        else:
+            run(*sign, str(app))
         run("codesign", "--verify", "--deep", "--strict", str(app))
         # Preserve the existing product until a complete valid signature exists.
         shutil.rmtree(original)
