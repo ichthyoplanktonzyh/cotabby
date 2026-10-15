@@ -373,10 +373,15 @@ enum SettingsItem: String, CaseIterable, Identifiable {
         case .showMenuBarIcon: return String(localized: "Hide menu bar clutter while Lingrove keeps running.", table: "Learning")
         case .showKeyHint: return String(localized: "Show the accept-key badge beside the ghost text.")
         case .ghostTextColor: return String(localized: "Pick the color of the inline suggestion.")
-        case .ghostTextStyle: return String(localized: "Draw suggestions bold, italic, or both.", table: "Learning")
+        case .ghostTextStyle: return String(localized: """
+                Draw suggestions bold, italic, or both. Accepted text keeps the field’s own style.
+                """, table: "Learning")
         case .ghostTextOpacity: return String(localized: "How faint the suggestion looks before you accept it.")
         case .matchHostTextSize:
-            return String(localized: "Draw suggestions at exactly the size of the text you are typing.", table: "Learning")
+            return String(localized: """
+                Use the host text size, with a 9 pt readability minimum. The size controls below are ignored while \
+                enabled.
+                """, table: "Learning")
         case .ghostTextSize: return String(localized: "Scale suggestions if the ghost text looks too big or small.")
         case .ghostTextSizeFloor:
             return String(localized: "The smallest point size ghost text may render at.")
@@ -529,7 +534,7 @@ enum SettingsItem: String, CaseIterable, Identifiable {
                     "brightness", "visibility"]
         case .matchHostTextSize:
             return ["match", "same size", "original", "host", "font size", "text size", "exact",
-                    "native", "actual size", "size"]
+                    "native", "actual size", "size", "ghost", "suggestion"]
         case .ghostTextSize:
             return ["size", "font size", "scale", "bigger", "smaller", "larger", "text size",
                     "zoom", "multiplier", "too big", "too small"]

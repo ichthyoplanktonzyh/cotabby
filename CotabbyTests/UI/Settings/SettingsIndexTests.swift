@@ -15,6 +15,10 @@ final class SettingsIndexTests: XCTestCase {
         }
     }
 
+    func test_ghostSearchIncludesHostSizeMatching() {
+        XCTAssertTrue(SettingsItem.results(for: "ghost").contains(.matchHostTextSize))
+    }
+
     func test_sidebarGroupsCoverEveryCategoryExactlyOnce() {
         // The sidebar renders from `sidebarGroups`, not `allCases`, so a category missing from the
         // groups would silently disappear from the window. Order is pinned too: the flattened

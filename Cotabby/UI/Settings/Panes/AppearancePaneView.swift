@@ -149,7 +149,8 @@ struct AppearancePaneView: View {
                 GhostTextPreview(
                     ghostColor: resolvedGhostTextColor,
                     opacity: suggestionSettings.ghostTextOpacity,
-                    fontSize: GhostTextPreview.baseFontSize * CGFloat(suggestionSettings.ghostTextSizeMultiplier),
+                    fontSize: GhostTextPreview.baseFontSize * (suggestionSettings.matchesHostTextSize
+                        ? 1 : CGFloat(suggestionSettings.ghostTextSizeMultiplier)),
                     isBold: suggestionSettings.isGhostTextBold,
                     isItalic: suggestionSettings.isGhostTextItalic
                 )
@@ -163,7 +164,9 @@ struct AppearancePaneView: View {
                 } label: {
                     SettingsRowLabel(
                         title: String(localized: "Ghost Text Color"),
-                        description: String(localized: "The color of the inline suggestion. Automatic adapts to light and dark; White suits dark editors.", table: "Learning"),
+                        description: String(localized: """
+                            The color of the inline suggestion. Automatic adapts to light and dark; White suits dark editors.
+                            """, table: "Learning"),
                         systemImage: "paintpalette"
                     )
                 }
@@ -171,14 +174,16 @@ struct AppearancePaneView: View {
 
                 LabeledContent {
                     HStack(spacing: 12) {
-                        Toggle("Bold", isOn: ghostTextBoldBinding)
-                        Toggle("Italic", isOn: ghostTextItalicBinding)
+                        Toggle(String(localized: "Bold", table: "Learning"), isOn: ghostTextBoldBinding)
+                        Toggle(String(localized: "Italic", table: "Learning"), isOn: ghostTextItalicBinding)
                     }
                     .toggleStyle(.checkbox)
                 } label: {
                     SettingsRowLabel(
-                        title: "Ghost Text Style",
-                        description: "Draw suggestions bold, italic, or both. Accepted text keeps the field's own style.",
+                        title: String(localized: "Ghost Text Style", table: "Learning"),
+                        description: String(localized: """
+                            Draw suggestions bold, italic, or both. Accepted text keeps the field’s own style.
+                            """, table: "Learning"),
                         systemImage: "bold.italic.underline"
                     )
                 }
@@ -211,9 +216,11 @@ struct AppearancePaneView: View {
 
                 Toggle(isOn: matchesHostTextSizeBinding) {
                     SettingsRowLabel(
-                        title: "Match Original Text Size",
-                        description: "Draw suggestions at exactly the size of the text you are typing. " +
-                            "The size settings below are set aside while this is on.",
+                        title: String(localized: "Match Original Text Size", table: "Learning"),
+                        description: String(localized: """
+                            Use the host text size, with a 9 pt readability minimum. The size controls below are ignored while \
+                            enabled.
+                            """, table: "Learning"),
                         systemImage: "equal.square"
                     )
                 }
@@ -461,6 +468,7 @@ struct AppearancePaneView: View {
 
     @ViewBuilder
     private func ghostColorSwatch(for preset: GhostTextColorPreset) -> some View {
+        let localizedName = Bundle.main.localizedString(forKey: preset.name, value: nil, table: "Learning")
         let isSelected = GhostTextColorPreset.matching(
             hex: suggestionSettings.customSuggestionTextColorHex
         ) == preset
@@ -480,6 +488,8 @@ struct AppearancePaneView: View {
                 )
         }
         .buttonStyle(.plain)
+        .help(localizedName)
+        .accessibilityLabel(localizedName)
     }
 
     private func swatchFill(for preset: GhostTextColorPreset) -> Color {

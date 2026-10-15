@@ -239,6 +239,9 @@ final class SuggestionSettingsModelTests: XCTestCase {
         model.setExtendedContext("Glossary: cotabby means tea whisk")
         model.setGhostTextOpacity(SuggestionSettingsModel.minimumGhostTextOpacity)
         model.setGhostTextSizeMultiplier(SuggestionSettingsModel.maximumGhostTextSizeMultiplier)
+        model.setMatchesHostTextSize(true)
+        model.setGhostTextBold(true)
+        model.setGhostTextItalic(true)
         model.setCustomSuggestionTextColorHex("#a1b2c3")
         model.setPowerBasedModelSwitchingEnabled(true)
         model.setBatteryEngine(.appleIntelligence)
@@ -257,6 +260,15 @@ final class SuggestionSettingsModelTests: XCTestCase {
         pristineDefaults.removePersistentDomain(forName: pristineSuite)
         addTeardownBlock { pristineDefaults.removePersistentDomain(forName: pristineSuite) }
         let pristine = SuggestionSettingsModel(configuration: .standard, userDefaults: pristineDefaults)
+
+        for restored in [model, makeModel()] {
+            XCTAssertFalse(restored.matchesHostTextSize)
+            XCTAssertFalse(restored.isGhostTextBold)
+            XCTAssertFalse(restored.isGhostTextItalic)
+            XCTAssertFalse(restored.domainSettings.presentation.matchesHostTextSize)
+            XCTAssertFalse(restored.domainSettings.presentation.isGhostTextBold)
+            XCTAssertFalse(restored.domainSettings.presentation.isGhostTextItalic)
+        }
 
         XCTAssertEqual(model.isGloballyEnabled, pristine.isGloballyEnabled)
         XCTAssertEqual(model.selectedEngine, pristine.selectedEngine)

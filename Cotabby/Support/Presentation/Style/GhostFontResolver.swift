@@ -129,6 +129,22 @@ enum GhostFontResolver {
         return Resolution(font: scaled, provenance: base.provenance, widthAgreement: base.widthAgreement)
     }
 
+    /// A popup can reuse reported sizes and measured widths, but its fallback caret may be a whole
+    /// field rectangle. Keep an unmeasured popup at 13pt rather than deriving a huge face from it.
+    /// The controller still applies cached pixel matches and caret-advance fits to this seed.
+    static func resolveForMirror(_ input: Input) -> Resolution {
+        guard let size = input.style?.fontPointSize, size.isFinite, (6...96).contains(size) else {
+            let face = input.style?.fontName.flatMap { font(named: $0, size: 13) }
+                ?? input.style?.fontFamily.flatMap { font(family: $0, size: 13) }
+                ?? NSFont.systemFont(ofSize: 13)
+            return Resolution(font: face, provenance: .caretDerived, widthAgreement: 1)
+        }
+        return resolve(Input(
+            style: input.style, hostMetrics: input.hostMetrics, caretBoxHeight: 0,
+            renderer: input.renderer, sizeMultiplier: input.sizeMultiplier
+        ))
+    }
+
     // MARK: - Host-reported faces
 
     private static func resolveHostFont(_ input: Input) -> Resolution {

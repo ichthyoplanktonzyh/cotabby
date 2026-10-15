@@ -12,6 +12,26 @@ struct LocalizationResourceTests {
         "it", "ru", "ar", "hi", "id", "tr"
     ]
 
+    @Test(arguments: translatedLanguages)
+    func ghostAppearanceIntegrationCopyResolves(language: String) throws {
+        let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"))
+        let bundle = try #require(Bundle(path: path))
+        for key in ["Ghost Text Style", "Match Original Text Size", "Bold", "Italic", "White"] {
+            let rendered = bundle.localizedString(forKey: key, value: nil, table: "Learning")
+            #expect(!rendered.isEmpty)
+            #expect(rendered != key)
+        }
+        let tableURL = try #require(bundle.url(forResource: "Learning", withExtension: "strings"))
+        let table = try #require(try PropertyListSerialization.propertyList(
+            from: Data(contentsOf: tableURL), options: 0, format: nil
+        ) as? [String: String])
+        for preset in GhostTextColorPreset.all {
+            // Some color names coincide across languages (Orange in French), so require compiled
+            // entries rather than mistaking a valid identical translation for an English fallback.
+            #expect(table[preset.name]?.isEmpty == false)
+        }
+    }
+
     @Test(arguments: ["en"] + translatedLanguages)
     func productBrandingResolvesFromTheForkTable(language: String) throws {
         let path = try #require(Bundle.main.path(forResource: language, ofType: "lproj"))

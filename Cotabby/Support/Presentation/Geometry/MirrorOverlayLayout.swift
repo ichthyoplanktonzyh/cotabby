@@ -16,10 +16,8 @@ struct MirrorOverlayLayout: Equatable {
     /// Final panel frame in screen coordinates. The caller passes this directly to `NSPanel.setFrame`.
     let panelFrame: CGRect
 
-    /// Fixed font size for the suggestion text. Mirror mode deliberately ignores the caret-derived
-    /// font sizing used by inline ghost text. The whole reason we are in mirror mode is that the
-    /// caret rect (and therefore its height) is untrustworthy, so deriving font size from it would
-    /// just propagate the same unreliable signal into the UI.
+    /// The fixed preview size, or the resolved host size when matching is enabled. The controller
+    /// can supply measured font evidence without trusting the fallback caret's height.
     let fontSize: CGFloat
 
     /// The suggestion to render. Whitespace collapsed for single-line display.
@@ -103,12 +101,13 @@ struct MirrorOverlayLayout: Equatable {
         // "Ghost Text Size" knob still scales it so suggestions stay one consistent size across both
         // display modes. The shared legibility floor guards a low multiplier; the keycap pill keeps
         // its own fixed size, so its width reservation below is intentionally left unscaled.
-        // With Match Original Text Size on, the host's reported size replaces the fixed one (the
-        // caret height is what is untrustworthy here, not a size the host states outright).
+        // With Match Original Text Size on, the controller supplies the resolved host size,
+        // including existing width, pixel-match and zoom evidence rather than raw CSS points.
         let baseFontSize = hostFontSize.flatMap { $0 > 0 && $0.isFinite ? $0 : nil } ?? Metrics.fontSize
         let scaledFontSize = max(Metrics.absoluteMinimumFontSize, baseFontSize * sizeMultiplier)
         let measuredTextWidth = measuredWidth(
-            of: normalizedSuggestion, fontSize: scaledFontSize, isBold: isBold, isItalic: isItalic
+            of: normalizedSuggestion, highlightedPrefix: highlightedPrefix,
+            fontSize: scaledFontSize, isBold: isBold, isItalic: isItalic
         )
         let keycapReservation = showsAcceptanceHint ? Metrics.keycapReservation : 0
 
@@ -290,13 +289,21 @@ struct MirrorOverlayLayout: Equatable {
         return collapsed
     }
 
-    private static func measuredWidth(of text: String, fontSize: CGFloat, isBold: Bool, isItalic: Bool) -> CGFloat {
+    private static func measuredWidth(
+        of text: String, highlightedPrefix: String, fontSize: CGFloat, isBold: Bool, isItalic: Bool
+    ) -> CGFloat {
         // The card draws in the system face, so it is measured in the system face with the same
         // style the view applies (`MirrorOverlayView` uses SwiftUI's bold and italic).
         let font = GhostFontStyler.styled(NSFont.systemFont(ofSize: fontSize), bold: isBold, italic: isItalic)
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: font
-        ]
-        return (text as NSString).size(withAttributes: attributes).width
+        let measured = NSMutableAttributedString(string: text, attributes: [.font: font])
+        if isBold, !highlightedPrefix.isEmpty {
+            // The view emphasizes the next accepted word with heavy rather than bold. Reserve its
+            // actual advance too, so enabling bold cannot cut off a previously fitting suggestion.
+            let highlightedFont = GhostFontStyler.styled(
+                NSFont.systemFont(ofSize: fontSize, weight: .heavy), bold: false, italic: isItalic
+            )
+            measured.addAttribute(.font, value: highlightedFont, range: NSRange(location: 0, length: highlightedPrefix.utf16.count))
+        }
+        return measured.size().width
     }
 }

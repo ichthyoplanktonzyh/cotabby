@@ -155,3 +155,80 @@ Validation on Xcode 26.5 / Apple Silicon, against the prepared pinned inference 
 
 Until these steps are complete, use the isolated Cotabby Dev configuration described in
 CONTRIBUTING.md for local development. No independent production release is established yet.
+
+## Reviewed upstream appearance and CI updates — 2026-10-15
+
+The maintainer approved #854, #857, #873 and #874 for the next adoption batch. They were
+reviewed on `codex/adopt-ghost-appearance-and-ci`, starting from Lingrove `608b3159`.
+All target upstream `main`; each contains one independent commit and has no dependency on another
+unmerged PR. Only the exact PR head refs were fetched, with tags disabled. All four source commits
+retain original authorship and their full source SHA through `cherry-pick -x`.
+
+| PR | Head repository / branch | Captured head and selected source SHA | Result |
+| --- | --- | --- | --- |
+| [#854](https://github.com/FuJacob/cotabby/pull/854) | `senadaruc/cotabby` / `feat/match-host-text-size` | `3ad26d6d468b7564b6a4aa78eb7e315a51e8277f` | Adopted: optional host-size matching, with the shared 9pt readability minimum. |
+| [#857](https://github.com/FuJacob/cotabby/pull/857) | `senadaruc/cotabby` / `feat/ghost-text-style` | `67928d80f99068076d63d7789d18cf5fc43908d7` | Adopted: bold, italic and white suggestion presentation. Accepted text keeps the host's style. |
+| [#873](https://github.com/FuJacob/cotabby/pull/873) | `FuJacob/cotabby` / `dependabot/github_actions/actions/download-artifact-8.0.2` | `d9da9cab821f235ecdcdb73de077751074fcc904` | Adopted: official download-artifact v8.0.2 SHA. |
+| [#874](https://github.com/FuJacob/cotabby/pull/874) | `FuJacob/cotabby` / `dependabot/github_actions/actions/upload-artifact-7.0.2` | `d377057124a097ff526038f758338688c176b465` | Adopted: official upload-artifact v7.0.2 SHA. |
+
+Two independent GPT-6 Luna reviewers (max reasoning), requested by the maintainer, reviewed
+font/layout and settings/localization/CI separately, then re-reviewed the integration fixes. Neither
+reported a remaining P1/P2 blocker. The integration includes these corrections:
+
+- `GhostFontResolver.resolveForMirror` seeds card sizing from valid reported font/width evidence,
+  with a conservative 13pt fallback when no size is known. It never derives a size from an
+  unreliable field-height caret. `OverlayController` then applies its existing pixel match, zoom,
+  caret-advance and settled-font memory pipeline. Matching therefore does not bypass measurements
+  by passing raw CSS font size straight to the card. The normal inline path remains unchanged.
+- Bold card measurement reserves the heavy next-acceptance prefix used by the view. Inline drawing
+  styles the resolved host face only after host measurements; consumed prefixes continue to use
+  the original host font, preserving the host insertion advance.
+- All three new toggles default off. Existing size tuning and plain text therefore remain the
+  defaults. Model/store round trips and reset coverage include the new values. The preview ignores
+  the custom multiplier when host matching is on, and Settings search can find matching via `ghost`.
+- New appearance copy and all palette help/accessibility labels use the fork's `Learning` catalog,
+  covering English and all 14 translated locales. `Localizable.xcstrings` remains byte-identical to
+  the baseline common catalog. Wording discloses the 9pt readability minimum rather than promising
+  an exact match for a 6pt host.
+- The Actions changes only replace existing pinned upload/download versions. Independent release
+  and Pages publication gates remain intact; Sparkle remains disabled. Model requests, prompting,
+  sampling, hosted-transmission scope and the language-learning pipeline are unchanged.
+
+A pre-existing RTL partial-acceptance geometry gap identified during review is outside this batch:
+its remaining-tail alignment does not yet account for the accepted prefix's host advance. The new
+LTR styling path does not introduce that gap; it remains a follow-up rather than a verified fix.
+
+Validation on Xcode 26.5 / Apple Silicon, using the prepared pinned inference workspace:
+
+- Release `build-for-testing` passed. Three early attempts exposed only newly written test-source
+  compile issues (private layout constants and the Foundation property-list read options); those
+  were corrected before the successful build and actual test execution.
+- Targeted execution passed all 220 test items, with no skips or failures. This includes host-font
+  resolution, font styling, pixel alignment, inline/floor/card layout, settings storage/reset,
+  Settings search and compiled localization resources. Parameterized font checks cover invalid
+  sizes and a field-height caret, plus the measured 14-to-15.4pt web sizing case.
+- Complete unit execution passed: 3118 test items, 3098 passed, 20 environment/opt-in skips, zero
+  failures. This comprises 2879 XCTest items and 239 Swift Testing items. The test host's debug
+  launch flag was removed before execution to avoid the already documented Desktop debug-capture
+  I/O issue. No model-backed quality suite was rerun because prompt/context/sampling/model code
+  is unchanged in this batch.
+- Both String Catalogs validate across 15 languages (1091 source keys); all five localization
+  import/validation script tests passed. Compiled resource checks cover every palette label and
+  the new appearance controls in all 14 translated locales.
+- Strict SwiftLint on changed Swift files reports the same three inherited `large_tuple` findings
+  as those files at `608b3159`, with no new findings. `git diff --check` passed. Regenerating with
+  XcodeGen a second time produced identical project bytes.
+- Real-host pixel signoff remains incomplete. Native UI automation entered synthetic text in an
+  isolated TextEdit document, but the dev app's focus stream continued to identify Lingrove itself
+  as frontmost, so no live ghost/accepted-host screenshot pair was obtained. The numerical 0.2pt
+  TextEdit/Chrome/Obsidian matrix was therefore not claimed. Automated raster alignment tests pass;
+  they do not substitute for that live-host matrix.
+- The separate `Cotabby Dev` Release build passed. The candidate was signed with the installed
+  development identity and verified against its designated requirement before replacement. The
+  installed binary timestamp advanced, one dev process launched, Accessibility and Input Monitoring
+  remained granted, and the local runtime reached ready state. The Chinese Appearance pane shows
+  the new style, white palette and size-matching controls; all three new toggles remain off. Further
+  UI input stopped when automation detected a concurrent user change.
+- Test logs, xcresult summaries and the install receipt are retained under the gitignored
+  `build/upstream-batch2/`. Production/test source hashes were verified unchanged after validation.
+  Repo-local `build/DerivedData` was removed and its absence verified before completion.

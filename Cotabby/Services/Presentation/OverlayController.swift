@@ -543,17 +543,17 @@ final class OverlayController: SuggestionOverlayControlling {
 
     private func resolveFont(
         for geometry: SuggestionOverlayGeometry,
-        renderer: GhostBaselinePolicy.HostRenderer
+        renderer: GhostBaselinePolicy.HostRenderer,
+        usesCaretSizing: Bool = true
     ) -> GhostFontResolver.Resolution {
-        let resolution = GhostFontResolver.resolve(
-            GhostFontResolver.Input(
-                style: geometry.resolvedFieldStyle,
-                hostMetrics: geometry.hostTextMetrics,
-                caretBoxHeight: geometry.caretRect.height,
-                renderer: renderer,
-                sizeMultiplier: ghostSizeMultiplier
-            )
+        let input = GhostFontResolver.Input(
+            style: geometry.resolvedFieldStyle,
+            hostMetrics: geometry.hostTextMetrics,
+            caretBoxHeight: geometry.caretRect.height,
+            renderer: renderer,
+            sizeMultiplier: ghostSizeMultiplier
         )
+        let resolution = usesCaretSizing ? GhostFontResolver.resolve(input) : GhostFontResolver.resolveForMirror(input)
         let judged = applyingTypefaceEvidence(resolution, for: geometry)
         let matched = Self.applyingMatchedTypeface(
             judged,
@@ -1551,7 +1551,10 @@ final class OverlayController: SuggestionOverlayControlling {
             showsAcceptanceHint: acceptanceHintLabel != nil,
             autoAcceptTrailingPunctuation: suggestionSettings.autoAcceptTrailingPunctuation,
             sizeMultiplier: ghostSizeMultiplier,
-            hostFontSize: suggestionSettings.matchesHostTextSize ? geometry.resolvedFieldStyle?.fontPointSize : nil,
+            hostFontSize: suggestionSettings.matchesHostTextSize ? resolveFont(
+                for: geometry, renderer: geometry.isWebContentField ? .webEngine : .textKit,
+                usesCaretSizing: false
+            ).font.pointSize : nil,
             isBold: suggestionSettings.isGhostTextBold,
             isItalic: suggestionSettings.isGhostTextItalic,
             reason: reason
