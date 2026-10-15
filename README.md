@@ -1,5 +1,9 @@
 # Lingrove · 拾语
 
+<p align="center">
+  <img src=".github/assets/readme/logo.png" width="112" alt="Lingrove whale logo">
+</p>
+
 Inline autocomplete and language learning, wherever you write. Get continuations beside your
 cursor, translate sentences, and learn useful expressions without leaving your editor.
 
@@ -8,9 +12,8 @@ Lingrove is an open-source macOS menu bar app maintained by
 [FuJacob/Cotabby](https://github.com/FuJacob/cotabby) and its contributors. Inline autocomplete and
 language learning are its two core capabilities, developed together.
 
-> **In development.** Work is on `codex/language-learning` until reviewed and validated for `main`.
-> Independent releases and automatic updates are not yet available. The existing cat artwork is
-> inherited from Cotabby while Lingrove's visual identity is being designed.
+> **In development.** Lingrove V0.5 is being developed on this repository's `main` branch.
+> Independent production releases and automatic updates are not yet available.
 
 [Source](https://github.com/ichthyoplanktonzyh/cotabby) ·
 [Feedback](https://github.com/ichthyoplanktonzyh/cotabby/issues) ·
@@ -60,8 +63,8 @@ behavior in the learning card; Escape dismisses it. Autocomplete's acceptance ke
 - Input-history recording is off by default. When enabled, the recorded text is stored in an
   encrypted archive on this Mac with its key in Keychain. You can clear the history in Settings.
 - Developer mode (`-cotabby-debug`) can write full model inputs/outputs to local diagnostic logs.
-  Model download/search uses the network. Automatic app updates remain disabled during migration;
-  the manual update action opens this project's Releases page.
+  Model download/search uses the network. Automatic app updates remain disabled until independent
+  update infrastructure is configured; the manual update action opens this project's Releases page.
 - There is no hosted account requirement, analytics, or remote crash reporting built into the app.
 
 Lingrove and Lingrove Dev use separate preferences, Keychain services, model/history folders, and
@@ -80,7 +83,6 @@ For now, build from source:
 ```sh
 git clone https://github.com/ichthyoplanktonzyh/cotabby.git
 cd cotabby
-git switch codex/language-learning
 scripts/dev-setup.sh
 scripts/prepare_cotabby_workspace.sh
 open build/cotabby-dependencies/Cotabby.xcworkspace

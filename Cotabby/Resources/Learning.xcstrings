@@ -4839,6 +4839,95 @@
         }
       }
     },
+    "Click the whale to pause suggestions, switch models, or open Settings.": {
+      "comment": "Lingrove onboarding copy describing the menu-bar controls.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انقر على الحوت لإيقاف الاقتراحات مؤقتًا أو تبديل النماذج أو فتح الإعدادات."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klicke auf den Wal, um Vorschläge zu pausieren, Modelle zu wechseln oder die Einstellungen zu öffnen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haz clic en la ballena para pausar las sugerencias, cambiar de modelo o abrir Configuración."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cliquez sur la baleine pour mettre les suggestions en pause, changer de modèle ou ouvrir les réglages."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सुझावों को रोकने, मॉडल बदलने या सेटिंग्ज़ खोलने के लिए व्हेल पर क्लिक करें।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klik ikan paus untuk menjeda saran, mengganti model, atau membuka Pengaturan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fai clic sulla balena per mettere in pausa i suggerimenti, cambiare modello o aprire le Impostazioni."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クジラをクリックすると、候補の一時停止、モデルの切り替え、または設定を開くことができます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고래를 클릭하면 제안을 일시 중지하거나 모델을 전환하고 설정을 열 수 있습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clique na baleia para pausar as sugestões, trocar de modelo ou abrir os Ajustes."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите на кита, чтобы приостановить подсказки, сменить модель или открыть настройки."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önerileri duraklatmak, modeller arasında geçiş yapmak veya Ayarlar’ı açmak için balinaya tıklayın."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点击鲸鱼即可暂停建议、切换模型或打开设置。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點選鯨魚即可暫停建議、切換模型或開啟「設定」。"
+          }
+        }
+      }
+    },
     "Click to inspect the source chunk alignment": {
       "comment": "Tooltip for the source sentence text; clicking a highlighted range inspects its target-language match.",
       "localizations": {

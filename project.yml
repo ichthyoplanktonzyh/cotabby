@@ -139,7 +139,7 @@ targetTemplates:
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
           - "@executable_path/../Frameworks"
-        MARKETING_VERSION: "1.0"
+        MARKETING_VERSION: "0.5"
         # Keep source/module and scheme names stable during the identity migration. PRODUCT_NAME
         # owns the installed bundle, executable, and data-folder name; PRODUCT_MODULE_NAME keeps
         # existing `@testable import Cotabby` references valid without a simultaneous source rename.

@@ -670,7 +670,7 @@ final class SuggestionSettingsModelTests: XCTestCase {
 
         XCTAssertEqual(
             model.conflictingShortcutName(keyCode: keyCode, modifiers: learning.modifiers, excluding: .toggleTabby),
-            "跨语言表达学习"
+            "Language Learning"
         )
         XCTAssertNil(model.conflictingShortcutName(
             keyCode: keyCode,
@@ -699,7 +699,7 @@ final class SuggestionSettingsModelTests: XCTestCase {
                 modifiers: learning.modifiers,
                 excluding: .toggleTabby
             ),
-            "跨语言表达学习"
+            "Language Learning"
         )
         XCTAssertNil(model.conflictingPerAppShortcutName(
             forBundleIdentifier: bundleIdentifier,
@@ -796,7 +796,7 @@ final class SuggestionSettingsModelTests: XCTestCase {
     func test_shortcutActionDisplayNames_coverAllActions() {
         XCTAssertEqual(ShortcutAction.acceptWord.displayName, "Accept Word")
         XCTAssertEqual(ShortcutAction.acceptEntireSuggestion.displayName, "Accept Entire Suggestion")
-        XCTAssertEqual(ShortcutAction.toggleTabby.displayName, "Toggle Cotabby")
+        XCTAssertEqual(ShortcutAction.toggleTabby.displayName, "Toggle Lingrove")
     }
 
     // MARK: - Normalization funnels

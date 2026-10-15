@@ -3,9 +3,8 @@ import Foundation
 import SwiftUI
 
 /// File overview:
-/// Owns the tiny non-activating panel that marks supported inputs with Cotabby's icon near
-/// the field edge. Unlike the ghost-text overlay, this controller is focus-driven and toggled
-/// by a simple boolean.
+/// Owns the tiny non-activating panel that places Lingrove's whale-tail indicator beside supported
+/// fields. Unlike the ghost-text overlay, this controller is focus-driven and toggled by a boolean.
 ///
 /// Keeping this as a separate controller preserves the architectural split between:
 /// supported-field affordances and suggestion-specific UI.
@@ -40,7 +39,7 @@ final class ActivationIndicatorController {
 
     private var isVisible = false
 
-    /// Shows or hides the field-edge Cotabby icon indicator.
+    /// Shows or hides the field-edge Lingrove whale-tail indicator.
     func show(
         enabled: Bool,
         caretRect: CGRect,
@@ -75,14 +74,14 @@ final class ActivationIndicatorController {
         isVisible = true
     }
 
-    /// Hides the indicator when Cotabby is not actively supporting the current field.
+    /// Hides the indicator when Lingrove is not actively supporting the current field.
     func hide(reason _: String) {
         panel.orderOut(nil)
         isVisible = false
     }
 
-    /// Places Cotabby's icon just outside the text area's left edge. When the field is flush against
-    /// the screen edge we fall back to the right side so the icon stays fully visible.
+    /// Places Lingrove's whale-tail indicator just outside the text area's left edge. When the field
+    /// is flush against the screen edge we fall back to the right side so the mark stays visible.
     private func fieldEdgeIconOrigin(
         caretRect: CGRect,
         inputFrameRect: CGRect?,

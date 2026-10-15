@@ -99,7 +99,7 @@ struct HomePaneView: View {
 
     private var hero: some View {
         VStack(spacing: 10) {
-            Image("CotabbyLogo")
+            Image("LingroveLogo")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 64, height: 64)

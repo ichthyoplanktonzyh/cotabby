@@ -280,7 +280,7 @@ extension WelcomeView {
             Spacer(minLength: 0)
 
             VStack(spacing: 24) {
-                Image("CotabbyLogo")
+                Image("LingroveLogo")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 84, height: 84)
@@ -423,7 +423,7 @@ extension WelcomeView {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(.quaternary.opacity(0.55))
 
-                Image("MenuBarCatIcon")
+                Image("MenuBarWhaleIcon")
                     .resizable()
                     .scaledToFit()
                     .frame(height: 18)
@@ -435,7 +435,10 @@ extension WelcomeView {
                 Text(String(localized: "Lingrove lives in your menu bar", table: "Learning"))
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
 
-                Text("Click the cat to pause suggestions, switch models, or open Settings.")
+                Text(String(
+                    localized: "Click the whale to pause suggestions, switch models, or open Settings.",
+                    table: "Learning"
+                ))
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }

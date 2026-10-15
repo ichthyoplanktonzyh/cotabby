@@ -66,7 +66,7 @@ final class FoundationModelSuggestionEngineTests: XCTestCase {
 
         await assertUnavailable(
             engine,
-            message: "Apple Intelligence reported available, but Cotabby could not access the system language model."
+            message: "Apple Intelligence reported available, but the app could not access the system language model."
         )
         #else
         throw XCTSkip("FoundationModels is unavailable in this SDK")

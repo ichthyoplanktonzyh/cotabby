@@ -5771,7 +5771,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(LINGROVE_DEV_BUNDLE_ID:default=io.ichthyoplanktonzyh.lingrove.dev)";
 				PRODUCT_MODULE_NAME = Cotabby;
 				PRODUCT_NAME = "Lingrove Dev";
@@ -5810,7 +5810,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = io.ichthyoplanktonzyh.lingrove;
 				PRODUCT_MODULE_NAME = Cotabby;
 				PRODUCT_NAME = Lingrove;
@@ -5848,7 +5848,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(LINGROVE_DEV_BUNDLE_ID:default=io.ichthyoplanktonzyh.lingrove.dev)";
 				PRODUCT_MODULE_NAME = Cotabby;
 				PRODUCT_NAME = "Lingrove Dev";
@@ -6037,7 +6037,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = io.ichthyoplanktonzyh.lingrove;
 				PRODUCT_MODULE_NAME = Cotabby;
 				PRODUCT_NAME = Lingrove;

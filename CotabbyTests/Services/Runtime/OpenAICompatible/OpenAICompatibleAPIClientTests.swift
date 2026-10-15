@@ -61,7 +61,7 @@ final class OpenAICompatibleAPIClientTests: XCTestCase {
         XCTAssertEqual(lan.hostScope, .localNetwork)
         XCTAssertEqual(
             lan.privacyWarning,
-            "Cotabby will send typed text and any enabled context to this server on your local network."
+            "Lingrove will send typed text and any enabled context to this server on your local network."
         )
 
         let publicHTTPS = try configuration(baseURL: "https://models.example.com/custom/v1")

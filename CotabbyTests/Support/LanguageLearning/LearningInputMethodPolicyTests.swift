@@ -14,7 +14,7 @@ struct LearningInputMethodPolicyTests {
 
         #expect(!assessment.permitsReplacement)
         #expect(assessment.replacementUnavailableReason == nil)
-        #expect(assessment.previewRejectionReason?.contains("候选词") == true)
+        #expect(assessment.previewRejectionReason?.contains("candidate") == true)
     }
 
     @Test
@@ -37,7 +37,7 @@ struct LearningInputMethodPolicyTests {
 
         #expect(assessment == .copyOnly(reason: LearningInputMethodPolicy.unavailableMarkedRangeReason))
         #expect(!assessment.permitsReplacement)
-        #expect(assessment.replacementUnavailableReason?.contains("只读") == true)
+        #expect(assessment.replacementUnavailableReason?.contains("read-only") == true)
     }
 
     @Test

@@ -140,7 +140,7 @@ final class ShortcutConflictTests: XCTestCase {
             modifiers: [.command, .shift],
             excluding: .acceptWord
         )
-        XCTAssertEqual(conflict, "Toggle Cotabby")
+        XCTAssertEqual(conflict, "Toggle Lingrove")
     }
 
     func test_perAppConflict_allowsRebindingSameActionToSameKey() {

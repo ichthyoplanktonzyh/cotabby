@@ -106,7 +106,7 @@ final class OpenAICompatibleEndpointConfigurationTests: XCTestCase {
 
         XCTAssertEqual(
             lan.privacyWarning,
-            "Cotabby will send typed text and any enabled context to this server on your local network."
+            "Lingrove will send typed text and any enabled context to this server on your local network."
         )
         XCTAssertEqual(
             hosted.privacyWarning,

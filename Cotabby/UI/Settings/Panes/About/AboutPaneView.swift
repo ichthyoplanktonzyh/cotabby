@@ -25,7 +25,7 @@ struct AboutPaneView: View {
     @ViewBuilder
     private var aboutHeader: some View {
         HStack(spacing: 12) {
-            Image("CotabbyLogo")
+            Image("LingroveLogo")
                 .resizable()
                 .scaledToFit()
                 .frame(width: 40, height: 40)

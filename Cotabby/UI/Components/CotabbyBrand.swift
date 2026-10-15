@@ -6,7 +6,8 @@ import SwiftUI
 /// `Color.accentColor` so brand moments stay on-brand even when the user picks a different system
 /// accent; ordinary interactive controls should keep following the system accent.
 enum CotabbyBrand {
-    /// The brand blue, sampled from the app icon's background (#007AFF). Identical in both
+    /// The existing blue UI accent stays available for controls and blue-tinted brand moments;
+    /// it remains independent of the whale logo's navy and turquoise colors. Identical in both
     /// appearances.
     static let accent = Color(red: 0.0, green: 0.478, blue: 1.0)
 
