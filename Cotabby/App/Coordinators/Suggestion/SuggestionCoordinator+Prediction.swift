@@ -339,8 +339,8 @@ extension SuggestionCoordinator {
     ///
     /// Deliberately outside `workController`: this generation must not become "the current work",
     /// or it would retire the in-flight cycle and its own result would be judged as the visible
-    /// suggestion. It is fire-and-forget, and a stale answer is simply a cache entry the live text
-    /// never matches.
+    /// suggestion. It is fire-and-forget, but the cache's lifetime token rejects answers after
+    /// settings/model/context invalidation even when the live text still matches exactly.
     func prefetchContinuation(after session: ActiveSuggestionSession, rawContext: FocusedInputSnapshot) {
         guard !userDefaults.bool(forKey: Self.continuationPrefetchDisabledDefaultsKey) else { return }
         guard !hasPrefetchedContinuation, case .continuation = session.kind else { return }
@@ -376,10 +376,12 @@ extension SuggestionCoordinator {
             historyExamples: historyExamples(for: context)
         )
         let request = requestBuildResult.request
+        let cacheIdentity = suggestionAnchorCache.identity
         let suggestionEngine = suggestionEngine
         Task { @MainActor [weak self] in
             let result = try? await suggestionEngine.generateSuggestion(for: request)
-            guard let self, let result, !result.text.isEmpty else { return }
+            guard let self, self.suggestionAnchorCache.identity == cacheIdentity,
+                  let result, !result.text.isEmpty else { return }
             // Space-corrected against the text this continuation will follow, so the cached entry
             // is already right when it is restored (see `GhostSpaceBoundary`).
             let text = GhostSpaceBoundary.liveAdjusted(

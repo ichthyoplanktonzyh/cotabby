@@ -27,6 +27,10 @@ nonisolated struct SuggestionAnchor: Equatable {
 /// Pure logic with an injected clock; entries expire so a stale suggestion cannot resurface after
 /// the document changed elsewhere (the caller additionally re-checks display guards on restore).
 nonisolated struct SuggestionAnchorCache {
+    /// A replacement cache starts a new lifetime. Async prefetches capture this token so an old
+    /// result cannot repopulate entries after settings, model or screen-context invalidation.
+    let identity = UUID()
+
     /// Characters of preceding-text tail stored per anchor. Long enough that an accidental
     /// cross-field or cross-paragraph collision is implausible; short enough to keep matching and
     /// memory trivial.

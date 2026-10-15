@@ -19,6 +19,7 @@ extension SuggestionCoordinator {
         suggestionPresentationTiming.clear()
         cancelPredictionWork()
         resetCachedGenerationContext()
+        suggestionAnchorCache = SuggestionAnchorCache()
         visualContextCoordinator.cancel(resetState: true)
         hideOverlay(reason: "Overlay hidden because Cotabby stopped observing suggestions.")
         inputMonitor.onEvent = nil
@@ -36,6 +37,7 @@ extension SuggestionCoordinator {
         suggestionPresentationTiming.clear()
         cancelPredictionWork()
         resetCachedGenerationContext()
+        suggestionAnchorCache = SuggestionAnchorCache()
         interactionState.resetAll()
         visualContextCoordinator.cancel(resetState: true)
         clearSuggestion(clearDiagnostics: true)
@@ -56,6 +58,9 @@ extension SuggestionCoordinator {
         settingsSnapshot = snapshot
         cancelPredictionWork()
         resetCachedGenerationContext()
+        // Field text can stay identical while its app instructions or backend change. Reusing a
+        // text-only anchor here would bypass request construction with the new settings entirely.
+        suggestionAnchorCache = SuggestionAnchorCache()
         clearSuggestion(clearDiagnostics: true)
         hideOverlay(reason: "Overlay hidden because autocomplete settings changed.")
         state = .idle
