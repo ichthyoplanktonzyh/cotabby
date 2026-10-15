@@ -107,7 +107,8 @@ final class CotabbyAppEnvironment {
                 return calendarAccessibilityCaptureGuard.shouldSuppressCapture(
                     for: bundleIdentifier
                 )
-            }
+            },
+            contextWindowUTF16: { suggestionSettings.completionCaptureWindowUTF16 }
         )
         // The snapshot is poll-based, so after a fast app switch the closure may briefly
         // evaluate against the previous app's identity until the next AX poll fires. This
@@ -375,11 +376,6 @@ final class CotabbyAppEnvironment {
         // One offline resource/index owner serves both asynchronous unit recognition and lookup.
         // Panels borrow it; none creates a second dictionary or recognition worker in a view.
         let learningLexicon = LearningLexiconService(resourceURL: Bundle.main.url(forResource: "learning-expressions", withExtension: "json"))
-        let learningCoordinator = LanguageLearningCoordinator(
-            service: learningService, focus: focusModel,
-            replacement: learningReader,
-            panel: LearningTranslationPanel(), availability: learningAvailability
-        )
         let sentencePreview = LearningSentencePreviewCoordinator(
             service: learningService, reader: learningReader, focus: focusModel,
             panel: LearningSentencePanel(reservedFramePublisher: overlayController.$visiblePanelFrame.eraseToAnyPublisher(),
@@ -387,15 +383,16 @@ final class CotabbyAppEnvironment {
             unitRecognizer: learningLexicon,
             availability: learningAvailability
         )
-        inputMonitor.learningKeyDecider = { [weak learningCoordinator, weak sentencePreview] event in
-            Self.learningKeyDecision(event, automatic: suggestionSettings.languageLearning.sentencePreviewEnabled,
-                preview: sentencePreview, manual: learningCoordinator)
+        // One card and one tap slot handle both automatic and explicit translation. The preview
+        // coordinator gates automatic capture separately, so turning it off does not change UI.
+        inputMonitor.learningKeyDecider = { [weak sentencePreview] event in
+            sentencePreview?.decide(event) ?? .notHandled
         }
         let inlineCommandCoordinator = InlineCommandCoordinator(
             emoji: emojiPickerController,
             macro: macroController,
             inputMonitor: inputMonitor,
-            learning: learningCoordinator, sentencePreview: sentencePreview
+            sentencePreview: sentencePreview
         )
         suggestionCoordinator.emojiInputObserver = { [weak inlineCommandCoordinator] event in
             inlineCommandCoordinator?.observe(event) ?? false
@@ -434,17 +431,28 @@ final class CotabbyAppEnvironment {
             ? FocusDebugOverlayController()
             : nil
 
-        observeLanguageLearning(coordinator: learningCoordinator)
+        runtimeModel.$selectedModelFilename.sink { [weak suggestionSettings] filename in
+            suggestionSettings?.setCompletionLocalModelFilename(filename)
+        }.store(in: &cancellables)
+        runtimeManager.contextWindowTokensProvider = { [weak suggestionSettings, weak runtimeModel] in
+            guard let settings = suggestionSettings, let filename = runtimeModel?.selectedModelFilename else { return nil }
+            let key = SuggestionSettingsModel.completionContextIdentity(
+                engine: .llamaOpenSource, localModel: filename,
+                baseURL: "", endpointModel: "", mode: settings.openAICompatibleAPIMode)
+            return settings.completionContexts.tokens(for: key)
+        }
+        observeLanguageLearning(coordinator: sentencePreview)
         // Low Power Mode is shared with completion. Clear current learning work immediately when
         // pausing, rather than waiting for another edit or a model response to reach its guard.
         Publishers.Merge(lowPowerModeMonitor.$isLowPowerModeEnabled.map { _ in () },
             suggestionSettings.$isLowPowerModeAutoDisableEnabled.map { _ in () })
-            .sink { [weak lowPowerModeMonitor, weak suggestionSettings, weak learningCoordinator,
-                     weak sentencePreview] _ in
+        .sink {
+            [
+                weak lowPowerModeMonitor, weak suggestionSettings,
+                weak sentencePreview] _ in
                 Task { @MainActor in
                     guard lowPowerModeMonitor?.isLowPowerModeEnabled == true,
                           suggestionSettings?.isLowPowerModeAutoDisableEnabled == true else { return }
-                    learningCoordinator?.cancel()
                     sentencePreview?.availabilityChanged()
                 }
             }.store(in: &cancellables)
@@ -502,13 +510,13 @@ final class CotabbyAppEnvironment {
 
     /// Installs the translation tap only for the explicit feature switch. The module has a separate
     /// interception reason so emoji/macro capture cannot tear down its shortcut handling.
-    private func observeLanguageLearning(coordinator: LanguageLearningCoordinator) {
+    private func observeLanguageLearning(coordinator: LearningSentencePreviewCoordinator) {
         suggestionSettings.languageLearning.$translationEnabled
             .removeDuplicates()
             .sink { [weak inputMonitor, weak coordinator] enabled in
                 inputMonitor?.setLearningInterceptionActive(enabled)
                 guard !enabled else { return }
-                coordinator?.cancel()
+                coordinator?.availabilityChanged()
             }
             .store(in: &cancellables)
     }
@@ -631,15 +639,7 @@ final class CotabbyAppEnvironment {
             }
             .store(in: &cancellables)
     }
-    /// Both learning modes borrow the same event-tap slot. Choose the active workflow here so
-    /// disabling automatic preview restores the explicit selection path without duplicate taps.
-    private static func learningKeyDecision(
-        _ event: InputMonitorKeyEvent, automatic: Bool, preview: LearningSentencePreviewCoordinator?,
-        manual: LanguageLearningCoordinator?
-    ) -> InputMonitorAcceptTapDecision {
-        if automatic { return preview?.decide(event) ?? .notHandled }
-        return manual?.decide(event) ?? .notHandled
-    }
+
 }
 
 private extension String {

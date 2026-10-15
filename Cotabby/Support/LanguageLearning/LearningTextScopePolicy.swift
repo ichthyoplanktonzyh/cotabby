@@ -13,14 +13,7 @@ nonisolated enum LearningTextScopePolicy {
                 table: "Learning", comment: "Error shown when the requested learning text range cannot be verified as complete."))
         }
         let source = value.substring(with: range)
-        guard source.utf8.count <= 6_000 else {
-            throw LearningFailure.message(String(localized: """
-            The selected range exceeds 6 KB. Select shorter text manually; the source was not truncated.
-            """,
-                table: "Learning", comment: """
-                Error shown when the selected text exceeds the safe request limit; no shortened text was sent.
-                """))
-        }
+        guard source.utf8.count <= ModelContextBudget.maximumTextBytes else { throw ModelContextBudget.oversizedTarget() }
         guard source.contains(where: \.isLetter) else {
             throw LearningFailure.message(String(localized: "The selected range contains no text that can be converted.",
                 table: "Learning", comment: "Error shown when the selected range contains no letters to translate."))
@@ -41,10 +34,11 @@ nonisolated enum LearningTextScopePolicy {
         }
         if selection.length > 0 { _ = try text(value: value, range: selection); return selection }
         // AX exposes full document values, but NLP must not scan unbounded text on MainActor.
-        // 6000 UTF-16 units on either side exceed the complete source's UTF-8 byte budget.
+        // A bounded 32K-unit neighborhood keeps sentence detection responsive. Explicit selections
+        // can be larger; a sentence touching this artificial boundary is rejected in full.
         // A token touching an artificial edge is rejected rather than sent as a partial sentence.
-        let start = max(0, selection.location - 6_000)
-        let end = min(utf16.length, selection.location + min(6_000, utf16.length - selection.location))
+        let start = max(0, selection.location - 32_768)
+        let end = min(utf16.length, selection.location + min(32_768, utf16.length - selection.location))
         let window = utf16.rangeOfComposedCharacterSequences(for: NSRange(location: start, length: end - start))
         let local = utf16.substring(with: window)
         let caret = selection.location - window.location

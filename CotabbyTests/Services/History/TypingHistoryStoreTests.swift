@@ -238,6 +238,20 @@ final class TypingHistoryStoreTests: XCTestCase {
         XCTAssertEqual(store.recordCount, 1)
     }
 
+    func test_completionContextExpansionDoesNotBroadenRecordedHistory() throws {
+        let vault = makeVault(), store = makeStore(vault: vault)
+        store.setRecording(true)
+        let excluded = "EARLIER-CONTEXT-IS-NOT-HISTORY "
+        let nearest = String(repeating: "The nearest complete sentence stays in local history. ", count: 100)
+        store.observe(focus(excluded + nearest)) { true }
+        store.observe(focus("", element: "other")) { true }
+        store.flush()
+        let saved = try XCTUnwrap(vault.load().first)
+        XCTAssertFalse(saved.text.contains(excluded))
+        XCTAssertLessThanOrEqual(saved.text.utf16.count, FocusedInputSnapshot.textWindowUTF16)
+        XCTAssertTrue(saved.text.contains("nearest complete sentence"))
+    }
+
     func test_recordingSkipsSecureFieldsExcludedAppsAndDisallowedContexts() {
         let store = makeStore()
         store.setRecording(true)

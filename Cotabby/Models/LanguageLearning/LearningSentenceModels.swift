@@ -31,6 +31,8 @@ nonisolated struct LearningSentenceResult: Equatable, Sendable {
 protocol LearningSentenceGenerating: LearningDisplayReporting {
     var settings: SuggestionSettingsModel { get }
     func translateSentence(source: String, sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage) async throws -> String
+    func translateSentence(input: LearningTranslationInput, sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage) async throws
+        -> String
     func analyzeSentence(source: String, translation: String, sourceLanguage: LearningLanguage,
                          targetLanguage: LearningLanguage,
                          onUpdate: @escaping @MainActor (LearningSentenceUpdate) -> Void) async throws -> LearningSentenceResult
@@ -41,6 +43,10 @@ protocol LearningSentenceGenerating: LearningDisplayReporting {
 }
 
 extension LearningSentenceGenerating {
+    func translateSentence(input: LearningTranslationInput, sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage) async throws
+        -> String {
+        try await translateSentence(source: input.source, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)
+    }
     func translateSentence(source: String, sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage) async throws -> String {
         try await generateSentence(source: source, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage, onUpdate: { _ in }).translation
     }
@@ -51,8 +57,9 @@ extension LearningSentenceGenerating {
     }
 }
 
-/// Memory-only learning display. The original editor capture never leaves the coordinator and
-/// this surface has no insertion capability, keeping passive learning independent of Tab/Enter.
+/// Memory-only learning display. The original AX capture stays in the coordinator; the view
+/// receives only versioned text and an explicit confirmation callback. Ordinary typing stays in
+/// the host editor, independently of whether the writer chooses to replace this preview.
 struct LearningSentencePresentation {
     let id: UUID
     let source: String
@@ -69,6 +76,11 @@ struct LearningSentencePresentation {
     var isStale: Bool = false
     var units: [LearningUnit] = []
     var unitStage: LearningUnitStage = .pending
+    var targetIsSelection = false
+    var canReplace = false
+    var replacementShortcutLabel = ""
+    var isCommitting = false
+    var isError = false
 }
 
 @MainActor
@@ -77,8 +89,15 @@ protocol LearningSentencePresenting: AnyObject {
     func hide()
     func dismissDetail() -> Bool
     func show(_ presentation: LearningSentencePresentation, expand: @escaping () -> Void, dismiss: @escaping () -> Void)
+    func show(
+        _ presentation: LearningSentencePresentation, expand: @escaping () -> Void, dismiss: @escaping () -> Void,
+        replace: (() -> Void)?)
 }
 
 extension LearningSentencePresenting {
+    func show(
+        _ presentation: LearningSentencePresentation, expand: @escaping () -> Void, dismiss: @escaping () -> Void,
+        replace: (() -> Void)?
+    ) { show(presentation, expand: expand, dismiss: dismiss) }
     func dismissDetail() -> Bool { false }
 }

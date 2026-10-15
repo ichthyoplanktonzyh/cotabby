@@ -26,6 +26,10 @@ struct FocusedInputContext: Equatable, Sendable {
     /// Content edges measured from the host's child text-run frames, carried through so the caret
     /// layout estimator can anchor to the field's real padding instead of guessed insets.
     let observedContentEdges: ObservedContentEdges?
+    /// Captured-window size travels with the text so geometry does not confuse a complete large
+    /// prefix with a truncated default window after a model budget override.
+    let capturedTextWindowUTF16: Int
+    var precedingTextMayBeTruncated: Bool { precedingText.utf16.count >= capturedTextWindowUTF16 }
     let precedingText: String
     let trailingText: String
     let selection: NSRange
@@ -71,6 +75,7 @@ struct FocusedInputContext: Equatable, Sendable {
         caretSource = snapshot.caretSource
         observedCharWidth = snapshot.observedCharWidth
         observedContentEdges = snapshot.observedContentEdges
+        capturedTextWindowUTF16 = snapshot.capturedTextWindowUTF16
         precedingText = snapshot.precedingText
         trailingText = snapshot.trailingText
         selection = snapshot.selection

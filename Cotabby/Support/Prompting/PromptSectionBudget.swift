@@ -81,7 +81,8 @@ enum PromptSectionBudget {
     static func allocate(
         _ sections: [PromptSection],
         totalTokens: Int,
-        estimate: (String) -> Int
+        estimate: (String) -> Int,
+        enforcesTokenLimit: Bool = false
     ) -> [PromptSection] {
         var remainingTokens = max(0, totalTokens)
 
@@ -101,7 +102,19 @@ enum PromptSectionBudget {
             if cap < section.minChars {
                 continue
             }
-            let truncated = allocatedContent(for: section, characterCap: cap)
+            var truncated = allocatedContent(for: section, characterCap: cap)
+            if enforcesTokenLimit, estimate(truncated) > remainingTokens {
+                // A dense suffix can cost more than the section's average. Search complete
+                // character boundaries and retain only an actually counted fitting candidate.
+                var low = section.minChars, high = cap - 1
+                var best = ""
+                while low <= high {
+                    let middle = low + (high - low) / 2
+                    let candidate = allocatedContent(for: section, characterCap: middle)
+                    if estimate(candidate) <= remainingTokens { best = candidate; low = middle + 1 } else { high = middle - 1 }
+                }
+                truncated = best
+            }
             guard !truncated.isEmpty else {
                 continue
             }

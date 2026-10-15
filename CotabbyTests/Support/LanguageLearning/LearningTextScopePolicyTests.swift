@@ -149,11 +149,11 @@ struct LearningTextScopePolicyTests {
 
     @Test
     func sourceAtTheByteLimitIsAcceptedAndLongerSourceIsRejectedWhole() throws {
-        let atLimit = String(repeating: "a", count: 6_000)
-        let overLimit = String(repeating: "a", count: 6_001)
+        let atLimit = String(repeating: "a", count: ModelContextBudget.maximumTextBytes)
+        let overLimit = String(repeating: "a", count: ModelContextBudget.maximumTextBytes + 1)
         let atLimitRange = NSRange(location: 0, length: (atLimit as NSString).length)
         let overLimitRange = NSRange(location: 0, length: (overLimit as NSString).length)
-        let oversizedSentence = String(repeating: "language ", count: 750) + "lesson."
+        let oversizedSentence = String(repeating: "language ", count: 10_000) + "lesson."
 
         #expect(try LearningTextScopePolicy.text(value: atLimit, range: atLimitRange) == atLimit)
         #expect(throws: LearningFailure.self) {
@@ -162,7 +162,7 @@ struct LearningTextScopePolicyTests {
         #expect(throws: LearningFailure.self) {
             try LearningTextScopePolicy.conversionRange(
                 value: oversizedSentence,
-                selection: NSRange(location: 3_000, length: 0)
+                selection: NSRange(location: 40_000, length: 0)
             )
         }
     }

@@ -8,6 +8,7 @@ import UniformTypeIdentifiers
 struct AppsPaneView: View {
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
     @ObservedObject var typingHistory: TypingHistoryStore
+    var openShortcuts: (String) -> Void = { _ in }
     @Environment(\.settingsHighlightedItem) private var highlightedItem
     @State private var runningApps: [RunningAppSuggestion] = []
     @State private var selectedApp: AppSettingsEntry?
@@ -19,7 +20,7 @@ struct AppsPaneView: View {
                 AppSettingsDetailView(
                     suggestionSettings: suggestionSettings, typingHistory: typingHistory,
                     bundleIdentifier: selectedApp.bundleIdentifier, displayName: selectedApp.displayName,
-                    onBack: { self.selectedApp = nil }
+                    onBack: { self.selectedApp = nil }, openShortcuts: { openShortcuts(selectedApp.bundleIdentifier) }
                 )
             } else {
                 appListSection
@@ -112,14 +113,7 @@ struct AppsPaneView: View {
     }
 
     private func presentAppPicker() {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.application]
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
-        panel.prompt = String(localized: "Add")
-        guard panel.runModal() == .OK, let url = panel.url,
-              let metadata = ApplicationBundleMetadata(appURL: url) else { return }
+        guard let metadata = ApplicationBundlePicker.choose() else { return }
         // Keep a newly added app across launches even if every choice still inherits its default.
         suggestionSettings.addPerAppShortcutApp(bundleIdentifier: metadata.bundleIdentifier, displayName: metadata.displayName)
         selectedApp = entries.first { $0.bundleIdentifier == metadata.bundleIdentifier }

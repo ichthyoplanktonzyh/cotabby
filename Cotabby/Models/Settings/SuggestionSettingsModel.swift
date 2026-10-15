@@ -35,6 +35,8 @@ enum ShortcutAction: CaseIterable {
 @MainActor
 final class SuggestionSettingsModel: ObservableObject {
     let languageLearning: LanguageLearningSettings
+    let completionContexts: ModelContextSettings
+    @Published var completionLocalModelFilename = ""
     @Published private(set) var isGloballyEnabled: Bool
     /// The settings model owns pause lifetime so views and services observe one shared state.
     @Published private(set) var pauseState: SuggestionPauseState?
@@ -236,6 +238,7 @@ final class SuggestionSettingsModel: ObservableObject {
         endpointCredentialStore: OpenAICompatibleCredentialStoring
     ) {
         languageLearning = LanguageLearningSettings(defaults: userDefaults)
+        completionContexts = ModelContextSettings(role: "completion", defaults: userDefaults)
         languageLearning.translation.migrateLegacyCredential(from: endpointCredentialStore)
         let store = SuggestionSettingsStore(userDefaults: userDefaults)
         let data = store.load(configuration: configuration)
@@ -330,6 +333,7 @@ final class SuggestionSettingsModel: ObservableObject {
     /// the two ever drift. Scope matches the store: unrelated app state (onboarding, the lifetime
     /// accepted-word count, emoji history, the login-item flag) is intentionally left untouched.
     func resetToDefaults() {
+        completionContexts.reset()
         languageLearning.resetToDefaults()
         let data = store.resetToDefaults(configuration: configuration)
 
@@ -526,7 +530,7 @@ final class SuggestionSettingsModel: ObservableObject {
 
     var snapshot: SuggestionSettingsSnapshot {
         let settings = domainSettings
-        return SuggestionSettingsSnapshot(
+        let value = SuggestionSettingsSnapshot(
             isGloballyEnabled: settings.general.isGloballyEnabled,
             isTemporarilyPaused: settings.general.pauseState?.isActive() == true,
             disabledAppBundleIdentifiers: Set(settings.general.disabledAppRules.map(\.bundleIdentifier)),
@@ -567,6 +571,9 @@ final class SuggestionSettingsModel: ObservableObject {
             ),
             perAppBehaviors: Self.behaviorMap(settings.shortcuts.perAppOverrides)
         )
+        return applyingContext(
+            to: value, overrides: completionContexts.overrides, localModel: completionLocalModelFilename,
+            baseURL: openAICompatibleBaseURL, endpointModel: openAICompatibleModelName, mode: openAICompatibleAPIMode)
     }
 
     /// The per-app behavior the suggestion pipeline reads, keyed by bundle identifier. Apps whose
@@ -1755,6 +1762,10 @@ final class SuggestionSettingsModel: ObservableObject {
             }
         }
         if includingLearningShortcut, languageLearning.translationEnabled,
+            languageLearning.replacementKeyCode == keyCode, languageLearning.replacementModifiers == modifiers {
+            return String(localized: "Replace preview translation", table: "Learning")
+        }
+        if includingLearningShortcut, languageLearning.translationEnabled,
            languageLearning.keyCode == keyCode,
            languageLearning.modifiers == modifiers {
             return String(localized: "Language Learning", table: "Learning")
@@ -1790,6 +1801,10 @@ final class SuggestionSettingsModel: ObservableObject {
         // The global toggle tap would consume a matching per-app accept key first.
         if globalToggleKeyCode == keyCode, globalToggleKeyModifiers == modifiers {
             return ShortcutAction.toggleTabby.displayName
+        }
+        if includingLearningShortcut, languageLearning.translationEnabled,
+            languageLearning.replacementKeyCode == keyCode, languageLearning.replacementModifiers == modifiers {
+            return String(localized: "Replace preview translation", table: "Learning")
         }
         if includingLearningShortcut, languageLearning.translationEnabled,
            languageLearning.keyCode == keyCode,
@@ -1942,7 +1957,18 @@ extension SuggestionSettingsModel: SuggestionSettingsProviding {
                     perAppBehaviors: Self.behaviorMap(perAppOverrides)
                 )
             }
-            .removeDuplicates()
+        .combineLatest(
+            Publishers.CombineLatest4(
+                completionContexts.$overrides, $completionLocalModelFilename,
+                $openAICompatibleBaseURL, Publishers.CombineLatest($openAICompatibleModelName, $openAICompatibleAPIMode))
+        )
+        .map { [weak self] value, context in
+            guard let self else { return value }
+            return self.applyingContext(
+                to: value, overrides: context.0, localModel: context.1,
+                baseURL: context.2, endpointModel: context.3.0, mode: context.3.1)
+        }
+        .removeDuplicates()
             .eraseToAnyPublisher()
     }
 }

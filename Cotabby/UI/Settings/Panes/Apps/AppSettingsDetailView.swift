@@ -11,6 +11,7 @@ struct AppSettingsDetailView: View {
     let bundleIdentifier: String
     let displayName: String
     let onBack: () -> Void
+    var openShortcuts: () -> Void = {}
     @State private var isConfirmingDelete = false
 
     var body: some View {
@@ -61,9 +62,15 @@ struct AppSettingsDetailView: View {
             }
         }
         Section("Keys") {
-            PerAppShortcutRowsView(
-                suggestionSettings: suggestionSettings, bundleIdentifier: bundleIdentifier, displayName: displayName
-            )
+            LabeledContent(
+                String(localized: "Accept Word"),
+                value: suggestionSettings.resolvedAcceptBinding(forBundleIdentifier: bundleIdentifier).label)
+            LabeledContent(
+                String(localized: "Accept Entire Suggestion"),
+                value: suggestionSettings.inheritedFullAcceptanceDisplayLabel(forBundleIdentifier: bundleIdentifier))
+            Button(
+                String(localized: "Manage in Shortcuts", table: "Learning", comment: "Navigates to the single shortcut editor."),
+                action: openShortcuts)
         }
         Section {
             SettingsRowLabel(
@@ -112,8 +119,12 @@ struct AppSettingsDetailView: View {
             Text("Other apps’ history is kept.", tableName: "Learning")
         }
         Section {
-            Button(String(localized: "Reset App Settings", table: "Learning"), action: resetToDefaults)
-                .disabled(typingHistory.isDeletingRecords)
+            Button(
+                String(
+                    localized: "Reset App Behavior", table: "Learning",
+                    comment: "Resets app behavior while keeping shortcut overrides in the Shortcuts pane."), action: resetToDefaults
+            )
+            .disabled(typingHistory.isDeletingRecords)
         }
     }
 
@@ -161,7 +172,7 @@ struct AppSettingsDetailView: View {
 
     private func resetToDefaults() {
         suggestionSettings.removeDisabledApplication(bundleIdentifier: bundleIdentifier)
-        suggestionSettings.removePerAppOverride(bundleIdentifier: bundleIdentifier)
+        suggestionSettings.updatePerAppBehavior(bundleIdentifier: bundleIdentifier, displayName: displayName) { $0 = PerAppBehavior() }
         typingHistory.setExcluded(bundleIdentifier, excluded: false)
     }
 }

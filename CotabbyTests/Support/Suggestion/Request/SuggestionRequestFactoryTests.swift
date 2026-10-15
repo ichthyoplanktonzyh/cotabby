@@ -227,8 +227,8 @@ final class SuggestionRequestFactoryTests: XCTestCase {
             settings: CotabbyTestFixtures.settingsSnapshot(selectedEngine: .appleIntelligence),
             configuration: configuration
         )
-        // The endpoint backend is a small-window completion transport like llama, so it shares the
-        // llama budget rather than Apple's larger one.
+        // Endpoint input now has its own token budget. A short fixture fits whole regardless of
+        // the legacy local word-window limit used above.
         let endpointResult = SuggestionRequestFactory.buildRequest(
             context: context,
             settings: CotabbyTestFixtures.settingsSnapshot(selectedEngine: .openAICompatible),
@@ -236,7 +236,7 @@ final class SuggestionRequestFactoryTests: XCTestCase {
         )
 
         XCTAssertEqual(llamaResult.request.prefixText, "zeta eta theta")
-        XCTAssertEqual(endpointResult.request.prefixText, "zeta eta theta")
+        XCTAssertEqual(endpointResult.request.prefixText, "alpha beta gamma delta epsilon zeta eta theta")
         XCTAssertEqual(
             foundationModelResult.request.prefixText,
             "gamma delta epsilon zeta eta theta"

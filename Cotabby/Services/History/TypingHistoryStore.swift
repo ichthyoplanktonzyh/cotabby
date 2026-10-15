@@ -303,7 +303,10 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
         // The focus sequence is left out on purpose: leaving a field and coming back starts a new
         // focus session, but it is the same document and should stay one record.
         let fieldKey = "\(input.bundleIdentifier)|\(input.processIdentifier)|\(input.elementIdentifier)"
-        let text = input.precedingText + input.trailingText
+        // A larger completion budget expands the shared focus excerpt, not consent to keep
+        // more history. Recording retains the original independent 4K-per-side boundary.
+        let prefix = Self.recordingWindow(input.precedingText, beforeCaret: true)
+        let text = prefix + Self.recordingWindow(input.trailingText, beforeCaret: false)
         // Unchanged text in the same field is the common case on a 50 ms poll; answer it before
         // building the settings snapshot `isAllowed` needs.
         if activeRecording?.fieldKey == fieldKey, activeRecording?.rawText == text { return }
@@ -312,7 +315,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
             return
         }
 
-        let typedLength = input.precedingText.count
+        let typedLength = prefix.count
         if let active = activeRecording, active.fieldKey == fieldKey, !holdsNewDocument(active, input: input, text: text) {
             activeRecording?.rawText = text
             activeRecording?.rawTypedLength = typedLength
@@ -337,6 +340,13 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
             )
     }
 
+    private static func recordingWindow(_ text: String, beforeCaret: Bool) -> String {
+        let value = text as NSString, limit = FocusedInputSnapshot.textWindowUTF16
+        guard value.length > limit else { return text }
+        let range = NSRange(location: beforeCaret ? value.length - limit : 0, length: limit)
+        return value.substring(with: value.rangeOfComposedCharacterSequences(for: range))
+    }
+
     /// Whether the active field's new `text` is different writing from what is being recorded.
     ///
     /// A field is reused for many pieces of writing: chat apps clear the composer when a message is
@@ -351,7 +361,9 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     /// marks another document (a different note or file shown in the same view).
     private func holdsNewDocument(_ active: ActiveRecording, input: FocusedInputSnapshot, text: String) -> Bool {
         if Self.isWorthKeeping(active.rawText) {
-            guard input.precedingTextMayBeTruncated else { return !Self.keepsMostOf(active.rawText, in: text) }
+            guard input.precedingText.utf16.count >= FocusedInputSnapshot.textWindowUTF16 else {
+                return !Self.keepsMostOf(active.rawText, in: text)
+            }
             return active.windowTitle != input.windowTitle && !Self.sharesContent(active.rawText, with: text)
         }
         // Nothing worth keeping is being recorded, for example just after a message was sent. If
@@ -375,7 +387,7 @@ final class TypingHistoryStore: ObservableObject, SuggestionHistoryProviding {
     private func resumedRecording(fieldKey: String, input: FocusedInputSnapshot, text: String) -> ActiveRecording? {
         guard var recent = recentRecordings[fieldKey], text.hasPrefix(recent.rawText) else { return nil }
         recent.rawText = text
-        recent.rawTypedLength = input.precedingText.count
+        recent.rawTypedLength = Self.recordingWindow(input.precedingText, beforeCaret: true).count
         recent.windowTitle = input.windowTitle
         return recent
     }

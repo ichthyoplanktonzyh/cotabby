@@ -168,7 +168,8 @@ remain under `CotabbyTests/Evals`, and shared fixtures remain under `CotabbyTest
   owning AppKit state. Their direct tests live under `CotabbyTests/Support/Settings/`.
 - `UI/Settings/Panes/AppsPaneView.swift` presents that list. `Panes/Apps/AppSettingsDetailView.swift`
   edits one app through the environment-owned settings and history stores;
-  `PerAppShortcutRowsView.swift` reuses the shared keybind and recorder components. These views
+  shortcut summaries link to the central Shortcuts pane. `PerAppShortcutRowsView.swift` is hosted
+  there through `Components/Controls/AppShortcutSection.swift` and reuses the shared recorder. These views
   use the existing settings scaffold, rows and callouts. Opt-in rendering checks live under
   `CotabbyTests/UI/Settings/`.
 - `SuggestionRequestFactory` carries app instructions separately from global notes. Both prompt
@@ -260,3 +261,26 @@ that owns too many responsibilities and should be split by behavior rather than 
 - `VisualContextCoordinator` refreshes both backend profiles using their existing capture limits.
   Excerpts expire six seconds after capture starts, even while OCR is pending. Navigation clears
   the published excerpt immediately, and invalidation retires predictions conditioned on it.
+
+## Scoped Translation and Model Budgets
+
+- `Models/Settings/ModelContextSettings.swift` persists one task's model/destination token map;
+  `SuggestionSettingsModel+Context.swift` projects active completion identity and budgets.
+- `Models/LanguageLearning/LearningTranslationInput.swift` separates target/reference text from AX
+  captures. `LearningLocalModelConfiguration.swift` freezes the native model URL, adapter and
+  capacity together for planning/decode, without owning an allocation.
+  `Support/LanguageLearning/LearningTranslationBudget.swift` plans complete targets with
+  reference-only cropping; `Support/Prompting/ModelContextBudget.swift` supplies shared allocation
+  limits and endpoint estimates. Their direct pure tests live under `CotabbyTests/Support/Prompting`.
+- `LearningModelController` schedules native or estimated planning away from MainActor;
+  `LearningLocalRuntime` counts actual vocabulary/template tokens and owns native capacity.
+  `LearningTranslationService` validates the immutable plan and output before publication.
+- `App/Coordinators/InlineFeatures/LearningSentencePreviewCoordinator.swift` owns the versioned
+  preview, capture, cancellation and replacement transaction. The existing sentence panel/card
+  presents both automatic and explicit previews; the existing selection service owns the single
+  scoped write. Coordinator and native integration tests mirror those subsystems.
+- `UI/Settings/Components/Controls/ModelContextSection.swift` is reused by completion/translation
+  model pages; `LearningShortcutRows.swift` and `AppShortcutSection.swift` are hosted only by
+  `ShortcutsPaneView`. Its transient `ShortcutRecordingState.swift` owns the single active recorder,
+  keeping global/translation/app rows mutually exclusive without adding another input monitor.
+  `ApplicationBundlePicker.swift` shares app selection with `AppsPaneView`.

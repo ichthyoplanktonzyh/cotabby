@@ -93,7 +93,8 @@ nonisolated enum SpeculativeAcceptanceContext {
             hostMarkedTextRange: snapshot.hostMarkedTextRange,
             documentSelection: NSRange(location: max(0, snapshot.documentSelection.location +
                 selectionLocation - snapshot.selection.location), length: 0),
-            documentLength: snapshot.documentLength.map { $0 + selectionLocation - snapshot.selection.location }
+            documentLength: snapshot.documentLength.map { $0 + selectionLocation - snapshot.selection.location },
+            capturedTextWindowUTF16: snapshot.capturedTextWindowUTF16
         )
     }
 }

@@ -5,8 +5,8 @@ import Foundation
 import Logging
 
 /// App-lifetime sibling of autocomplete. It observes the existing focus stream, waits for edits
-/// to settle and owns one versioned learning request. Its panel is read-only: ordinary keystrokes,
-/// including Tab and Return, always continue to the editor and original autocomplete pipeline.
+/// to settle and owns one versioned translation and optional explicit replacement transaction.
+/// Ordinary typing, Tab and Return remain owned by the host and autocomplete pipeline.
 @MainActor
 final class LearningSentencePreviewCoordinator {
     private let service: any LearningSentenceGenerating
@@ -31,8 +31,21 @@ final class LearningSentencePreviewCoordinator {
     private var document: Document?
     private var expanded = false
     private var dismissedSource: String?
-    private var cache: [String: LearningSentenceResult] = [:]
+    private var cache: [TranslationKey: LearningSentenceResult] = [:]
     private var running = false
+    /// A write can outlive a document switch while AX verification settles. Keep a single
+    /// transaction gate, but show its spinner only on the document that owns that transaction.
+    private var committingID: UUID?
+    private var committing: Bool { committingID != nil }
+
+    /// Reference and effective model are meaning-bearing inputs, even when target text is unchanged.
+    private struct TranslationKey: Hashable {
+        let input: LearningTranslationInput
+        let sourceLanguage: LearningLanguage
+        let targetLanguage: LearningLanguage
+        let model: LearningModelSnapshot
+        let mode: LearningReferenceMode
+    }
 
     private struct AnalysisKey: Hashable {
         let source: String
@@ -59,6 +72,7 @@ final class LearningSentencePreviewCoordinator {
         var isStale = false
         /// An explicit shortcut may keep a preview in a search field; a passive preview cannot.
         var explicitlyRequested = false
+        var replacementBlocked = false
     }
 
     /// A previous result carries its source evidence, so editing earlier text cannot relabel an
@@ -105,6 +119,10 @@ final class LearningSentencePreviewCoordinator {
             service.settings.snapshotPublisher.map(\.isLowPowerModeAutoDisableEnabled).removeDuplicates().dropFirst().map { _ in () }.eraseToAnyPublisher(),
             service.settings.snapshotPublisher.map(\.disabledAppBundleIdentifiers).removeDuplicates().dropFirst().map { _ in () }.eraseToAnyPublisher()
         ]).sink { [weak self] in self?.clear() }.store(in: &subscriptions)
+        service.settings.languageLearning.shortcutChanges.sink { [weak self] in
+            // @Published fires before storage; repaint labels after the new binding is committed.
+            Task { @MainActor [weak self] in self?.render() }
+        }.store(in: &subscriptions)
         service.settings.languageLearning.analysisChanges.sink { [weak self] in
             // @Published delivers before the edited value is stored. Defer configuration work
             // one main-actor turn and keep the already displayed translation intact.
@@ -122,7 +140,8 @@ final class LearningSentencePreviewCoordinator {
     /// Observing typing never claims it. Hide immediately, even before AX publishes committed
     /// text; only the next settled edit or an explicit shortcut may present a new version.
     func observe(_ event: CapturedInputEvent) -> Bool {
-        if event.shouldClearSuggestion, event.keyCode != 53, !matchesShortcut(event.keyCode, flags: event.flags) {
+        if event.shouldClearSuggestion, event.keyCode != 53,
+            !matchesShortcut(event.keyCode, flags: event.flags), !matchesReplacement(event.keyCode, flags: event.flags) {
             suspendPreview()
         }
         return false
@@ -137,6 +156,17 @@ final class LearningSentencePreviewCoordinator {
             return .consume
         }
         guard enabled, availability() == nil else { return .notHandled }
+        if matchesReplacement(event.keyCode, flags: event.flags) {
+            guard !replacementConflicts, panel.isVisible, let document, !document.isStale,
+                !document.replacementBlocked, document.capture.supportsReplacement,
+                !document.translation.isEmpty
+            else { return .notHandled }
+            if !event.isAutorepeat, !committing {
+                let identifier = document.id
+                Task { [weak self] in self?.replacePreview(identifier) }
+            }
+            return .consume
+        }
         guard matchesShortcut(event.keyCode, flags: event.flags), !shortcutConflicts else { return .notHandled }
         guard !event.isAutorepeat else { return .consume }
         // AX reads cannot block the consuming keyboard tap. The following task either expands
@@ -151,15 +181,26 @@ final class LearningSentencePreviewCoordinator {
 
     private var enabled: Bool {
         let settings = service.settings.languageLearning
-        return running && settings.translationEnabled && settings.sentencePreviewEnabled
+        return running && settings.translationEnabled
     }
 
     private var shortcutConflicts: Bool {
         let settings = service.settings.languageLearning
-        return service.settings.conflictingPerAppShortcutName(
-            forBundleIdentifier: focus.snapshot.bundleIdentifier ?? "", keyCode: CGKeyCode(settings.keyCode),
-            modifiers: settings.modifiers, excluding: .toggleTabby, includingLearningShortcut: false
-        ) != nil
+        return service.settings.learningShortcutConflict(
+            keyCode: CGKeyCode(settings.keyCode), modifiers: settings.modifiers,
+            replacement: false, bundleIdentifier: focus.snapshot.bundleIdentifier ?? "") != nil
+    }
+
+    private var replacementConflicts: Bool {
+        let settings = service.settings.languageLearning
+        return service.settings.learningShortcutConflict(
+            keyCode: CGKeyCode(settings.replacementKeyCode),
+            modifiers: settings.replacementModifiers, replacement: true, bundleIdentifier: focus.snapshot.bundleIdentifier ?? "") != nil
+    }
+
+    private func matchesReplacement(_ code: UInt16, flags: CGEventFlags) -> Bool {
+        let settings = service.settings.languageLearning
+        return code == settings.replacementKeyCode && ShortcutModifierMask(eventFlags: flags) == settings.replacementModifiers
     }
 
     private func matchesShortcut(_ code: UInt16, flags: CGEventFlags) -> Bool {
@@ -170,6 +211,12 @@ final class LearningSentencePreviewCoordinator {
     private func changed(_ context: FocusedInputSnapshot?) {
         let old = previousContext
         previousContext = context
+        // Our confirmed transaction may select the saved sentence before replacing it. Its AX
+        // revalidation owns that transition; a genuine field switch still retires the whole offer.
+        if let committingID, document?.id == committingID {
+            if old?.sessionIdentity != context?.sessionIdentity { clear() }
+            return
+        }
         guard LearningCapturePolicy.permitsPreview(focus.snapshot.capability,
             explicitlyRequested: document?.explicitlyRequested == true) else {
             // Capability can change on a reused AX node without changing its text or identity.
@@ -183,8 +230,9 @@ final class LearningSentencePreviewCoordinator {
             old.hasHostMarkedText != context.hasHostMarkedText
         guard changed else { return }
         suspendPreview()
-        guard enabled, availability() == nil, LearningCapturePolicy.permitsAutomaticCapture(focus.snapshot.capability),
-              !context.isSecure, !context.isIntegratedTerminal,
+        guard enabled, service.settings.languageLearning.sentencePreviewEnabled,
+            availability() == nil, LearningCapturePolicy.permitsAutomaticCapture(focus.snapshot.capability),
+            !context.isSecure, !context.isIntegratedTerminal,
               context.documentSelection.length == 0,
               LearningCommittedTextChangePolicy.hasMutation(from: old, to: context) else {
             // Caret navigation is not consent to translate existing text. Also remove a preview
@@ -205,7 +253,9 @@ final class LearningSentencePreviewCoordinator {
             guard let self else { return }
             do {
                 try await self.waitForPause(self.debounce)
-                guard self.requestID == identifier, !Task.isCancelled, self.enabled, self.availability() == nil else { return }
+                guard self.requestID == identifier, !Task.isCancelled, self.enabled,
+                    self.service.settings.languageLearning.sentencePreviewEnabled, self.availability() == nil
+                else { return }
                 let capture = try self.reader.capture()
                 // Capture refreshes AX. Recheck the passive gate after that refresh, since the
                 // field may have become a search box during the debounce without changing text.
@@ -238,8 +288,17 @@ final class LearningSentencePreviewCoordinator {
             let capture = try reader.capture()
             begin(capture, expanded: true)
         } catch {
-            // An explicit shortcut may report an error; passive AX failures stay silent.
-            if document != nil { document?.message = error.localizedDescription; expanded = true; render() }
+            // Explicit commands deserve feedback even with no previous document. This error-only
+            // card owns no AX capture and therefore cannot offer a replacement action.
+            clear()
+            let settings = service.settings.languageLearning
+            panel.show(
+                .init(
+                    id: requestID, source: "", translation: "", chunks: [],
+                    sourceLanguage: settings.sourceLanguages.first ?? .chinese, targetLanguage: settings.targetLanguage,
+                    caret: focus.snapshot.context?.caretRect ?? .zero, isExpanded: false, isGenerating: false,
+                    message: error.localizedDescription, previousTranslation: nil, shortcutLabel: settings.keyLabel, isError: true),
+                expand: {}, dismiss: { [weak self] in self?.clear() }, replace: nil)
         }
     }
 
@@ -262,7 +321,12 @@ final class LearningSentencePreviewCoordinator {
             targetLanguage: settings.targetLanguage, previousSentence: prior)
         document?.explicitlyRequested = expanded
         self.expanded = expanded
-        let key = language.rawValue + ":" + settings.targetLanguage.rawValue + ":" + capture.source
+        let input = LearningTranslationInput.captured(
+            value: capture.value, range: capture.range,
+            source: capture.source, mode: settings.referenceMode)
+        let key = TranslationKey(
+            input: input, sourceLanguage: language, targetLanguage: settings.targetLanguage,
+            model: settings.translation.snapshot, mode: settings.referenceMode)
         if let cached = cache[key] {
             CotabbyLogger.learning.info("Learning translation cache hit", metadata: [
                 "request_id": .string(document?.traceID ?? ""), "source": .string("translation"), "phase": .string("cache_hit")])
@@ -281,7 +345,8 @@ final class LearningSentencePreviewCoordinator {
             guard let self else { return }
             await LearningRequestTrace.$requestID.withValue(traceIdentifier) {
                 do {
-                    let translation = try await self.service.translateSentence(source: capture.source,
+                    let translation = try await self.service.translateSentence(
+                        input: input,
                         sourceLanguage: language, targetLanguage: settings.targetLanguage)
                     guard self.isCurrent(identifier, capture: capture, verifyCapture: true) else { return }
                     self.work = nil
@@ -455,12 +520,53 @@ final class LearningSentencePreviewCoordinator {
             caret: focus.snapshot.context?.caretRect ?? document.capture.context.caretRect,
             isExpanded: expanded, isGenerating: document.generating, message: document.message,
             previousTranslation: document.previousSentence?.translation, shortcutLabel: service.settings.languageLearning.keyLabel,
-            isStale: document.isStale, units: document.units, unitStage: document.unitStage),
-            expand: { [weak self] in self?.expandOrRequest() }, dismiss: { [weak self] in self?.dismiss() })
+                isStale: document.isStale, units: document.units, unitStage: document.unitStage,
+                targetIsSelection: document.capture.originalSelection.length > 0,
+                canReplace: !committing && !document.replacementBlocked && !document.translation.isEmpty
+                    && document.capture.supportsReplacement,
+                replacementShortcutLabel: service.settings.languageLearning.replacementKeyLabel, isCommitting: committingID == document.id),
+            expand: { [weak self] in self?.expandOrRequest() }, dismiss: { [weak self] in self?.dismiss() },
+            replace: { [weak self] in self?.replacePreview(document.id) })
         if panel.isVisible, !document.isStale, !document.translation.isEmpty {
             service.recordDisplay(source: .translation, requestID: document.traceID)
             if expanded, !document.chunks.isEmpty {
                 service.recordDisplay(source: .analysis, requestID: document.traceID)
+            }
+        }
+    }
+
+    /// The click/shortcut itself confirms this exact preview version. The AX service rechecks the
+    /// capture immediately before its single scoped write; an uncertain write is never retried.
+    private func replacePreview(_ identifier: UUID) {
+        guard !committing, let current = document, current.id == identifier, !current.isStale,
+            !current.replacementBlocked, current.capture.supportsReplacement, !current.translation.isEmpty,
+            isCurrent(identifier, capture: current.capture, verifyCapture: true)
+        else { return }
+        committingID = identifier
+        document?.generating = false
+        analysisWork?.cancel(); unitWork?.cancel()
+        render()
+        work = Task { [weak self] in
+            guard let self else { return }
+            defer {
+                if self.committingID == identifier { self.committingID = nil }
+                // A newer preview may have waited for this old write's verification. Repaint its
+                // enabled state without attaching this transaction's failure to the new document.
+                self.render()
+            }
+            do {
+                try Task.checkCancellation()
+                guard self.requestID == identifier, self.availability() == nil else { throw CancellationError() }
+                try await self.reader.replace(current.capture, with: current.translation)
+                guard self.requestID == identifier else { return }
+                self.clear()
+            } catch {
+                guard self.requestID == identifier else { return }
+                self.work = nil
+                self.document?.replacementBlocked = true
+                self.document?.message = error.localizedDescription
+                self.expanded = true
+                self.render()
             }
         }
     }

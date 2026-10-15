@@ -780,7 +780,8 @@ enum AXHelper {
     static func synthesizeMarkerSelection(
         on element: AXUIElement,
         parameterizedAttributes: Set<String>,
-        normalizeNonBreakingSpaces: Bool = false
+        normalizeNonBreakingSpaces: Bool = false,
+        contextWindowUTF16: Int = MarkerSelectionSynthesizer.defaultWindow
     ) -> MarkerSelection? {
         // Guard on advertised parameterized attributes so apps without marker support degrade to
         // nil instead of issuing doomed cross-process AX calls on every poll.
@@ -817,7 +818,7 @@ enum AXHelper {
         }
 
         return MarkerSelectionSynthesizer.make(
-            beforeCaret: beforeText, selected: selectedText, afterCaret: afterText,
+            beforeCaret: beforeText, selected: selectedText, afterCaret: afterText, window: contextWindowUTF16,
             normalizeNonBreakingSpaces: normalizeNonBreakingSpaces, afterCaretIsKnown: afterCaretIsKnown
         )
     }

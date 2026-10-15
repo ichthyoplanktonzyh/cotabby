@@ -52,6 +52,67 @@ final class LearningLocalRuntimeIntegrationTests: XCTestCase {
         try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys]).write(to: output)
     }
 
+    /// Exercises the new planner and the same native generator as the UI, with both specialists.
+    /// The report is for human review of target-only output, not a synthetic translation score.
+    func testBudgetedReferenceTranslationUsesCompleteTargetOnly() async throws {
+        guard let directory = ProcessInfo.processInfo.environment["COTABBY_TRANSLATION_CATALOG_DIR"] else {
+            throw XCTSkip("Set COTABBY_TRANSLATION_CATALOG_DIR to the pinned translation GGUF directory")
+        }
+        let cases: [(String, LearningTranslationInput, LearningLanguage, LearningLanguage)] = [
+            ("greeting", .init(source: "你好。", referenceBefore: "我们正在谈论今晚的晚餐。"), .chinese, .english),
+            ("ability", .init(source: "我能做到。", referenceBefore: "这次任务是修复编译错误。"), .chinese, .english),
+            ("pronoun", .init(source: "它现在可以正常工作了。", referenceBefore: "这台打印机刚刚修好。"), .chinese, .english),
+            ("selection", .init(source: "太好了", referenceBefore: "我们顺利解决了这个问题。", referenceAfter: "，明天可以发布。"), .chinese, .english),
+            ("whole-draft", .init(source: "今天我们完成了代码审查。明天准备发布新版本。"), .chinese, .english),
+            ("reverse", .init(source: "It works now.", referenceBefore: "The printer was repaired this morning."), .english, .chinese)
+        ]
+        var evidence: [[String: String]] = []
+        for model in LearningRuntimeCatalog.translationModels
+        where
+            ["Hy-MT2-1.8B-Q4_K_M.gguf", "translategemma-4b-it-Q4_K_M.gguf"].contains(model.filename) {
+            let url = URL(fileURLWithPath: directory).appendingPathComponent(model.filename)
+            let results = try await Task.detached {
+                let runtime = LearningLocalRuntime(), id = UUID()
+                runtime.claim(id)
+                defer { runtime.shutdownSync() }
+                var rows: [[String: String]] = []
+                for (name, input, source, target) in cases {
+                    let plan = try runtime.translationPlan(
+                        configuration: .init(modelURL: url, template: .automatic, contextWindowTokens: 8_192), input: input,
+                        sourceLanguage: source, targetLanguage: target, output: 512, operationID: id, trace: nil)
+                    let output = try runtime.generate(
+                        configuration: .init(modelURL: url, template: .automatic, contextWindowTokens: 8_192), prompt: plan.prompt,
+                        maxTokens: 512, operationID: id, trace: nil, onLoad: nil, onDelta: { _ in })
+                    rows.append([
+                        "model": model.filename, "case": name, "source": input.source,
+                        "prompt": plan.prompt, "translation": output
+                    ])
+                }
+                // A huge reference must be cropped as complete data, while the target stays exact.
+                let bounded = try runtime.translationPlan(
+                    configuration: .init(modelURL: url, template: .automatic, contextWindowTokens: 2_048),
+                    input: .init(source: "你好。", referenceBefore: String(repeating: "这是更早的参考上下文。", count: 2_000)),
+                    sourceLanguage: .chinese, targetLanguage: .english, output: 512, operationID: id, trace: nil)
+                guard bounded.prompt.contains("你好。"), bounded.prompt.utf8.count < 20_000 else {
+                    throw LearningFailure.message("Native planner did not preserve the complete target with bounded reference")
+                }
+                return rows
+            }.value
+            for row in results {
+                let output = try XCTUnwrap(row["translation"])
+                XCTAssertFalse(try LearningExpressionOutputPolicy.validatedText(output).isEmpty)
+                XCTAssertFalse(output.contains("REFERENCE EXCERPTS"), output)
+                XCTAssertFalse(output.contains("TARGET TRANSLATION TASK"), output)
+                if row["case"] == "greeting" {
+                    XCTAssertNotNil(output.range(of: #"\b(hello|hi)\b"#, options: [.regularExpression, .caseInsensitive]), output)
+                }
+            }
+            evidence += results
+        }
+        let output = URL(fileURLWithPath: directory).appendingPathComponent("native-reference-translations.json")
+        try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys]).write(to: output)
+    }
+
     func testShutdownCancelsLiveDecodeBeforeUnloading() async throws {
         guard let path = ProcessInfo.processInfo.environment["COTABBY_LEARNING_GGUF"] else {
             throw XCTSkip("Set COTABBY_LEARNING_GGUF to an existing Hy-MT2 GGUF")

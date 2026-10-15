@@ -195,6 +195,52 @@ struct LearningSentenceCardTests {
         #expect(longText.contains("Source content must remain visible") && longText.contains("Target translation must remain visible"))
     }
 
+    @Test(arguments: [false, true])
+    func scopedReplacementAndBothRecoveryActionsStayVisible(_ dark: Bool) async throws {
+        let window = NSPanel(
+            contentRect: CGRect(x: 0, y: 0, width: 480, height: 300),
+            styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+        defer { window.close() }
+        let state = LearningDetailState(), id = UUID()
+        func card(expanded: Bool) -> LearningSentenceCard {
+            var presentation = Self.presentation(id: id, expanded: expanded)
+            presentation.targetIsSelection = true
+            presentation.canReplace = true
+            presentation.replacementShortcutLabel = "⌃⌥T"
+            return LearningSentenceCard(
+                presentation: presentation, detailState: state,
+                replace: {}, inspect: { _ in }, expand: {}, dismiss: {}, sizeChanged: { _ in })
+        }
+        let hosting = NSHostingView(rootView: card(expanded: false))
+        window.contentView = hosting
+        window.orderFrontRegardless()
+        for expanded in [false, true] {
+            hosting.rootView = card(expanded: expanded)
+            await settle(hosting, in: window)
+            let bitmap = try #require(hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds))
+            hosting.cacheDisplay(in: hosting.bounds, to: bitmap)
+            if let output = ProcessInfo.processInfo.environment["COTABBY_UI_SCREENSHOT_DIR"] {
+                let name = "replacement-\(expanded ? "expanded" : "compact")-\(dark ? "dark" : "light").png"
+                try bitmap.representation(using: .png, properties: [:])?.write(
+                    to: URL(fileURLWithPath: output).appendingPathComponent(name))
+            }
+            let request = VNRecognizeTextRequest()
+            request.recognitionLanguages = [Bundle.main.preferredLocalizations.first?.hasPrefix("zh") == true ? "zh-Hans" : "en-US"]
+            request.recognitionLevel = .accurate
+            try VNImageRequestHandler(cgImage: try #require(bitmap.cgImage)).perform([request])
+            let text = (request.results?.compactMap { $0.topCandidates(1).first?.string } ?? []).joined()
+            func normalized(_ value: String) -> String { value.lowercased().filter { $0.isLetter || $0.isNumber } }
+            let visible = normalized(text)
+            #expect(visible.contains(normalized(String(localized: "Target: Selection", table: "Learning"))))
+            if expanded {
+                #expect(visible.contains(normalized(String(localized: "Copy source text", table: "Learning"))))
+                #expect(visible.contains(normalized(String(localized: "Copy translation", table: "Learning"))))
+            }
+        }
+    }
+
     private func settle(_ hosting: NSHostingView<LearningSentenceCard>, in window: NSWindow) async {
         for _ in 0..<8 {
             hosting.layoutSubtreeIfNeeded()

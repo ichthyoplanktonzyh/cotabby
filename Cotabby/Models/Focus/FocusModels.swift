@@ -396,6 +396,7 @@ nonisolated struct FocusedInputSnapshot: Equatable {
     /// Present only when the resolver read the real document length. An empty trailing excerpt
     /// can mean a failed range query; it must not be mistaken for a caret at the document end.
     let documentLength: Int?
+    let capturedTextWindowUTF16: Int
     let isSecure: Bool
 
     /// True when the resolved field is an xterm.js integrated-terminal surface (VS Code / Cursor /
@@ -485,7 +486,8 @@ nonisolated struct FocusedInputSnapshot: Equatable {
         elementFrameRect: CGRect? = nil,
         hostMarkedTextRange: NSRange? = nil,
         documentSelection: NSRange? = nil,
-        documentLength: Int? = nil
+        documentLength: Int? = nil,
+        capturedTextWindowUTF16: Int = Self.textWindowUTF16
     ) {
         self.applicationName = applicationName
         self.bundleIdentifier = bundleIdentifier
@@ -504,6 +506,7 @@ nonisolated struct FocusedInputSnapshot: Equatable {
         self.selection = selection
         self.documentSelection = documentSelection ?? selection
         self.documentLength = documentLength
+        self.capturedTextWindowUTF16 = capturedTextWindowUTF16
         self.isSecure = isSecure
         self.isIntegratedTerminal = isIntegratedTerminal
         self.isWebContentField = isWebContentField
@@ -543,7 +546,7 @@ nonisolated struct FocusedInputSnapshot: Equatable {
 
     /// True when capture may have cut the start of `precedingText` to fit that window.
     nonisolated var precedingTextMayBeTruncated: Bool {
-        precedingText.utf16.count >= Self.textWindowUTF16
+        precedingText.utf16.count >= capturedTextWindowUTF16
     }
 
     /// The signature lets later pipeline stages detect whether a completion result is stale.

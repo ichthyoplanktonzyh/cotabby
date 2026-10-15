@@ -7,7 +7,7 @@ struct LanguageLearningSection: View {
     @ObservedObject var settings: LanguageLearningSettings
     let suggestionSettings: SuggestionSettingsModel
     var configureModel: (LearningModelRole) -> Void = { _ in }
-    @State private var recording = false
+    var openShortcuts: () -> Void = {}
     @State private var sourceLanguagesExpanded = false
 
     var body: some View {
@@ -35,8 +35,8 @@ struct LanguageLearningSection: View {
                 """))
                 .font(.caption).foregroundStyle(.secondary)
             Text(String(localized: """
-            Learning requests contain the current source text and language direction. Chunk-alignment requests also include the \
-            displayed translation. They never include screen content, clipboard content, or typing history.
+            Translation sends the target and optional draft excerpts from the same field to the chosen engine. Alignment receives \
+            only the target and translation. Screens, clipboard and history are excluded.
             """,
                 table: "Learning", comment: """
                 Privacy disclosure describing the data sent for learning requests and context that is never included.
@@ -60,34 +60,16 @@ struct LanguageLearningSection: View {
                 comment: "Name of the model profile used to align source and target phrases."), profile: settings.analysis) {
                 configureModel(.analysis)
             }
-            HStack {
-                Text(String(localized: "Expand learning details: \(settings.keyLabel)", table: "Learning",
-                    comment: "Shows the configured keyboard shortcut that expands the sentence-learning card."))
-                if recording {
-                    KeyRecorderView(onKeyRecorded: { code, modifiers, label in
-                        settings.keyCode = code
-                        settings.modifiers = modifiers
-                        settings.keyLabel = label
-                        recording = false
-                    }, onCancelled: { recording = false }, conflictChecker: conflict)
-                } else {
-                    Button(String(localized: "Change", table: "Learning",
-                        comment: "Starts recording a new shortcut for the learning detail card.")) { recording = true }
-                }
-            }
-            if settings.translationEnabled,
-               let reason = conflict(settings.keyCode, settings.modifiers) {
-                Text(String(localized: "This shortcut conflicts with \(reason). Choose a different key combination.", table: "Learning",
-                    comment: "Explains why the learning shortcut cannot be used; the conflicting command name is inserted."))
-                    .font(.caption)
-                    .foregroundStyle(.red)
+            LabeledContent {
+                Button(String(localized: "Manage in Shortcuts", table: "Learning"), action: openShortcuts)
+            } label: {
+                Text(
+                    String(
+                        localized: "Translation shortcuts", table: "Learning", comment: "Read-only route to the central shortcut editor."))
             }
             Text(String(localized: """
-            Automatic preview processes only new text typed in the focused field after you enable it; moving to existing text never \
-            sends it automatically. A pause starts the preview. Sentence-ending punctuation and line breaks define sentence \
-            boundaries, and adding to the same sentence updates its preview. The learning overlay never edits source text; Tab and \
-            Return still go to the editor, and Escape dismisses the overlay. When automatic preview is off, use the shortcut to \
-            preview the current selection or sentence.
+            After a pause, preview the current sentence. Use Replace to write it back, or select text to translate a larger range. \
+            The details shortcut opens a preview or toggles details. Tab and Return stay with the editor; Escape dismisses.
             """,
                 table: "Learning", comment: """
                 Explains when automatic preview runs, how sentence boundaries are detected, and how the overlay interacts with typing.
@@ -98,6 +80,24 @@ struct LanguageLearningSection: View {
 
     private var translationControls: some View {
         Group {
+            Picker(
+                String(
+                    localized: "Translation reference", table: "Learning",
+                    comment: "Selects extra translation context without changing the target."),
+                selection: $settings.referenceMode
+            ) {
+                Text(String(localized: "Current sentence", table: "Learning", comment: "Translate without extra draft reference.")).tag(
+                    LearningReferenceMode.currentSentence)
+                Text(String(localized: "Draft context", table: "Learning", comment: "Use budgeted reference from the current draft.")).tag(
+                    LearningReferenceMode.draft)
+            }
+            Text(
+                String(
+                    localized:
+                        "The target remains the current sentence or your selection. Only reference text may be shortened to fit the budget.",
+                    table: "Learning", comment: "Distinguishes immutable translation target from bounded reference.")
+            )
+            .font(.caption).foregroundStyle(.secondary)
             Picker(String(localized: "Target language", table: "Learning",
                 comment: "Picker label for the language to translate into."),
                 selection: $settings.targetLanguage) {
@@ -136,26 +136,6 @@ struct LanguageLearningSection: View {
         return $sourceLanguagesExpanded.transaction(transaction)
     }
 
-    private func conflict(_ code: UInt16, _ modifiers: ShortcutModifierMask) -> String? {
-        if code == 36 || code == 76 || code == 53 || modifiers.isEmpty {
-            return String(localized: "Use a shortcut with a modifier key; Enter and Escape are reserved.",
-                table: "Learning", comment: "Validation message shown when a shortcut uses a reserved key or has no modifier.")
-        }
-        for action in ShortcutAction.allCases {
-            if let conflict = suggestionSettings.conflictingShortcutName(
-                keyCode: code, modifiers: modifiers, excluding: action, includingLearningShortcut: false
-            ) {
-                return conflict
-            }
-        }
-        for override in suggestionSettings.perAppShortcutOverrides {
-            if let conflict = suggestionSettings.conflictingPerAppShortcutName(
-                forBundleIdentifier: override.bundleIdentifier, keyCode: code, modifiers: modifiers,
-                excluding: .toggleTabby, includingLearningShortcut: false
-            ) { return conflict }
-        }
-        return nil
-    }
 }
 
 /// Writing shows the role's current selection and a route into Engine & Model. It observes the

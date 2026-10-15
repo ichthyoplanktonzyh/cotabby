@@ -20,6 +20,11 @@ final class LlamaRuntimeManager: ObservableObject {
     private let core: LlamaRuntimeCore
     private var startupTask: Task<PreparedLlamaRuntime, Error>?
     private var startupModelFilename: String?
+    private var startupContextWindowTokens: Int?
+    private var startupID = UUID()
+    /// The app supplies the selected model's saved budget for warmup; requests carry their own
+    /// immutable choice. The manager remains the sole native-runtime lifecycle owner.
+    var contextWindowTokensProvider: (() -> Int?)?
     private var cachedRuntime: PreparedLlamaRuntime?
     private var selectedModelFilename: String?
 
@@ -82,10 +87,12 @@ final class LlamaRuntimeManager: ObservableObject {
 
         selectedModelFilename = normalizedFilename
 
-        if cachedRuntime?.resolvedRuntime.modelFileURL.lastPathComponent == normalizedFilename {
+        if cachedRuntime?.resolvedRuntime.modelFileURL.lastPathComponent == normalizedFilename,
+            cachedRuntime?.contextWindowTokens == (contextWindowTokensProvider?() ?? Int(configuration.contextWindowTokens)) {
             return
         }
 
+        startupID = UUID()
         startupTask?.cancel()
         startupTask = nil
         startupModelFilename = nil
@@ -118,7 +125,7 @@ final class LlamaRuntimeManager: ObservableObject {
         options: LlamaGenerationOptions,
         onPartialRawText: (@Sendable (String) -> Void)?
     ) async throws -> LlamaGenerationOutput {
-        _ = try await preparedRuntime()
+        _ = try await preparedRuntime(contextWindowTokens: options.contextWindowTokens)
 
         let core = self.core
         let operationID = UUID()
@@ -185,7 +192,7 @@ final class LlamaRuntimeManager: ObservableObject {
         cachedPrefixBytes: Int? = nil,
         options: LlamaGenerationOptions
     ) async throws {
-        _ = try await preparedRuntime()
+        _ = try await preparedRuntime(contextWindowTokens: options.contextWindowTokens)
 
         let core = self.core
         let operationID = UUID()
@@ -232,6 +239,7 @@ final class LlamaRuntimeManager: ObservableObject {
     }
 
     private func prepareForStop() {
+        startupID = UUID()
         startupTask?.cancel()
         startupTask = nil
         startupModelFilename = nil
@@ -242,12 +250,22 @@ final class LlamaRuntimeManager: ObservableObject {
     }
 
     /// Returns cached runtime metadata when available or performs one full preparation flow otherwise.
-    private func preparedRuntime() async throws -> PreparedLlamaRuntime {
+    private func preparedRuntime(contextWindowTokens: Int? = nil) async throws -> PreparedLlamaRuntime {
+        let requestedWindow = min(
+            ModelContextBudget.maximumLocalTokens,
+            max(
+                1_024,
+                contextWindowTokens ?? contextWindowTokensProvider?() ?? Int(configuration.contextWindowTokens)))
+        let configuration = LlamaRuntimeConfiguration(
+            runtimeDirectoryPath: configuration.runtimeDirectoryPath,
+            preferredModelNames: configuration.preferredModelNames, contextWindowTokens: Int32(requestedWindow),
+            batchSize: configuration.batchSize, gpuLayerCount: configuration.gpuLayerCount)
         let resolvedRuntime = try resolveSelectedRuntime()
         let requestedModelFilename = resolvedRuntime.modelFileURL.lastPathComponent
 
         if let cachedRuntime,
-            cachedRuntime.resolvedRuntime.modelFileURL == resolvedRuntime.modelFileURL {
+            cachedRuntime.resolvedRuntime.modelFileURL == resolvedRuntime.modelFileURL,
+            cachedRuntime.contextWindowTokens == requestedWindow {
             CotabbyLogger.runtime.trace("Using cached runtime for \(requestedModelFilename)")
             return cachedRuntime
         }
@@ -255,9 +273,9 @@ final class LlamaRuntimeManager: ObservableObject {
         // Deduplicate concurrent prepare calls for the same selected model, but cancel and
         // replace the task if the requested model changed while startup was already in flight.
         if let startupTask {
-            if startupModelFilename == requestedModelFilename {
+            if startupModelFilename == requestedModelFilename, startupContextWindowTokens == requestedWindow {
                 CotabbyLogger.runtime.debug("Reusing in-flight startup for \(requestedModelFilename)")
-                return try await awaitPreparedRuntime(startupTask)
+                return try await awaitPreparedRuntime(startupTask, id: startupID)
             }
 
             CotabbyLogger.runtime.info("Model changed to \(requestedModelFilename), cancelling previous startup")
@@ -278,12 +296,14 @@ final class LlamaRuntimeManager: ObservableObject {
                 configuration: configuration
             )
         }
+        startupID = UUID()
         self.startupTask = startupTask
         startupModelFilename = requestedModelFilename
+        startupContextWindowTokens = requestedWindow
         CotabbyLogger.runtime.info("Loading \(resolvedRuntime.modelDisplayName) into memory")
         state = .loading(String(localized: "Loading \(resolvedRuntime.modelDisplayName) into memory."))
 
-        return try await awaitPreparedRuntime(startupTask)
+        return try await awaitPreparedRuntime(startupTask, id: startupID)
     }
 
     /// Resolves either the explicitly selected model or the default preferred model order.
@@ -324,38 +344,26 @@ final class LlamaRuntimeManager: ObservableObject {
     }
 
     /// Awaits the prepared runtime task and applies the published diagnostics on success.
-    private func awaitPreparedRuntime(
-        _ startupTask: Task<PreparedLlamaRuntime, Error>
-    ) async throws -> PreparedLlamaRuntime {
+    private func awaitPreparedRuntime(_ startupTask: Task<PreparedLlamaRuntime, Error>, id: UUID) async throws -> PreparedLlamaRuntime {
+        let prepared: PreparedLlamaRuntime
         do {
-            // `Task.value` rethrows if startup failed; the manager converts those failures into
-            // user-facing bootstrap state below.
-            let preparedRuntime = try await startupTask.value
-            cachedRuntime = preparedRuntime
-            apply(preparedRuntime)
-            self.startupTask = nil
-            startupModelFilename = nil
-            return preparedRuntime
-        } catch is CancellationError {
-            self.startupTask = nil
-            startupModelFilename = nil
-            throw LlamaRuntimeError.cancelled
-        } catch let error as LlamaRuntimeError {
-            self.startupTask = nil
-            startupModelFilename = nil
-            diagnostics.lastError = error.localizedDescription
-            diagnostics.lastLoadStatus = "Failed"
-            state = .failed(error.localizedDescription)
-            throw error
+            prepared = try await startupTask.value
         } catch {
-            self.startupTask = nil
-            startupModelFilename = nil
-            let runtimeError = LlamaRuntimeError.unavailable(error.localizedDescription)
-            diagnostics.lastError = runtimeError.localizedDescription
+            // A superseded load must not clear the newer load's task or publish its failure.
+            guard startupID == id else { throw LlamaRuntimeError.cancelled }
+            self.startupTask = nil; startupModelFilename = nil; startupContextWindowTokens = nil
+            if error is CancellationError { throw LlamaRuntimeError.cancelled }
+            let failure = (error as? LlamaRuntimeError) ?? .unavailable(error.localizedDescription)
+            diagnostics.lastError = failure.localizedDescription
             diagnostics.lastLoadStatus = "Failed"
-            state = .failed(runtimeError.localizedDescription)
-            throw runtimeError
+            state = .failed(failure.localizedDescription)
+            throw failure
         }
+        guard startupID == id else { throw LlamaRuntimeError.cancelled }
+        cachedRuntime = prepared
+        apply(prepared)
+        self.startupTask = nil; startupModelFilename = nil; startupContextWindowTokens = nil
+        return prepared
     }
 
     /// Copies prepared runtime metadata into published diagnostics for the menu and startup UI.

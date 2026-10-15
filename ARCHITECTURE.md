@@ -731,7 +731,8 @@ completion, filters both chart and rows by task, and labels outcome and stages. 
 all tasks. Completion acceptance/suppression quality counters remain completion-only.
 
 Endpoint learning reuses the HTTP client implementation with a dedicated ephemeral session that
-rejects redirects. Translation sends only bounded source/language direction; analysis sends that
+rejects redirects. Translation sends the complete target/language direction plus optional budgeted
+reference excerpts from the same editable draft; analysis sends that
 source plus the fixed displayed translation. Both require complete text responses; analysis streams
 valid chunks. No screen OCR, clipboard, history or autocomplete prompt is included.
 
@@ -770,49 +771,83 @@ repositions an existing learning card; when no space remains, learning waits and
 is released. Card height follows content, with a bounded scroll viewport for details. Zero geometry
 preferences during host-root replacement are ignored so they cannot collapse the details viewport.
 
-The explicit translation workflow remains available when automatic sentence preview is disabled.
-The redundant word-hint coordinator, settings entry and model task have been retired; old keys are ignored.
+Automatic and explicit translation share `LearningSentencePreviewCoordinator`, one nonactivating
+`LearningSentencePanel` and the same sentence card. Turning automatic preview off disables the pause
+trigger, while the details shortcut can still request a selection or current-sentence preview.
+`InlineCommandCoordinator` owns this sibling's start/stop lifetime, and the existing input monitor
+routes both learning commands without another event tap. The legacy `LanguageLearningCoordinator`
+and translation panel remain compatibility/test surfaces; the composition root no longer starts them.
 
-Ordinary inline autocomplete remains owned by the suggestion pipeline. The legacy learning workflow
-provides an explicitly triggered translation preview. `LanguageLearningSettings` stores the source-language choices,
-target language, model name, shortcut, and off-by-default feature switches. `LearningExpressionTask`
-and `LearningExpressionPrompt` describe translation requests.
+`LanguageLearningSettings` owns source languages, target language, reference mode and the two separate
+shortcuts. The default reference mode translates the current sentence or explicit selection with no
+extra draft excerpts; draft mode adds bounded text before/after that exact target. Selecting the whole
+draft makes it the target. `LearningTranslationInput` contains only text; the coordinator alone retains
+AX handles and the exact replacement range. Model, reference, language or budget changes cancel old
+work and clear caches. Translation cache keys include the effective model and bounded reference input.
 
-For an explicit translation preview, one enabled source language is the user's direction preference;
-the short source text is not asked to prove that choice. With several enabled sources, the preview
-uses Natural Language constrained to those choices and requires a confident result with a clear
-margin. The target is excluded from source candidates.
+For explicit previews, one enabled source language is the user's direction preference; with several,
+Natural Language must resolve a confident choice excluding the target. Positive marked IME evidence
+blocks the request. Missing proof of committed text permits copy-only preview, never replacement.
+Learning includes no screen contents, clipboard data or typing history. Each explicitly configured
+endpoint retains its own credentials and disclosure and may be local or public HTTPS.
 
-`CotabbyAppEnvironment` builds one `LearningExpressionService` using the role-specific model collection.
-Each learning Endpoint has its own credential owner and is explicitly configured by the user;
-it may be local or remote over HTTPS. A shortcut request is an explicit preview of
-the selected text, or the complete sentence at the caret when nothing is selected. Positive evidence
-of active marked IME composition blocks that request until the candidate is committed. If the editor
-cannot prove that text is committed, the user may still preview and copy it, but the capture carries
-no replacement capability. Learning includes no screen contents, clipboard data, or typing history.
+Clicking Replace or pressing its configured shortcut confirms the currently displayed version. The
+card identifies current sentence versus selection. Tab, Return and ordinary typing stay with the host.
+Details expand independently; a complete translation can be replaced before alignment finishes.
+`LearningSelectionReplacement` revalidates field/session, UTF-16 text, selection and IME capability,
+then performs one native selected-text write or target-PID Paste with final selection validation.
+It never derives a range from model-output length, retries an uncertain write or rolls back user edits.
+A failed write expands source/translation copy recovery and disables repeat replacement. A document-ID
+transaction gate survives cancellation until verification ends; an older write cannot label a new
+preview as committing or dispatch concurrently. Explicit capture failures show an error-only card
+without an editable range. Shortcut label changes repaint the existing card without regenerating.
 
-`InlineCommandCoordinator` owns the sibling manual `LanguageLearningCoordinator` and automatic
-`LearningSentencePreviewCoordinator` with their start/stop lifetime.
-The new InputMonitor interception reason is independent of emoji/macro capture and is not installed
-until the monitor starts. A translation task retains one selection capture, task identity and preview;
-input, navigation or configuration changes invalidate it. `LearningContracts` separates model,
-selection transaction and presentation boundaries so controlled asynchronous test doubles can verify
-late-response rejection, cancellation, and commit failures without OS permissions.
+`LearningTextScopePolicy` resolves complete grapheme-safe selections/sentences, with a separate 256 KiB
+acquisition ceiling and a bounded 32K UTF-16 neighborhood for sentence detection. A sentence touching
+an artificial boundary is rejected rather than shortened. `LearningTranslationBudget` counts the full
+model-specific task and complete target first, reserves output, and crops only reference excerpts.
+The output reserve scales with a larger model budget (up to 32K tokens), so a fixed old output
+ceiling does not reject a larger complete target unnecessarily. The generic, Hy-MT and TranslateGemma
+adapters share this target/reference contract; TranslateGemma's
+2K input limit applies to both native and endpoint transports. Output ending at the token limit is
+rejected as incomplete and never becomes replaceable. Native post-write verification accepts the
+retained field's exact expected value despite a dirty-document title; web fields retain session checks.
 
-`LearningSelectionReplacement` verifies the live AX capture before mutation. Native fields receive a
-selected-text write; web fields use the existing inserter's target-PID Paste menu path with final
-selection validation and no synthetic-key fallback. Both paths inspect actual field contents before
-reporting success. An uncertain edit is never automatically rolled back (which might overwrite a new
-user edit) or repeated. The nonactivating `LearningTranslationPanel` owns the window; the SwiftUI
-`LearningTranslationCard` owns only display and explicit confirm/copy/cancel controls.
+### Model context budgets and shortcut ownership
 
-`LearningTextScopePolicy` computes a full grapheme-safe selection or sentence from the locally retained
-AX value, capped at 6 KB and rejected rather than silently truncated. Sentence preview preserves the
-original insertion point throughout generation. Only a capture with replacement capability may
-start the confirmed transaction to select that sentence, followed by another exact capture check.
-Native post-write verification accepts the retained field's exact expected value despite a
-dirty-document title or transient focus change; web fields additionally retain session checks to
-prevent composer reuse after navigation from becoming a false receipt.
+`ModelContextSettings` stores independent task-specific maps keyed by backend, model and normalized
+endpoint destination/API mode. Completion resolves its active local filename from the one runtime
+model, while translation resolves its power profile. Flat legacy preference keys remain stable.
+`SuggestionSettingsSnapshot` freezes both the numeric window and model identities so switching equal
+budgets still invalidates requests and anchor caches. Completion defaults to its existing 4K policy;
+translation retains its existing 8K default. Apple capacity remains system managed.
+
+`LearningLocalModelConfiguration` freezes the model file, adapter and capacity together for each
+native operation. The controller supplies this value across its detached planning/decode boundary,
+rather than widening every executor method with separate mutable settings inputs.
+
+`ModelContextBudget` owns pure limits and the disclosed endpoint estimator/margin. Native translation
+planning executes inside the role's serialized native boundary off MainActor and counts literal tokens
+plus trusted template framing against actual allocated capacity. Endpoint planning also runs off
+MainActor, with cancellation checks. Local completion retains estimated section allocation followed
+by native tokenizer enforcement; default on-device prompt bytes stay unchanged. A configured local
+window reallocates its existing runtime on the next use; startup identities reject obsolete loads.
+
+An explicit completion override expands the existing AX range/provider and bounded snapshot together,
+up to a fixed acquisition ceiling. Default polling remains 4096 UTF-16 units per side. Snapshots and
+optimistic copies carry their actual capture window for geometry truncation checks. Marker captures
+use the same window. Block-break alignment remains independently bounded, and history recording keeps
+its original 4K-per-side scope even when completion reads more. Prompt allocation still prioritizes
+caret-nearest text; accepting a completion inserts only continuation text at the caret.
+
+All editable keybindings live in Settings → Shortcuts: global acceptance/toggle, translation replace
+and details, and per-app overrides. `LearningShortcutRows` and `AppShortcutSection` reuse `KeybindRow`,
+`KeyRecorderView` and `PerAppShortcutRowsView`. A pane-owned `ShortcutRecordingState` makes recording
+exclusive across all three areas, and late cleanup from an old row cannot retire a newer recorder.
+Writing and app detail pages present summaries/navigation;
+resetting app behavior preserves shortcut overrides. Onboarding demonstrates read-only current
+keycaps and directs later editing to Settings. `ModelContextSection` is a shared presentation-only
+budget control owned by each task's parent model page, not another settings/runtime owner.
 
 Focus snapshots keep `documentSelection` and known `documentLength` separately from the bounded
 prompt-window `selection`. Native coordinates come from raw AX ranges; marker coordinates derive

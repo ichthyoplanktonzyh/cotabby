@@ -329,3 +329,89 @@ Validation on Xcode 26.5 / Apple Silicon, using the prepared pinned inference wo
   and project/configuration file hashes remained unchanged after validation. Both the current
   repo-scoped `build/DerivedData` and the isolated baseline's `build/DerivedData` were removed and
   their absence verified before completion.
+
+## Scoped translation and model context budgets — 2026-10-16
+
+After reviewing [upstream #845](https://github.com/FuJacob/cotabby/pull/845), the maintainer approved
+an adapted target/reference design, starting from Lingrove `43ce5eec`. The inspected upstream draft
+head was `1bafbdce5c40981d2ee4f250dfc0e81ce3d3a933`. This work implements that approved design in
+Lingrove's existing subsystems; it does not merge the upstream draft wholesale. Incoming-chat OCR,
+automatic whole-field selection and Cmd-A replacement from the draft are outside this adoption.
+#843 and #673 remain deferred.
+
+Completion and translation now have independent token context preferences saved by effective
+backend/model/destination. Local preparation uses the selected window; endpoint settings bound
+application input without resizing or claiming the server's capacity. Translation's native planner
+counts actual vocabulary and trusted template tokens off MainActor, reserves output and crops only
+reference. Endpoint planning uses a disclosed conservative estimate/margin off MainActor. The full
+current sentence or explicit selection is never silently cropped. Oversized targets or incomplete
+model output are rejected before they can become replacement offers. A larger budget can reserve
+more output, up to 32K tokens, instead of inheriting the old fixed output ceiling.
+
+The default reference mode uses only the target. Optional draft reference adds nearest excerpts
+from the same editable field; selecting the entire draft makes that whole selection the target.
+The model-specific generic/Hy-MT/TranslateGemma task adapter is unchanged without references, and
+references never redefine the retained AX replacement range. TranslateGemma's 2K input limit is
+shared by native and endpoint paths. Neither learning prompt includes screen OCR, clipboard or
+history. Default on-device completion keeps its shipped prompt policy; explicit overrides expand
+the existing AX capture and sliding prompt window. Actual capture size travels through snapshots
+and optimistic copies. History retains its separate original capture boundary.
+
+Automatic and explicit requests share the existing sentence card, TextKit highlights, lookup and
+nonactivating panel. It identifies sentence versus selection, offers explicit Replace separately
+from detail expansion, and reuses the existing AX replacement service. A versioned single-write
+transaction survives cancellation until verification settles. Changes to text, selection, field,
+IME state, model, reference mode, language or budget invalidate old offers. Failure expands source
+and translation copy recovery, blocks retry, and never automatically restores or overwrites text.
+Explicit capture failures have an error-only card rather than a silently consumed command.
+
+All editable shortcuts now live in Settings → Shortcuts, including translation replace/details
+and per-app overrides. A pane-owned transient recording state ensures that starting a recorder
+in any section retires the previous one; late cleanup cannot clear the newer owner. Writing/App
+detail provide summaries and navigation; onboarding shows read-only keycaps. Existing saved conflicts
+are shown when translation is enabled, and the runtime
+arbiter checks the current app. KeybindRow, KeyRecorderView, PerAppShortcutRowsView, native form
+scaffolds and row labels are reused. App behavior reset preserves key overrides. Pending budget
+text-field edits cannot commit into a newly selected power/model profile. New copy is translated
+into all 15 supported languages in `Learning.xcstrings`; `Localizable.xcstrings` is unchanged.
+
+Two independent GPT-6 Luna reviewers with max reasoning performed read-only behavior/budget and
+preview/input/UI reviews, as requested. The fixes include equal-budget model identity publication,
+actual AX capture expansion, copied truncation metadata, existing shortcut-conflict feedback,
+manual error feedback, source-copy recovery and document-scoped replacement transaction state.
+Their final reviews found no remaining P1/P2 after those corrections.
+
+Validation on Xcode 26.5 / Apple Silicon with the prepared pinned inference workspace:
+
+- Final Release `build-for-testing` passed; all 353 targeted test items passed without skips.
+  The final complete run executed 3174 items: 3138 passed, 35 environment/opt-in skips and one
+  failure in the inherited aria2 fake-process progress wait. The failure is
+  `Aria2DownloadServiceTests.test_cancelStopsRunningProcessAsCancelled` at the pre-cancellation
+  fixture wait, also seen in the preceding adoption's validation. All 14 aria2 items passed when
+  isolated. No aria2 production or fixture code was changed. Unsigned test-host AX checks account
+  for 20 of the environment skips; these results are not presented as a completely passing suite.
+- Both Release model eval suites passed with the same Gemma GGUF and seed 42 as baseline
+  `43ce5eec`. All 117 continuation and 23 recall cases retained identical raw/displayed output,
+  outcome and suppression stage. Quality scores remained 0.882051 and 0.739130. Native Hy-MT2 1.8B
+  and TranslateGemma 4B checks generated 12 target-only translations, including explicit selection,
+  whole-draft selection and both language directions; each also planned a large cropped reference
+  while retaining the complete target.
+- Actual SwiftUI settings/card views were rendered and visually checked in English/Simplified
+  Chinese and light/dark appearances, using isolated settings fixtures. The final Chinese render
+  run passed all five items. Both String Catalogs validate: 1144 source keys across 15 languages;
+  all five localization tool tests passed. The common catalog remains byte-identical to baseline.
+- Normal SwiftLint on changed production Swift passed with zero errors and 70 warnings; strict
+  lint is not clean. `git diff --check` passed and repeated XcodeGen generation produced identical
+  project bytes. All 845 production/test/project/configuration hashes matched the final validated
+  source after testing.
+- The separate `Cotabby Dev` Release build passed and replaced the installed development app
+  only after matching its existing designated signing requirement. The binary timestamp advanced,
+  exactly one installed dev process launched, Accessibility/Input Monitoring remained granted,
+  all services started and the completion runtime reached ready state. All 18 existing shortcut
+  preference values were semantically preserved; the inherited startup store only reordered the
+  keys in its encoded per-app JSON. Native settings interaction on this installed binary remains
+  pending because macOS was locked and the UI tool could not unlock it; the maintainer was asked
+  to unlock the Mac. Offscreen render and recording-owner tests passed independently of this block.
+- Logs, xcresult bundles, source/eval comparisons, rendered UI, native translation outputs and
+  the signed install receipt are retained under gitignored `build/model-context/`. Repo-scoped
+  `build/DerivedData` was removed and its absence verified before completion.

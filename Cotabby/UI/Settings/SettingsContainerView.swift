@@ -153,13 +153,17 @@ struct SettingsContainerView: View {
                 huggingFaceSearchService: huggingFaceSearchService
             )
         case .writing:
-            WritingPaneView(suggestionSettings: suggestionSettings, configureLearningModel: navigation.openLearningModel)
+            WritingPaneView(
+                suggestionSettings: suggestionSettings, configureLearningModel: navigation.openLearningModel,
+                openShortcuts: { navigation.openShortcuts() })
         case .context:
             ContextPaneView(suggestionSettings: suggestionSettings, typingHistory: typingHistoryStore)
         case .shortcuts:
-            ShortcutsPaneView(suggestionSettings: suggestionSettings)
+            ShortcutsPaneView(suggestionSettings: suggestionSettings, selectedApp: navigation.shortcutAppBundleIdentifier)
         case .apps:
-            AppsPaneView(suggestionSettings: suggestionSettings, typingHistory: typingHistoryStore)
+            AppsPaneView(
+                suggestionSettings: suggestionSettings, typingHistory: typingHistoryStore,
+                openShortcuts: { navigation.openShortcuts(for: $0) })
         case .permissions:
             PermissionsPaneView(
                 permissionManager: permissionManager,

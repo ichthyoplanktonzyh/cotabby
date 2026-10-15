@@ -61,6 +61,7 @@ nonisolated struct LearningModelSnapshot: Equatable, Hashable, Sendable {
     let baseURL: String
     let endpointModel: String
     let credentialRevision: Int
+    var contextWindowTokens: Int = 8_192
 }
 
 /// A learning task's battery/AC choice. Server address and key remain owned by its role; a power
@@ -81,6 +82,7 @@ nonisolated struct LearningPowerProfile: Codable, Equatable, Hashable, Sendable 
 @MainActor
 final class LearningModelSettings: ObservableObject {
     let role: LearningModelRole
+    let contexts: ModelContextSettings
     private let defaults: UserDefaults
     private let credentials: any OpenAICompatibleCredentialStoring
     private var prefix: String { "learning.\(role.rawValue)." }
@@ -104,6 +106,7 @@ final class LearningModelSettings: ObservableObject {
     init(role: LearningModelRole, defaults: UserDefaults,
          credentials: (any OpenAICompatibleCredentialStoring)? = nil) {
         self.role = role
+        contexts = ModelContextSettings(role: role.rawValue, defaults: defaults)
         self.defaults = defaults
         self.credentials = credentials ?? (defaults === UserDefaults.standard &&
             ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
@@ -146,7 +149,29 @@ final class LearningModelSettings: ObservableObject {
             template: selection.backend == .local ? selection.template : .automatic,
             baseURL: selection.backend == .endpoint ? baseURL : "",
             endpointModel: selection.backend == .endpoint ? selection.endpointModel : "",
-            credentialRevision: selection.backend == .endpoint ? credentialRevision : 0)
+            credentialRevision: selection.backend == .endpoint ? credentialRevision : 0,
+            contextWindowTokens: min(
+                contexts.tokens(for: contextIdentity) ?? 8_192,
+                selection.backend == .local ? ModelContextBudget.maximumLocalTokens : ModelContextBudget.maximumEndpointTokens))
+    }
+
+    var contextIdentity: String {
+        let selection = activeSelection
+        return ModelContextBudget.identity(
+            backend: selection.backend.rawValue,
+            model: selection.backend == .local ? selection.localModel : selection.endpointModel,
+            baseURL: selection.backend == .endpoint ? baseURL : "")
+    }
+
+    func setContextWindowTokens(_ tokens: Int?, expectedIdentity: String? = nil) {
+        if let expectedIdentity, expectedIdentity != contextIdentity { return }
+        contexts.setTokens(
+            tokens, for: contextIdentity,
+            maximum: activeSelection.backend == .local
+                ? ModelContextBudget.maximumLocalTokens : ModelContextBudget.maximumEndpointTokens)
+        // Budget edits are committed before publishing the effective profile, just like model edits.
+        objectWillChange.send()
+        publishEffectiveChange()
     }
 
     var activeSelection: LearningPowerProfile {
@@ -206,6 +231,7 @@ final class LearningModelSettings: ObservableObject {
     }
 
     func reset() {
+        contexts.reset()
         powerSwitchingEnabled = false
         backend = .local; localModel = ""; template = .automatic
         baseURL = OpenAICompatibleEndpointConfiguration.defaultBaseURLString; endpointModel = ""

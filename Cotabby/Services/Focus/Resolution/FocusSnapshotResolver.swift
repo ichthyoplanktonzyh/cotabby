@@ -10,6 +10,10 @@ import Logging
 @MainActor
 struct FocusSnapshotResolver {
     private let geometryResolver: AXTextGeometryResolver
+    /// The composition root supplies the effective completion budget. Keeping the provider here
+    /// expands the native AX range and the published excerpt together; default polling stays 4K.
+    private let contextWindowUTF16: @MainActor () -> Int
+    var captureWindow: Int { min(262_144, max(Self.focusedTextContextWindowUTF16, contextWindowUTF16())) }
 
     /// Throttle window for the deep caret BFS. ~100ms keeps the walk off the per-keystroke hot path
     /// in Chromium editors while staying short enough that caret lag during fast typing stays minor.
@@ -88,10 +92,12 @@ struct FocusSnapshotResolver {
 
     init(
         geometryResolver: AXTextGeometryResolver? = nil,
-        uptime: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
+        uptime: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
+        contextWindowUTF16: @escaping @MainActor () -> Int = { FocusedInputSnapshot.textWindowUTF16 }
     ) {
         self.geometryResolver = geometryResolver ?? AXTextGeometryResolver()
         self.uptime = uptime
+        self.contextWindowUTF16 = contextWindowUTF16
     }
 
     /// Drops the cached static-text-run walk so the next capture pays a fresh one. Called through
@@ -353,7 +359,8 @@ struct FocusSnapshotResolver {
             elementFrameRect: resolvedCandidate.elementFrameRect,
             hostMarkedTextRange: resolvedCandidate.markedTextRange ?? chromiumCompletionRange ?? smartComposeRange,
             documentSelection: resolvedCandidate.documentSelection,
-            documentLength: resolvedCandidate.documentLength
+            documentLength: resolvedCandidate.documentLength,
+            capturedTextWindowUTF16: captureWindow
         )
 
         if let reason = blockedReason(
@@ -692,7 +699,7 @@ struct FocusSnapshotResolver {
 
     /// Returns a caret-adjacent text window and rewrites `selection` into that window's coordinate
     /// space. `NSRange` is UTF-16 based, so all slicing goes through `NSString`.
-    private func boundedContextWindow(text: String, selection: NSRange) -> (text: String, selection: NSRange) {
+    func boundedContextWindow(text: String, selection: NSRange) -> (text: String, selection: NSRange) {
         let nsText = text as NSString
         guard nsText.length > 0 else {
             return (text, NSRange(location: 0, length: 0))
@@ -703,8 +710,8 @@ struct FocusSnapshotResolver {
             ? Int.max
             : selection.location + selection.length
         let safeEnd = min(max(requestedEnd, safeLocation), nsText.length)
-        let beforeStart = max(0, safeLocation - Self.focusedTextContextWindowUTF16)
-        let afterEnd = min(nsText.length, safeEnd + Self.focusedTextContextWindowUTF16)
+        let beforeStart = max(0, safeLocation - captureWindow)
+        let afterEnd = min(nsText.length, safeEnd + captureWindow)
         let rawWindow = NSRange(location: beforeStart, length: afterEnd - beforeStart)
         let composedWindow = nsText.rangeOfComposedCharacterSequences(for: rawWindow)
         let windowText = nsText.substring(with: composedWindow)
@@ -1017,7 +1024,8 @@ struct FocusSnapshotResolver {
                 parameterizedAttributes: supportedParameterizedAttributes,
                 // Mail rewrites trailing spaces as NBSP in its WebKit AX text. Give every
                 // downstream session comparison the same representation as keyboard events.
-                normalizeNonBreakingSpaces: bundleIdentifier == "com.apple.mail"
+                normalizeNonBreakingSpaces: bundleIdentifier == "com.apple.mail",
+                contextWindowUTF16: captureWindow
             )
             : nil
 
@@ -1047,7 +1055,8 @@ struct FocusSnapshotResolver {
         } ?? nativeTextSelection).map {
             restoringBlockBreaks(
                 in: $0,
-                on: element,
+                    documentSelection: nativeSelection ?? markerSelection?.documentSelection,
+                    on: element,
                 role: role,
                 supportedAttributes: supportedAttributes,
                 supportedParameterizedAttributes: supportedParameterizedAttributes
@@ -1379,6 +1388,7 @@ struct FocusSnapshotResolver {
             startOffset = 0
         } else {
             return LineEdgeParagraph(
+                // Geometry cache granularity stays fixed when only the model budget changes.
                 key: "u\(windowDocumentOrigin / focusedTextContextWindowUTF16)",
                 startOffset: nil
             )
@@ -1460,7 +1470,7 @@ struct FocusSnapshotResolver {
         return Self.windowedTextSelection(
             selection: selection,
             documentLength: rawDocumentLength,
-            contextWindow: Self.focusedTextContextWindowUTF16,
+            contextWindow: captureWindow,
             readRange: { range in
                 AXHelper.parameterizedStringValue(
                     for: kAXStringForRangeParameterizedAttribute as CFString,
@@ -1530,6 +1540,7 @@ struct FocusSnapshotResolver {
     /// stays in the range space, where the host's own offset queries expect it.
     private func restoringBlockBreaks(
         in selection: AXTextSelection,
+        documentSelection: NSRange?,
         on element: AXUIElement,
         role: String,
         supportedAttributes: Set<String>,
@@ -1538,8 +1549,11 @@ struct FocusSnapshotResolver {
         let text = selection.text as NSString
         guard role != kAXTextFieldRole as String,
               AXHelper.readsTextMarkers(parameterizedAttributes: supportedParameterizedAttributes),
-              selection.selection.location < min(Self.focusedTextContextWindowUTF16, MarkerSelectionSynthesizer.defaultWindow),
-              NSMaxRange(selection.selection) <= text.length
+            // Equality proves that the caret window still begins at the document start,
+            // independently of its model-specific size. Alignment itself stays bounded.
+            documentSelection?.location == selection.selection.location,
+            text.length <= Self.blockBreakAlignmentMaximumUTF16,
+            NSMaxRange(selection.selection) <= text.length
         else {
             return selection
         }

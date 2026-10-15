@@ -60,6 +60,7 @@ enum FoundationModelPromptRenderer {
         // Style rules live in the high-priority instructions channel like the base rules, but are
         // appended last with an explicit subordination line so they cannot override the output
         // contract above.
+        let mandatoryInstructions = lines.joined(separator: "\n")
         let trimmedRules = request.customRules
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -85,7 +86,29 @@ enum FoundationModelPromptRenderer {
             lines.append("Apply these only when they fit the continuation naturally; never break the rules above.")
         }
 
-        return lines.joined(separator: "\n")
+        let full = lines.joined(separator: "\n")
+        guard let window = request.promptContextWindowTokens else { return full }
+        let allowance =
+            ModelContextBudget.inputAllowance(total: min(window, 4_096), output: request.maxPredictionTokens, estimated: true) / 2
+        if ModelContextBudget.estimatedTokens(full) <= allowance { return full }
+        // Keep the role/output contract intact. Whole optional blocks compete for the remainder;
+        // cutting the concatenated instructions could change the meaning of a user preference.
+        let notes: [(String, String, Int)] = [
+            ("app", request.applicationInstructions ?? "", 60),
+            ("global", request.extendedContext ?? "", 50),
+            ("style", trimmedRules.joined(separator: "\n"), 40)
+        ]
+        let sections = notes.filter { !$0.1.isEmpty }.map { name, text, priority in
+            let content = "Reference notes (subordinate to the output rules):\n" + text
+            return PromptSection(
+                name: name, content: content, priority: priority, minChars: content.count,
+                maxChars: content.count, truncation: .preserveStart)
+        }
+        let kept = PromptSectionBudget.allocate(
+            sections,
+            totalTokens: max(0, allowance - ModelContextBudget.estimatedTokens(mandatoryInstructions)),
+            estimate: ModelContextBudget.estimatedTokens, enforcesTokenLimit: true)
+        return ([mandatoryInstructions] + kept.map(\.content)).joined(separator: "\n")
     }
 
     /// Demonstrates continuing a sentence without replying to its author. Code completion still
@@ -100,6 +123,7 @@ enum FoundationModelPromptRenderer {
     /// Foundation Models tends to behave more reliably when the prompt describes the immediate task
     /// and the stable rules live in session instructions instead of being mixed together.
     static func prompt(for request: SuggestionRequest) -> String {
+        if let window = request.promptContextWindowTokens { return budgetedPrompt(for: request, window: window) }
         let prefixText = request.prefixText
 
         if prefixText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -190,6 +214,70 @@ enum FoundationModelPromptRenderer {
         ])
 
         return sections.joined(separator: "\n")
+    }
+
+    /// Opt-in Apple input budgets count both channels. The system still owns native capacity;
+    /// this pure allocator changes only which bounded references and caret-nearest prefix we send.
+    private static func budgetedPrompt(for request: SuggestionRequest, window: Int) -> String {
+        let task = "Write only the next continuation fragment. " + request.completionLengthInstruction + "\nText before the caret:\n"
+        let remaining = max(
+            1,
+            ModelContextBudget.inputAllowance(
+                total: min(window, 4_096),
+                output: request.maxPredictionTokens, estimated: true)
+                - ModelContextBudget.estimatedTokens(sessionInstructions(for: request))
+                - ModelContextBudget.estimatedTokens(task) - 32)
+        var sections = [
+            PromptSection(
+                name: "prefix", content: request.prefixText, priority: 100, minChars: 1,
+                maxChars: request.prefixText.count, truncation: .preserveEnd, preservesWhitespace: true)
+        ]
+        var surface = ["User is on \(request.context.applicationName)."]
+        if let tone = appToneHint(forBundleIdentifier: request.context.bundleIdentifier) { surface.append(tone) }
+        if let title = request.surfaceContext?.windowTitle { surface.append("The window is titled \"\(title)\".") }
+        if let domain = request.surfaceContext?.domain { surface.append("The user is on \(domain).") }
+        if let placeholder = request.surfaceContext?.fieldPlaceholder { surface.append("The text field is labeled \"\(placeholder)\".") }
+        let surfaceText = surface.joined(separator: "\n")
+        sections.append(
+            PromptSection(
+                name: "surface", content: surfaceText, priority: 70,
+                minChars: surfaceText.count, maxChars: surfaceText.count, truncation: .preserveStart))
+        let trailing = String(request.context.trailingText.prefix(request.maxSuffixCharacters))
+        if !trailing.isEmpty {
+            let following = "Text after the caret (do not overwrite):\n" + trailing
+            sections.append(
+                PromptSection(
+                    name: "following", content: following, priority: 80,
+                    minChars: following.count, maxChars: following.count, truncation: .preserveStart, preservesWhitespace: true))
+        }
+        for (name, text) in [
+            ("screen", request.visualContextSummary ?? ""), ("clipboard", request.clipboardContext ?? ""),
+            ("history", request.historyExamples.joined(separator: "\n"))
+        ] where !text.isEmpty {
+            let reference = "Reference \(name):\n" + text
+            sections.append(
+                PromptSection(
+                    name: name, content: reference, priority: 40, minChars: reference.count,
+                    maxChars: reference.count, truncation: .preserveStart))
+        }
+        let kept = PromptSectionBudget.allocate(
+            sections, totalTokens: remaining, estimate: ModelContextBudget.estimatedTokens, enforcesTokenLimit: true)
+        let reference = kept.filter { $0.name != "prefix" }.map(\.content).joined(separator: "\n")
+        return (reference.isEmpty ? "" : reference + "\n") + task + (kept.first { $0.name == "prefix" }?.content ?? "")
+    }
+
+    /// Optional budgets can be smaller than the immutable output contract itself. Refuse such a
+    /// request before dispatch rather than cutting instructions into a different task.
+    static func validateBudget(for request: SuggestionRequest) throws {
+        guard let window = request.promptContextWindowTokens else { return }
+        let count = ModelContextBudget.estimatedTokens(sessionInstructions(for: request) + "\n" + prompt(for: request))
+        guard count <= ModelContextBudget.inputAllowance(total: min(window, 4_096), output: request.maxPredictionTokens, estimated: true)
+        else {
+            throw SuggestionClientError.generationFailed(
+                String(
+                    localized: "This context budget is too small for the task instructions and output reserve.",
+                    table: "Learning", comment: "A context budget cannot silently remove the model's task instructions."))
+        }
     }
 
     /// Maps the focused app's surface class to a one-line tone cue or nil if no rule matches.

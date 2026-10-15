@@ -1703,6 +1703,100 @@
         }
       }
     },
+    "After a pause, preview the current sentence. Use Replace to write it back, or select text to translate a larger range. The details shortcut opens a preview or toggles details. Tab and Return stay with the editor; Escape dismisses.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعد التوقف تظهر معاينة الجملة. استخدم الاستبدال لكتابتها أو حدد نصًا لترجمة نطاق أكبر. يفتح اختصار التفاصيل المعاينة أو يبدل التفاصيل. يبقى Tab وReturn للمحرر؛ يغلق Escape البطاقة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach einer Pause erscheint die Satzvorschau. Mit Ersetzen schreiben Sie sie zurück; für mehr Text wählen Sie ihn aus. Der Detailskurzbefehl öffnet die Vorschau oder schaltet Details um. Tab und Return bleiben im Editor; Escape schließt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After a pause, preview the current sentence. Use Replace to write it back, or select text to translate a larger range. The details shortcut opens a preview or toggles details. Tab and Return stay with the editor; Escape dismisses."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tras una pausa, se muestra la frase actual. Reemplazar la escribe; selecciona texto para traducir más. El atajo de detalles abre la vista o alterna detalles. Tab y Return siguen en el editor; Escape cierra."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Après une pause, prévisualisez la phrase. Remplacer l’insère ; sélectionnez du texte pour traduire plus. Le raccourci de détails ouvre l’aperçu ou affiche les détails. Tab et Entrée restent à l’éditeur ; Échap ferme."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "विराम के बाद वर्तमान वाक्य का पूर्वावलोकन देखें। बदलें से उसे लिखें या बड़े भाग के लिए पाठ चुनें। विवरण शॉर्टकट पूर्वावलोकन खोलता या विवरण बदलता है। Tab और Return संपादक के पास रहते हैं; Escape बंद करता है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setelah jeda, pratinjau kalimat saat ini. Gunakan Ganti untuk menulisnya, atau pilih teks untuk menerjemahkan lebih banyak. Pintasan detail membuka pratinjau atau mengganti detail. Tab dan Return tetap di editor; Escape menutup."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dopo una pausa, compare l’anteprima della frase. Sostituisci la inserisce; seleziona testo per tradurre di più. La scorciatoia dettagli apre l’anteprima o alterna i dettagli. Tab e Invio restano all’editor; Esc chiude."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力を止めると現在の文をプレビューします。「置換」で書き戻し、広い範囲は選択して翻訳します。詳細キーでプレビューを開くか詳細を切り替えます。Tab・Return はエディタが処理し、Escape で閉じます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "잠시 멈추면 현재 문장을 미리 봅니다. 바꾸기로 반영하거나 텍스트를 선택해 더 넓은 범위를 번역하세요. 세부 정보 단축키는 미리보기를 열거나 상세를 전환합니다. Tab과 Return은 편집기가 처리하며 Escape는 카드를 닫습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Após uma pausa, veja a frase atual. Substituir a grava; selecione texto para traduzir mais. O atalho de detalhes abre a prévia ou alterna os detalhes. Tab e Return continuam no editor; Escape fecha."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "После паузы появляется перевод предложения. «Заменить» вставляет его; для большего объёма выделите текст. Клавиша подробностей открывает предпросмотр или меняет вид. Tab и Return остаются редактору; Escape закрывает."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duraklayınca geçerli cümleyi önizleyin. Değiştir ile geri yazın veya daha geniş alan için metni seçin. Ayrıntı kısayolu önizlemeyi açar ya da ayrıntıları değiştirir. Tab ve Return editörde kalır; Escape kapatır."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停顿后预览当前句译文，使用“替换”写回；需要翻译更大范围时先选中文字。详情快捷键可打开预览或展开／收起详情。Tab 和 Return 仍由编辑器处理，Escape 关闭卡片。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停頓後預覽目前句子的譯文，使用「取代」寫回；需要翻譯較大範圍時先選取文字。詳細資訊快速鍵可開啟預覽或展開／收合詳細資訊。Tab 和 Return 仍由編輯器處理，Escape 關閉卡片。"
+          }
+        }
+      }
+    },
     "Allow new suggestions when text follows the caret on the same line.": {
       "localizations": {
         "ar": {
@@ -1797,6 +1891,100 @@
         }
       }
     },
+    "App": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التطبيق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ऐप"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplikasi"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приложение"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "应用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "應用程式"
+          }
+        }
+      }
+    },
     "App Settings": {
       "localizations": {
         "ar": {
@@ -1887,6 +2075,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "應用程式設定"
+          }
+        }
+      }
+    },
+    "Apple Intelligence manages its own capacity. This setting bounds the context Lingrove supplies.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يدير Apple Intelligence سعته ذاتيًا. يحد هذا الإعداد السياق الذي يوفره Lingrove."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence verwaltet seine Kapazität selbst. Diese Einstellung begrenzt Lingroves Kontext."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence manages its own capacity. This setting bounds the context Lingrove supplies."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence gestiona su capacidad. Este ajuste limita el contexto que aporta Lingrove."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence gère sa capacité. Ce réglage limite le contexte fourni par Lingrove."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence अपनी क्षमता स्वयं प्रबंधित करता है। यह सेटिंग Lingrove का दिया संदर्भ सीमित करती है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence mengelola kapasitasnya sendiri. Pengaturan ini membatasi konteks dari Lingrove."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence gestisce la propria capacità. L’impostazione limita il contesto fornito da Lingrove."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence の容量はシステムが管理します。この設定は Lingrove が渡す文脈を制限します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence의 용량은 시스템이 관리합니다. 이 설정은 Lingrove가 제공하는 문맥을 제한합니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Apple Intelligence gerencia sua capacidade. Este ajuste limita o contexto enviado pelo Lingrove."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ёмкостью Apple Intelligence управляет система. Настройка ограничивает контекст от Lingrove."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence kapasitesini kendi yönetir. Bu ayar Lingrove’un sağladığı bağlamı sınırlar."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence 的容量由系统管理；此设置限制拾语提供的上下文。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Intelligence 的容量由系統管理；此設定限制拾語提供的上下文。"
           }
         }
       }
@@ -2065,6 +2347,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "Apple Intelligence 傳回拾語無法解碼的回應。"
+          }
+        }
+      }
+    },
+    "Applies when the local model next runs. Larger contexts use more memory; model limits still apply.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُطبق عند التشغيل المحلي التالي. السياق الأكبر يستخدم ذاكرة أكثر؛ تبقى حدود النموذج سارية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gilt beim nächsten lokalen Modelllauf. Größerer Kontext braucht mehr Speicher; Modellgrenzen gelten weiter."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applies when the local model next runs. Larger contexts use more memory; model limits still apply."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se aplica en la próxima ejecución local. Más contexto usa más memoria; se mantienen los límites del modelo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S’applique à la prochaine exécution locale. Plus de contexte utilise plus de mémoire ; les limites du modèle restent valables."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लोकल मॉडल के अगले रन पर लागू होता है। बड़ा संदर्भ अधिक मेमोरी लेता है; मॉडल की सीमाएँ लागू रहती हैं।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berlaku saat model lokal dijalankan lagi. Konteks lebih besar memakai lebih banyak memori; batas model tetap berlaku."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si applica alla prossima esecuzione locale. Più contesto usa più memoria; restano i limiti del modello."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカルモデルの次回実行時に適用します。文脈を増やすとメモリ使用量が増え、モデルの制限も適用されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로컬 모델이 다음 실행될 때 적용됩니다. 큰 문맥은 더 많은 메모리를 사용하며 모델 제한이 적용됩니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicado na próxima execução local. Mais contexto usa mais memória; os limites do modelo continuam válidos."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Применяется при следующем запуске локальной модели. Больший контекст требует больше памяти; ограничения модели сохраняются."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yerel modelin sonraki çalışmasında uygulanır. Büyük bağlam daha fazla bellek kullanır; model sınırları geçerlidir."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本地模型下次运行时生效。更大的上下文占用更多内存，仍受模型限制。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本機模型下次執行時生效。較大的上下文使用更多記憶體，仍受模型限制。"
           }
         }
       }
@@ -2894,6 +3270,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "粗體"
+          }
+        }
+      }
+    },
+    "Bounds the input Lingrove sends, not server capacity. Token counts are estimates with a safety margin.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحد مدخلات Lingrove المرسلة لا سعة الخادم. أعداد الرموز تقديرية بهامش أمان."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begrenzt Lingroves Eingabe, nicht die Serverkapazität. Tokenzahlen sind Schätzungen mit Sicherheitsreserve."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bounds the input Lingrove sends, not server capacity. Token counts are estimates with a safety margin."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limita lo que envía Lingrove, no la capacidad del servidor. Los tokens se estiman con margen de seguridad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limite l’entrée envoyée par Lingrove, pas la capacité du serveur. Les tokens sont estimés avec une marge."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lingrove का भेजा इनपुट सीमित करता है, सर्वर की क्षमता नहीं। टोकन गिनती सुरक्षा अंतर सहित अनुमान है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membatasi masukan yang dikirim Lingrove, bukan kapasitas server. Jumlah token diperkirakan dengan margin aman."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limita l’input inviato da Lingrove, non la capacità del server. I token sono stimati con un margine."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーの容量ではなく、Lingrove が送る入力を制限します。トークン数は余裕を含む推定値です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버 용량이 아닌 Lingrove의 전송 입력을 제한합니다. 토큰 수는 안전 여유를 둔 추정치입니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limita a entrada enviada pelo Lingrove, não a capacidade do servidor. Tokens são estimados com margem de segurança."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ограничивает ввод Lingrove, а не ёмкость сервера. Число токенов оценивается с запасом."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu kapasitesini değil, Lingrove’un gönderdiği girdiyi sınırlar. Token sayısı güvenlik payıyla tahmin edilir."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "限制拾语发送的输入，不改变服务端容量。token 数为带安全余量的估算值。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "限制拾語傳送的輸入，不改變伺服器容量。token 數為含安全餘量的估算值。"
           }
         }
       }
@@ -4055,6 +4525,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "為此應用程式設定接受建議的按鍵，或沿用全域快捷鍵。"
+          }
+        }
+      }
+    },
+    "Choose an app": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختيار تطبيق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App auswählen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose an app"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir aplicación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir une app"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ऐप चुनें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pilih aplikasi"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scegli app"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリを選択"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 선택"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolher app"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите приложение"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama seç"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "选择应用"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選擇應用程式"
           }
         }
       }
@@ -6658,6 +7222,100 @@
         }
       }
     },
+    "Context budget": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ميزانية السياق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontextbudget"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Context budget"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presupuesto de contexto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Budget de contexte"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "संदर्भ बजट"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anggaran konteks"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Budget del contesto"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コンテキスト予算"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "문맥 예산"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orçamento de contexto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бюджет контекста"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlam bütçesi"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上下文预算"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上下文預算"
+          }
+        }
+      }
+    },
     "Contribute to Lingrove": {
       "comment": "Lingrove product copy; upstream common wording remains in Localizable.",
       "localizations": {
@@ -7548,6 +8206,100 @@
         }
       }
     },
+    "Counts instructions, source, references and output reserve. Saved per model.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يشمل التعليمات والمصدر والمراجع واحتياطي المخرجات. يُحفظ لكل نموذج."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zählt Anweisungen, Quelltext, Referenzen und Ausgabereserve. Pro Modell gespeichert."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counts instructions, source, references and output reserve. Saved per model."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluye instrucciones, origen, referencias y reserva de salida. Se guarda por modelo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inclut consignes, source, références et réserve de sortie. Enregistré par modèle."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "निर्देश, स्रोत, संदर्भ और आउटपुट के लिए आरक्षित स्थान शामिल हैं। हर मॉडल के लिए सहेजा जाता है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menghitung instruksi, sumber, referensi, dan cadangan keluaran. Disimpan per model."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include istruzioni, origine, riferimenti e riserva per l’output. Salvato per modello."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "指示、原文、参照文、出力用の余裕を含み、モデルごとに保存します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지침, 원문, 참고 문맥, 출력 여유분을 포함하며 모델별로 저장합니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inclui instruções, origem, referências e reserva de saída. Salvo por modelo."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Учитывает инструкции, исходник, контекст и резерв ответа. Сохраняется для каждой модели."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yönergeleri, kaynağı, başvuruları ve çıktı payını içerir. Model başına kaydedilir."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "计入任务提示、原文、参考上下文及输出预留空间，按模型保存。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "計入任務提示、原文、參考上下文及輸出預留空間，依模型儲存。"
+          }
+        }
+      }
+    },
     "Credential cleared": {
       "comment": "Confirmation shown after the saved learning endpoint credential is removed.",
       "localizations": {
@@ -7811,6 +8563,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "目前模型"
+          }
+        }
+      }
+    },
+    "Current sentence": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجملة الحالية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktueller Satz"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Current sentence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frase actual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phrase actuelle"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "वर्तमान वाक्य"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kalimat saat ini"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frase attuale"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在の文"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "현재 문장"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frase atual"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текущее предложение"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli cümle"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "当前句"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目前句子"
           }
         }
       }
@@ -8635,6 +9481,100 @@
         }
       }
     },
+    "Disable this shortcut": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعطيل هذا الاختصار"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Kurzbefehl deaktivieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disable this shortcut"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar este atajo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactiver ce raccourci"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह शॉर्टकट बंद करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nonaktifkan pintasan ini"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattiva questa scorciatoia"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このショートカットを無効にする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 단축키 비활성화"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativar este atalho"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключить сочетание"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kısayolu devre dışı bırak"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用此快捷键"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "停用此快速鍵"
+          }
+        }
+      }
+    },
     "Dismiss · Esc": {
       "comment": "Tooltip for dismissing the sentence-learning card with Escape.",
       "localizations": {
@@ -8986,6 +9926,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "連按兩下即可查詢片語 · 也可在「字典」中查詢其中的單字"
+          }
+        }
+      }
+    },
+    "Draft context": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سياق المسودة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entwurfskontext"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft context"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contexto del borrador"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contexte du brouillon"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ड्राफ़्ट का संदर्भ"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konteks draf"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contesto della bozza"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下書きの文脈"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "초안 문맥"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contexto do rascunho"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Контекст черновика"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taslak bağlamı"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "草稿上下文"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "草稿上下文"
           }
         }
       }
@@ -10686,6 +11720,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "拾語可從「/」查詢解析的所有巨集。"
+          }
+        }
+      }
+    },
+    "Expand / collapse translation details": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توسيع / طي تفاصيل الترجمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersetzungsdetails ein-/ausklappen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expand / collapse translation details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expandir / contraer detalles"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher / masquer les détails"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुवाद का विवरण खोलें / समेटें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka / tutup detail terjemahan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espandi / comprimi dettagli"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳の詳細を展開／折りたたむ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 세부 정보 펼치기/접기"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expandir / recolher detalhes"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Развернуть / свернуть перевод"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çeviri ayrıntılarını aç / daralt"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开／收起翻译详情"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展開／收合翻譯詳細資訊"
           }
         }
       }
@@ -17596,6 +18724,100 @@
         }
       }
     },
+    "Manage in Shortcuts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإدارة في الاختصارات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unter Kurzbefehle verwalten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage in Shortcuts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestionar en Atajos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gérer dans Raccourcis"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "शॉर्टकट में प्रबंधित करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kelola di Pintasan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestisci in Scorciatoie"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ショートカットで設定"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "단축키에서 관리"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerenciar em Atalhos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настроить в разделе сочетаний клавиш"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kısayollarda yönet"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前往快捷键设置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前往快速鍵設定"
+          }
+        }
+      }
+    },
     "Match Original Text Size": {
       "localizations": {
         "ar": {
@@ -22195,6 +23417,100 @@
         }
       }
     },
+    "Replace preview translation": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استبدال بترجمة المعاينة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durch Vorschauübersetzung ersetzen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace preview translation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar por la traducción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer par la traduction"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पूर्वावलोकन के अनुवाद से बदलें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganti dengan terjemahan pratinjau"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sostituisci con la traduzione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレビューの訳文に置換"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미리보기 번역으로 바꾸기"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Substituir pela tradução"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заменить переводом из предпросмотра"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önizleme çevirisiyle değiştir"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换预览译文"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取代預覽譯文"
+          }
+        }
+      }
+    },
     "Replace selection": {
       "comment": "Confirms replacing the selected source text with its translation.",
       "localizations": {
@@ -22373,6 +23689,100 @@
         }
       }
     },
+    "Replace · %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استبدال · %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersetzen · %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace · %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reemplazar · %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer · %@"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बदलें · %@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganti · %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sostituisci · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "置換 · %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "바꾸기 · %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Substituir · %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заменить · %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değiştir · %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "替换 · %@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取代 · %@"
+          }
+        }
+      }
+    },
     "Request Type": {
       "localizations": {
         "ar": {
@@ -22546,6 +23956,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "正在傳送要求"
+          }
+        }
+      }
+    },
+    "Reset App Behavior": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة ضبط سلوك التطبيق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App-Verhalten zurücksetzen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset App Behavior"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablecer comportamiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réinitialiser le comportement"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ऐप का व्यवहार रीसेट करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atur ulang perilaku aplikasi"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripristina comportamento app"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリの動作をリセット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 동작 초기화"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redefinir comportamento do app"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить поведение приложения"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama davranışını sıfırla"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复此应用的默认行为"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還原此應用程式的預設行為"
           }
         }
       }
@@ -22729,6 +24233,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "重新啟動拾語以套用所選介面語言。"
+          }
+        }
+      }
+    },
+    "Restore default budget": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استعادة الميزانية الافتراضية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardbudget wiederherstellen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore default budget"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar presupuesto predeterminado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rétablir le budget par défaut"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "डिफ़ॉल्ट बजट बहाल करें"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pulihkan anggaran bawaan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ripristina budget predefinito"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "既定の予算に戻す"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기본 예산 복원"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar orçamento padrão"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Восстановить стандартный бюджет"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan bütçeyi geri yükle"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恢复默认预算"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "還原預設預算"
           }
         }
       }
@@ -24157,6 +25755,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "暫停輸入後顯示句子譯文"
+          }
+        }
+      }
+    },
+    "Shows or hides details. Without a preview, requests the selected text or current sentence.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعرض التفاصيل أو يخفيها. عند عدم وجود معاينة يترجم النص المحدد أو الجملة الحالية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt oder verbirgt Details. Ohne Vorschau wird die Auswahl oder der aktuelle Satz übersetzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows or hides details. Without a preview, requests the selected text or current sentence."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra u oculta detalles. Sin vista previa, traduce la selección o la frase actual."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affiche ou masque les détails. Sans aperçu, traduit la sélection ou la phrase actuelle."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "विवरण दिखाता या छिपाता है। पूर्वावलोकन न हो तो चयन या वर्तमान वाक्य का अनुवाद करता है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menampilkan atau menyembunyikan detail. Tanpa pratinjau, menerjemahkan pilihan atau kalimat saat ini."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra o nasconde i dettagli. Senza anteprima, traduce la selezione o la frase attuale."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "詳細を表示／非表示にします。プレビューがなければ選択範囲または現在の文を翻訳します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "세부 정보를 표시하거나 숨깁니다. 미리보기가 없으면 선택한 텍스트 또는 현재 문장을 번역합니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra ou oculta detalhes. Sem prévia, traduz a seleção ou a frase atual."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показывает или скрывает подробности. Без предпросмотра переводит выделение или текущее предложение."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrıntıları gösterir veya gizler. Önizleme yoksa seçimi ya da geçerli cümleyi çevirir."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展开或收起详情；没有预览时，翻译选区或当前句。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "展開或收合詳細資訊；沒有預覽時，翻譯選取範圍或目前句子。"
           }
         }
       }
@@ -25941,6 +27633,194 @@
         }
       }
     },
+    "Target: Current sentence": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهدف: الجملة الحالية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel: aktueller Satz"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target: Current sentence"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino: frase actual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cible : phrase actuelle"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लक्ष्य: वर्तमान वाक्य"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target: kalimat saat ini"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destinazione: frase attuale"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "対象：現在の文"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대상: 현재 문장"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alvo: frase atual"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цель: текущее предложение"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hedef: geçerli cümle"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标：当前句"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目標：目前句子"
+          }
+        }
+      }
+    },
+    "Target: Selection": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهدف: النص المحدد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel: Auswahl"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target: Selection"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino: selección"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cible : sélection"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लक्ष्य: चयन"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target: pilihan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destinazione: selezione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "対象：選択範囲"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대상: 선택 영역"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alvo: seleção"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цель: выделение"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hedef: seçim"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目标：选区"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "目標：選取範圍"
+          }
+        }
+      }
+    },
     "Teal": {
       "localizations": {
         "ar": {
@@ -27103,6 +28983,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "片語字典超出支援的大小上限。"
+          }
+        }
+      }
+    },
+    "The full target and output reserve exceed this model's budget. Select less text or raise the budget. Nothing was shortened or replaced.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتجاوز الهدف الكامل واحتياطي المخرجات ميزانية النموذج. حدد نصًا أقل أو زد الميزانية. لم يُختصر أو يُستبدل شيء."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vollständiges Ziel und Ausgabereserve überschreiten das Budget. Wählen Sie weniger Text oder erhöhen Sie das Budget. Nichts wurde gekürzt oder ersetzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The full target and output reserve exceed this model's budget. Select less text or raise the budget. Nothing was shortened or replaced."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto completo y la reserva exceden el presupuesto. Selecciona menos texto o aumenta el presupuesto. Nada se recortó ni reemplazó."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le texte complet et la réserve dépassent le budget. Réduisez la sélection ou augmentez le budget. Rien n’a été raccourci ni remplacé."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "पूरा लक्ष्य और आउटपुट आरक्षित स्थान मॉडल बजट से अधिक हैं। कम पाठ चुनें या बजट बढ़ाएँ। कुछ छोटा या बदला नहीं गया।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target lengkap dan cadangan keluaran melampaui anggaran model. Pilih lebih sedikit teks atau tambah anggaran. Tidak ada yang dipotong atau diganti."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il testo completo e la riserva superano il budget. Seleziona meno testo o aumenta il budget. Nulla è stato ridotto o sostituito."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "対象全文と出力の余裕がモデルの予算を超えます。選択範囲を狭めるか予算を増やしてください。短縮も置換もしていません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 대상과 출력 여유분이 모델 예산을 초과합니다. 선택을 줄이거나 예산을 늘리세요. 텍스트를 줄이거나 바꾸지 않았습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O alvo completo e a reserva excedem o orçamento. Selecione menos texto ou aumente o orçamento. Nada foi cortado ou substituído."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Весь текст и резерв ответа превышают бюджет. Сократите выделение или увеличьте бюджет. Ничего не обрезано и не заменено."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam hedef ve çıktı payı model bütçesini aşıyor. Daha az metin seçin veya bütçeyi artırın. Hiçbir metin kısaltılmadı veya değiştirilmedi."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完整目标与输出预留空间超出此模型的预算。请减少选区或提高预算。没有裁剪原文，也没有执行替换。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完整目標與輸出預留空間超出此模型的預算。請縮小選取範圍或提高預算。未裁剪原文，也未執行取代。"
           }
         }
       }
@@ -28976,6 +30950,100 @@
         }
       }
     },
+    "The target remains the current sentence or your selection. Only reference text may be shortened to fit the budget.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يبقى الهدف الجملة الحالية أو التحديد. يمكن تقصير النص المرجعي فقط ليلائم الميزانية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziel bleibt der aktuelle Satz oder Ihre Auswahl. Nur Referenztext wird an das Budget angepasst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The target remains the current sentence or your selection. Only reference text may be shortened to fit the budget."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El destino sigue siendo la frase actual o tu selección. Solo se recorta el contexto según el presupuesto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cible reste la phrase actuelle ou votre sélection. Seul le contexte peut être réduit selon le budget."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "लक्ष्य वर्तमान वाक्य या आपका चयन रहता है। बजट के अनुसार केवल संदर्भ छोटा किया जा सकता है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Target tetap kalimat saat ini atau pilihan Anda. Hanya teks referensi yang boleh dipotong sesuai anggaran."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il testo da tradurre resta la frase attuale o la selezione. Solo il riferimento può essere ridotto al budget."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "対象は常に現在の文または選択範囲です。予算に合わせて短縮されるのは参照文だけです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대상은 현재 문장 또는 선택 영역입니다. 예산에 맞춰 참고 텍스트만 줄일 수 있습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O alvo continua sendo a frase atual ou sua seleção. Só o contexto pode ser reduzido ao orçamento."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Целью остаётся текущее предложение или выделение. Сокращается только справочный контекст."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hedef geçerli cümle veya seçiminizdir. Bütçeye uymak için yalnızca başvuru metni kısaltılır."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译目标始终是当前句或选区。只有参考上下文会按预算裁剪。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯目標始終是目前句子或選取範圍。只有參考上下文會依預算裁剪。"
+          }
+        }
+      }
+    },
     "The text exceeds 6 KB. No text was sent or truncated.": {
       "comment": "Error shown before a request when the source text exceeds the limit; no part of it was sent or shortened.",
       "localizations": {
@@ -29684,6 +31752,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "拾語隨附的第三方套件。"
+          }
+        }
+      }
+    },
+    "This context budget is too small for the task instructions and output reserve.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ميزانية السياق أصغر من التعليمات واحتياطي المخرجات."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Kontextbudget reicht nicht für Anweisungen und Ausgabereserve."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This context budget is too small for the task instructions and output reserve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El presupuesto no basta para las instrucciones y la reserva de salida."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce budget est trop petit pour les consignes et la réserve de sortie."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यह संदर्भ बजट निर्देशों और आउटपुट आरक्षित स्थान के लिए बहुत छोटा है।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anggaran konteks terlalu kecil untuk instruksi dan cadangan keluaran."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il budget non basta per le istruzioni e la riserva per l’output."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この予算では指示と出力用の余裕を確保できません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 문맥 예산은 작업 지침과 출력 여유분을 담기에 너무 작습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O orçamento não comporta as instruções e a reserva de saída."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бюджет слишком мал для инструкций и резерва ответа."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlam bütçesi yönergeler ve çıktı payı için çok küçük."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此上下文预算不足以容纳任务提示及输出预留空间。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此上下文預算不足以容納任務提示及輸出預留空間。"
           }
         }
       }
@@ -30488,6 +32650,100 @@
         }
       }
     },
+    "Total context tokens": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجمالي رموز السياق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesamtzahl Kontext-Tokens"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total context tokens"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tokens totales de contexto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre total de tokens"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "संदर्भ के कुल टोकन"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total token konteks"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token totali del contesto"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コンテキストの合計トークン数"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 문맥 토큰 수"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de tokens de contexto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всего токенов контекста"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toplam bağlam token sayısı"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上下文总 tokens"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上下文總 tokens"
+          }
+        }
+      }
+    },
     "TranslateGemma (translation only)": {
       "comment": "Instruction-template choice for TranslateGemma models, which are intended only for translation.",
       "localizations": {
@@ -30928,6 +33184,476 @@
           "stringUnit": {
             "state": "translated",
             "value": "翻譯模型"
+          }
+        }
+      }
+    },
+    "Translation preview unavailable": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة الترجمة غير متاحة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersetzungsvorschau nicht verfügbar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation preview unavailable"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa no disponible"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aperçu de traduction indisponible"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुवाद का पूर्वावलोकन उपलब्ध नहीं"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pratinjau terjemahan tidak tersedia"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anteprima non disponibile"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳をプレビューできません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 미리보기를 사용할 수 없음"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prévia da tradução indisponível"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предпросмотр перевода недоступен"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çeviri önizlemesi kullanılamıyor"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法预览翻译"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法預覽翻譯"
+          }
+        }
+      }
+    },
+    "Translation reference": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرجع الترجمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersetzungsreferenz"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation reference"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contexto de traducción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contexte de traduction"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुवाद का संदर्भ"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konteks referensi terjemahan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contesto della traduzione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳の参照範囲"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 참고 문맥"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contexto de tradução"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Контекст перевода"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çeviri başvuru bağlamı"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译参考上下文"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯參考上下文"
+          }
+        }
+      }
+    },
+    "Translation sends the target and optional draft excerpts from the same field to the chosen engine. Alignment receives only the target and translation. Screens, clipboard and history are excluded.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُرسل الترجمة الهدف ومقتطفات المسودة الاختيارية من الحقل نفسه إلى المحرك المختار. تتلقى المحاذاة الهدف والترجمة فقط. لا تشمل الشاشة أو الحافظة أو السجل."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Übersetzung sendet das Ziel und optionale Entwurfsauszüge desselben Feldes an die gewählte Engine. Die Zuordnung erhält nur Ziel und Übersetzung. Bildschirm, Zwischenablage und Verlauf sind ausgeschlossen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation sends the target and optional draft excerpts from the same field to the chosen engine. Alignment receives only the target and translation. Screens, clipboard and history are excluded."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La traducción envía el texto y extractos opcionales del mismo campo al motor elegido. La alineación solo recibe origen y traducción. Se excluyen pantalla, portapapeles e historial."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La traduction envoie la cible et, si choisi, des extraits du même champ au moteur sélectionné. L’alignement ne reçoit que cible et traduction. Écran, presse-papiers et historique sont exclus."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुवाद लक्ष्य और उसी फ़ील्ड के वैकल्पिक ड्राफ़्ट अंश चुने गए इंजन को भेजता है। मिलान को केवल लक्ष्य और अनुवाद मिलते हैं। स्क्रीन, क्लिपबोर्ड और इतिहास शामिल नहीं हैं।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terjemahan mengirim target dan kutipan draf opsional dari kolom yang sama ke mesin pilihan. Penyelarasan hanya menerima target dan terjemahan. Layar, papan klip, dan riwayat tidak disertakan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La traduzione invia il testo e gli estratti facoltativi dello stesso campo al motore scelto. L’allineamento riceve solo origine e traduzione. Schermo, appunti e cronologia sono esclusi."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳は対象と、必要に応じ同じ欄の下書き抜粋を選択したエンジンに送ります。対応付けには対象と訳文のみを渡します。画面、クリップボード、履歴は含みません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역은 대상과 선택적인 같은 입력란의 초안 발췌를 선택한 엔진에 보냅니다. 정렬에는 대상과 번역만 전달합니다. 화면, 클립보드, 기록은 제외됩니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tradução envia o alvo e trechos opcionais do mesmo campo ao mecanismo escolhido. O alinhamento recebe só alvo e tradução. Tela, área de transferência e histórico ficam de fora."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевод отправляет цель и необязательные выдержки черновика из того же поля выбранному движку. Сопоставление получает только исходник и перевод. Экран, буфер и история исключены."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çeviri, hedefi ve aynı alandaki isteğe bağlı taslak alıntılarını seçilen motora gönderir. Eşleştirme yalnızca hedefi ve çeviriyi alır. Ekran, pano ve geçmiş dahil değildir."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译会将目标原文及同一输入框内可选的草稿参考发送给所选引擎。对齐模型只接收目标原文和译文，不包含屏幕、剪贴板或输入历史。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯會將目標原文及同一輸入框內選用的草稿參考傳送給所選引擎。對齊模型只接收目標原文和譯文，不包含螢幕、剪貼簿或輸入歷史。"
+          }
+        }
+      }
+    },
+    "Translation shortcut": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختصار الترجمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersetzungskurzbefehl"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation shortcut"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atajo de traducción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raccourci de traduction"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुवाद का शॉर्टकट"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pintasan terjemahan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scorciatoia di traduzione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳ショートカット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 단축키"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atalho de tradução"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сочетание для перевода"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çeviri kısayolu"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译快捷键"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯快速鍵"
+          }
+        }
+      }
+    },
+    "Translation shortcuts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختصارات الترجمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersetzungskurzbefehle"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Translation shortcuts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atajos de traducción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raccourcis de traduction"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनुवाद के शॉर्टकट"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pintasan terjemahan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scorciatoie di traduzione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻訳のショートカット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "번역 단축키"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atalhos de tradução"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сочетания для перевода"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çeviri kısayolları"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻译快捷键"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "翻譯快速鍵"
           }
         }
       }
@@ -33798,6 +36524,100 @@
           "stringUnit": {
             "state": "translated",
             "value": "此片語中的單字"
+          }
+        }
+      }
+    },
+    "Writes a valid preview back to its saved sentence or selection. Never sends the message.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يكتب المعاينة الصالحة في الجملة أو التحديد المحفوظ. لا يرسل الرسالة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibt eine gültige Vorschau in den gespeicherten Satz oder die Auswahl zurück. Sendet keine Nachricht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Writes a valid preview back to its saved sentence or selection. Never sends the message."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe la vista previa válida en la frase o selección guardada. Nunca envía el mensaje."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insère l’aperçu valide dans sa phrase ou sélection d’origine. N’envoie jamais le message."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "मान्य पूर्वावलोकन को सहेजे गए वाक्य या चयन में लिखता है। संदेश नहीं भेजता।"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menulis pratinjau yang valid ke kalimat atau pilihan tersimpan. Tidak mengirim pesan."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisce l’anteprima valida nella frase o selezione salvata. Non invia il messaggio."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有効な訳文を保存済みの文または選択範囲に書き戻します。メッセージは送信しません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "유효한 미리보기를 저장된 문장 또는 선택 영역에 씁니다. 메시지를 전송하지 않습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grava a prévia válida na frase ou seleção salva. Nunca envia a mensagem."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заменяет сохранённое предложение или выделение готовым переводом. Не отправляет сообщение."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli önizlemeyi kayıtlı cümleye veya seçime yazar. Mesajı göndermez."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "将有效预览写回对应的原句或选区，不发送消息。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "將有效預覽寫回對應的原句或選取範圍，不傳送訊息。"
           }
         }
       }

@@ -324,12 +324,12 @@ struct LearningExpressionServiceTests {
         defer { translationHarness.cleanUp() }
         do {
             _ = try await translationHarness.service.generate(
-                source: String(repeating: "我", count: 2_001),
+                source: String(repeating: "我", count: ModelContextBudget.maximumTextBytes / 3 + 1),
                 task: .translation(source: .chinese, target: .english)
             )
-            Issue.record("Source larger than 6 KB must be rejected before transmission.")
+            Issue.record("The complete oversized source must be rejected before transmission.")
         } catch let failure as LearningFailure {
-            #expect(failure.errorDescription?.contains("6 KB") == true)
+            #expect(failure.errorDescription?.contains("budget") == true)
         }
         #expect(translationHarness.exchange.requestCount == 0)
 

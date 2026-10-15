@@ -41,7 +41,8 @@ struct LearningTranslationPromptTests {
     @Test(arguments: [LearningTranslationPrompt.Family.generic, .hyMT, .translateGemma])
     func allFamiliesRejectOverBudgetSourceWithoutTruncating(_ family: LearningTranslationPrompt.Family) {
         #expect(throws: (any Error).self) {
-            try LearningTranslationPrompt.render(source: String(repeating: "中", count: 2_001),
+            try LearningTranslationPrompt.render(
+                source: String(repeating: "中", count: ModelContextBudget.maximumTextBytes / 3 + 1),
                 sourceLanguage: .chinese, targetLanguage: .english, family: family)
         }
     }

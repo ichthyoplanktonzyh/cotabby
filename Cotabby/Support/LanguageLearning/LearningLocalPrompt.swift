@@ -49,12 +49,12 @@ nonisolated enum LearningLocalPrompt {
     /// Check the actual tokenizer result, including chat framing. The shared native allocation
     /// is larger than TranslateGemma's documented 2K input limit; allocation size is not proof
     /// that a specialist was trained for longer input. Reject rather than silently truncate.
-    static func validateTokenBudget(input: Int, output: Int, template: LearningChatTemplate) throws {
+    static func validateTokenBudget(input: Int, output: Int, template: LearningChatTemplate, contextWindowTokens: Int = 8_192) throws {
         if template == .translateGemma, input > 2_048 {
             throw LearningFailure.message(String(localized: "TranslateGemma input exceeds 2,048 tokens. Split the text into smaller parts.",
                 table: "Learning", comment: "Error shown when input exceeds TranslateGemma's supported token budget."))
         }
-        guard input > 0, output > 0, input < 8_192, output < 8_192 - input else {
+        guard input > 0, output > 0, input < contextWindowTokens, output < contextWindowTokens - input else {
             throw LearningFailure.message(String(localized: """
             The source text and output budget exceed the local model's context limit. Split the text into smaller parts.
             """,

@@ -14,7 +14,8 @@ struct LearningModelConfigurationView: View {
     @State private var pendingDeletion: RuntimeModelOption?
 
     var body: some View {
-        Group {
+        let contextIdentity = profile.contextIdentity
+        return Group {
             Section(String(localized: "Engine", table: "Learning",
                 comment: "Settings section for choosing this learning task's local or endpoint engine.")) {
                 Picker(selection: backendBinding) {
@@ -27,6 +28,14 @@ struct LearningModelConfigurationView: View {
                 .pickerStyle(.menu).disabled(profile.powerSwitchingEnabled)
             }
             powerSection
+            if profile.role == .translation {
+                ModelContextSection(
+                    tokens: Binding(get: { profile.snapshot.contextWindowTokens }, set: { profile.setContextWindowTokens($0, expectedIdentity: contextIdentity) }),
+                    maximum: profile.snapshot.backend == .local
+                        ? ModelContextBudget.maximumLocalTokens : ModelContextBudget.maximumEndpointTokens,
+                    isEndpoint: profile.snapshot.backend == .endpoint, reset: { profile.setContextWindowTokens(nil, expectedIdentity: contextIdentity) })
+                    .id(contextIdentity)
+            }
             if profile.snapshot.backend == .local { Section(String(localized: "Runtime", table: "Learning",
                 comment: "Settings section for the current state of this task's local runtime.")) {
                 LabeledContent {

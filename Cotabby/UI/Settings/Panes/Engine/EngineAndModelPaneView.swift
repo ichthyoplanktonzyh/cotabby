@@ -55,7 +55,8 @@ struct EngineAndModelPaneView: View {
     /// The completion form retains its original sections, actions and callout. Navigation tabs
     /// sit outside its scroll view so choosing another task cannot change the active engine.
     private var completionPage: some View {
-        SettingsPaneScaffold(callout: callout) {
+        let contextIdentity = suggestionSettings.completionContextIdentity
+        return SettingsPaneScaffold(callout: callout) {
             Section("Engine") {
                 Picker(selection: selectedEngineBinding) {
                     // Match onboarding: an engine this Mac cannot run stays listed (so a stored
@@ -86,6 +87,18 @@ struct EngineAndModelPaneView: View {
             }
 
             powerSection
+            ModelContextSection(
+                tokens: Binding(
+                    get: { suggestionSettings.completionContextWindowTokens },
+                    set: { suggestionSettings.setCompletionContextWindowTokens($0, expectedIdentity: contextIdentity) }),
+                maximum: suggestionSettings.selectedEngine == .appleIntelligence
+                    ? 4_096
+                    : suggestionSettings.selectedEngine == .llamaOpenSource
+                        ? ModelContextBudget.maximumLocalTokens : ModelContextBudget.maximumEndpointTokens,
+                isEndpoint: suggestionSettings.selectedEngine == .openAICompatible,
+                isSystemManaged: suggestionSettings.selectedEngine == .appleIntelligence,
+                reset: { suggestionSettings.setCompletionContextWindowTokens(nil, expectedIdentity: contextIdentity) })
+                .id(contextIdentity)
 
             switch suggestionSettings.selectedEngine {
             case .appleIntelligence:

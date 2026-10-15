@@ -36,7 +36,8 @@ enum BaseCompletionPromptRenderer {
         contextBudget: Int = defaultContextBudget,
         maxScreenCharacters: Int = 4000,
         screenPriority: Int = 45,
-        tokenBudget: Int? = nil
+        tokenBudget: Int? = nil,
+        usesConservativeTokenEstimate: Bool = false
     ) -> String {
         var sections: [PromptSection] = []
         // The surface description leads the preface: knowing the writing surface (email in Mail,
@@ -110,7 +111,9 @@ enum BaseCompletionPromptRenderer {
             )
         )
 
-        let kept = allocate(sections, contextBudget: contextBudget, tokenBudget: tokenBudget)
+        let kept = allocate(
+            sections, contextBudget: contextBudget, tokenBudget: tokenBudget,
+            conservative: usesConservativeTokenEstimate)
         let prefix = kept.first { $0.name == "prefix" }?.content ?? ""
         let preface = kept.filter { $0.name != "prefix" }.map(\.content)
 
@@ -126,11 +129,14 @@ enum BaseCompletionPromptRenderer {
     /// Token-aware budgeting (opt-in): when a token budget is supplied, fill sections against an
     /// estimated-token window instead of the character approximation. Defaults to the character
     /// path so shipped behavior is unchanged.
-    private static func allocate(_ sections: [PromptSection], contextBudget: Int, tokenBudget: Int?) -> [PromptSection] {
+    private static func allocate(_ sections: [PromptSection], contextBudget: Int, tokenBudget: Int?, conservative: Bool) -> [PromptSection] {
         guard let tokenBudget else {
             return PromptSectionBudget.allocate(sections, totalChars: contextBudget)
         }
-        return PromptSectionBudget.allocate(sections, totalTokens: tokenBudget, estimate: TokenCountEstimator.estimate)
+        return PromptSectionBudget.allocate(
+            sections, totalTokens: max(0, tokenBudget - (conservative ? sections.count * 2 : 0)),
+            estimate: conservative ? ModelContextBudget.estimatedTokens : TokenCountEstimator.estimate,
+            enforcesTokenLimit: conservative)
     }
 
     /// Independent app notes precede optional screen context, while the caret retains first claim

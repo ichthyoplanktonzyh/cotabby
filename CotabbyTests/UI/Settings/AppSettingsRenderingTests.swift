@@ -50,6 +50,19 @@ struct AppSettingsRenderingTests {
                 )
             }, dark: dark, destination: destination.appendingPathComponent("app-detail-\(suffix).png")
         )
+        try await paint(
+            ShortcutsPaneView(suggestionSettings: model, selectedApp: "com.apple.mail"), dark: dark,
+            destination: destination.appendingPathComponent("unified-shortcuts-\(suffix).png")
+        )
+        try await paint(
+            SettingsPaneScaffold {
+                ModelContextSection(
+                    tokens: Binding(
+                        get: { model.completionContextWindowTokens },
+                        set: { model.setCompletionContextWindowTokens($0) }), maximum: 131_072, isEndpoint: true,
+                    reset: { model.setCompletionContextWindowTokens(nil) })
+            }, dark: dark, destination: destination.appendingPathComponent("context-budget-\(suffix).png")
+        )
         #expect(model.snapshot.perAppBehaviors["com.apple.mail"]?.midLineCompletions == .off)
         #expect(model.inheritedFullAcceptanceDisplayLabel(forBundleIdentifier: "com.apple.mail").contains("⌥R"))
     }

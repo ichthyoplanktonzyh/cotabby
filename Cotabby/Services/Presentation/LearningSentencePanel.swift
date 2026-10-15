@@ -70,6 +70,13 @@ final class LearningSentencePanel: LearningSentencePresenting {
     }
 
     func show(_ presentation: LearningSentencePresentation, expand: @escaping () -> Void, dismiss: @escaping () -> Void) {
+        show(presentation, expand: expand, dismiss: dismiss, replace: nil)
+    }
+
+    func show(
+        _ presentation: LearningSentencePresentation, expand: @escaping () -> Void, dismiss: @escaping () -> Void,
+        replace: (() -> Void)?
+    ) {
         // Compact word lookup remains anchored to the same fixed translation while analysis
         // streams in. Dismiss when its text/view mode changes, rather than on every chunk update.
         if currentPresentation?.id != presentation.id || presentation.isStale ||
@@ -96,7 +103,7 @@ final class LearningSentencePanel: LearningSentencePresenting {
         let revision = UUID()
         layoutRevision = revision
         let card = LearningSentenceCard(
-            presentation: presentation, detailState: detailPanel.state,
+            presentation: presentation, detailState: detailPanel.state, replace: replace,
             inspect: { [weak self] in self?.selectCorrespondence($0, documentID: presentation.id) }, expand: expand, dismiss: dismiss,
             lookup: { [weak self] word, button in self?.inspectWord(word, documentID: presentation.id, button: button) },
             lookupText: { [weak self] anchor, view in

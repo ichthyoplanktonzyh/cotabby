@@ -41,6 +41,12 @@ final class LanguageLearningSettings: ObservableObject {
     @Published var sentencePreviewEnabled: Bool {
         didSet { defaults.set(sentencePreviewEnabled, forKey: "learningSentencePreviewEnabled") }
     }
+    @Published var referenceMode: LearningReferenceMode {
+        didSet { defaults.set(referenceMode.rawValue, forKey: "learningReferenceMode") }
+    }
+    @Published var replacementKeyCode: UInt16 { didSet { saveReplacementShortcut() } }
+    @Published var replacementModifiers: ShortcutModifierMask { didSet { saveReplacementShortcut() } }
+    @Published var replacementKeyLabel: String { didSet { saveReplacementShortcut() } }
 
     /// A generation snapshots all settings that can change its prompt or eligibility. The
     /// publisher lets coordinators cancel work as soon as one of those values is edited.
@@ -50,7 +56,23 @@ final class LanguageLearningSettings: ObservableObject {
             $sourceLanguages.map { _ in () }.eraseToAnyPublisher(),
             $targetLanguage.map { _ in () }.eraseToAnyPublisher(),
             $sentencePreviewEnabled.map { _ in () }.eraseToAnyPublisher(),
-        ].map { $0.dropFirst().eraseToAnyPublisher() } + [translation.changes]).eraseToAnyPublisher()
+                $referenceMode.map { _ in () }.eraseToAnyPublisher()
+            ].map { $0.dropFirst().eraseToAnyPublisher() } + [translation.changes]).eraseToAnyPublisher()
+    }
+
+    /// Bindings affect presentation, not the meaning of a generated translation. Repaint labels
+    /// without discarding the current source or cancelling a valid response.
+    var shortcutChanges: AnyPublisher<Void, Never> {
+        Publishers.MergeMany(
+            [
+                $keyCode.map { _ in () }.eraseToAnyPublisher(),
+                $modifiers.map { _ in () }.eraseToAnyPublisher(),
+                $keyLabel.map { _ in () }.eraseToAnyPublisher(),
+                $replacementKeyCode.map { _ in () }.eraseToAnyPublisher(),
+                $replacementModifiers.map { _ in () }.eraseToAnyPublisher(),
+                $replacementKeyLabel.map { _ in () }.eraseToAnyPublisher()
+            ].map { $0.dropFirst().eraseToAnyPublisher() }
+        ).eraseToAnyPublisher()
     }
 
     var analysisChanges: AnyPublisher<Void, Never> {
@@ -64,7 +86,7 @@ final class LanguageLearningSettings: ObservableObject {
             sentencePreviewEnabled: sentencePreviewEnabled,
             sourceLanguages: sourceLanguages,
             targetLanguage: targetLanguage,
-            translationModel: translation.snapshot
+            translationModel: translation.snapshot, referenceMode: referenceMode
         )
     }
 
@@ -72,6 +94,8 @@ final class LanguageLearningSettings: ObservableObject {
     func resetToDefaults() {
         translationEnabled = false
         sentencePreviewEnabled = true
+        referenceMode = .currentSentence
+        replacementKeyCode = 17; replacementModifiers = [.control, .option]; replacementKeyLabel = "⌃⌥T"
         sourceLanguages = [.chinese]
         targetLanguage = .english
         model = ""
@@ -96,6 +120,13 @@ final class LanguageLearningSettings: ObservableObject {
         targetLanguage = LearningLanguage(rawValue: defaults.string(forKey: "learningTargetLanguage") ?? "en")
             ?? .english
         sentencePreviewEnabled = defaults.object(forKey: "learningSentencePreviewEnabled") as? Bool ?? true
+        referenceMode = LearningReferenceMode(rawValue: defaults.string(forKey: "learningReferenceMode") ?? "") ?? .currentSentence
+        replacementKeyCode = UInt16(clamping: defaults.object(forKey: "learningReplacementKey") as? Int ?? 17)
+        replacementModifiers = ShortcutModifierMask(
+            rawValue: UInt32(
+                clamping:
+                    defaults.object(forKey: "learningReplacementModifiers") as? Int ?? 12))
+        replacementKeyLabel = defaults.string(forKey: "learningReplacementLabel") ?? "⌃⌥T"
         keyCode = UInt16(clamping: defaults.object(forKey: "learningTranslationKey") as? Int ?? 17)
         modifiers = ShortcutModifierMask(
             rawValue: UInt32(clamping: defaults.object(forKey: "learningTranslationModifiers") as? Int ?? 9)
@@ -109,6 +140,12 @@ final class LanguageLearningSettings: ObservableObject {
             defaults.set(keyLabel, forKey: "learningTranslationLabel")
         }
     }
+
+    private func saveReplacementShortcut() {
+        defaults.set(Int(replacementKeyCode), forKey: "learningReplacementKey")
+        defaults.set(Int(replacementModifiers.rawValue), forKey: "learningReplacementModifiers")
+        defaults.set(replacementKeyLabel, forKey: "learningReplacementLabel")
+    }
 }
 
 /// Immutable behavior boundary retained by one generation. Equality rejects a reply after any
@@ -120,4 +157,5 @@ nonisolated struct LearningSettingsSnapshot: Equatable, Sendable {
     let sourceLanguages: [LearningLanguage]
     let targetLanguage: LearningLanguage
     var translationModel: LearningModelSnapshot? = nil
+    var referenceMode: LearningReferenceMode = .currentSentence
 }

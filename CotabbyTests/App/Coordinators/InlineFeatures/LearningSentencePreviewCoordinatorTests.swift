@@ -511,6 +511,139 @@ struct LearningSentencePreviewCoordinatorTests {
         #expect(rig.panel.last?.message.contains("analysis unavailable") == true)
     }
 
+    @Test
+    func explicitPreviewStillUsesTheSameCardWithAutomaticPreviewOff() async throws {
+        let rig = try Rig(initial: "我能做到")
+        defer { rig.cleanup() }
+        rig.settings.languageLearning.sentencePreviewEnabled = false
+        rig.coordinator.start()
+        try rig.edit("我能做到更多")
+        for _ in 0..<20 { await Task.yield() }
+        #expect(rig.service.requests.isEmpty && !rig.panel.isVisible)
+        #expect(rig.coordinator.decide(.init(keyCode: 17, flags: .maskAlternate)) == .consume)
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I can do more."))
+        await waitUntil { rig.panel.last?.translation == "I can do more." }
+        #expect(rig.panel.last?.isExpanded == true)
+        #expect(rig.reader.replaceCount == 0)
+    }
+
+    @Test
+    func confirmedReplacementDoesNotWaitForAnalysisAndConsumesNoTypingKeys() async throws {
+        let rig = try Rig()
+        defer { rig.cleanup() }
+        rig.reader.permitsReplacement = true
+        rig.coordinator.start()
+        try rig.edit("我能做到")
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I can do it."))
+        await waitUntil { rig.panel.last?.canReplace == true && rig.service.analysisCalls == 1 }
+        #expect(rig.coordinator.decide(.init(keyCode: 36, flags: [])) == .notHandled)
+        #expect(rig.coordinator.decide(.init(keyCode: 48, flags: [])) == .notHandled)
+        #expect(rig.coordinator.decide(.init(keyCode: 17, flags: [.maskAlternate, .maskControl])) == .consume)
+        await waitUntil { rig.reader.replaceCount == 1 }
+        #expect(rig.reader.replaced?.source == "我能做到")
+        #expect(rig.reader.replacementText == "I can do it.")
+        await waitUntil { !rig.panel.isVisible }
+    }
+
+    @Test
+    func selectedPreviewReplacesOnlyTheSavedSelectionAndStaleClickCannotWrite() async throws {
+        let rig = try Rig(initial: "前文。我的目标。后文。", selection: ("前文。我的目标。后文。" as NSString).range(of: "我的目标"))
+        defer { rig.cleanup() }
+        rig.reader.permitsReplacement = true
+        rig.settings.languageLearning.referenceMode = .draft
+        rig.coordinator.start()
+        #expect(rig.coordinator.decide(.init(keyCode: 17, flags: .maskAlternate)) == .consume)
+        await waitUntil { rig.service.requests.count == 1 }
+        #expect(rig.service.inputs.first?.referenceBefore == "前文。")
+        #expect(rig.service.inputs.first?.referenceAfter == "。后文。")
+        rig.service.emit(.translation("my goal"))
+        await waitUntil { rig.panel.last?.canReplace == true }
+        #expect(rig.panel.last?.targetIsSelection == true)
+        let oldClick = try #require(rig.panel.replace)
+        oldClick()
+        await waitUntil { rig.reader.replaceCount == 1 }
+        #expect(rig.reader.replaced?.range == rig.reader.selectionOverride)
+        try rig.edit("新文档", element: "second")
+        oldClick()
+        for _ in 0..<20 { await Task.yield() }
+        #expect(rig.reader.replaceCount == 1)
+    }
+
+    @Test
+    func unknownIMEIsCopyOnlyAndOldPreviewCannotConsumeReplaceAfterAnEdit() async throws {
+        let rig = try Rig()
+        defer { rig.cleanup() }
+        rig.coordinator.start()
+        try rig.edit("我能做到")
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I can do it."))
+        await waitUntil { rig.panel.last?.translation.isEmpty == false }
+        #expect(rig.panel.last?.canReplace == false)
+        #expect(rig.coordinator.decide(.init(keyCode: 17, flags: [.maskAlternate, .maskControl])) == .notHandled)
+        let old = try #require(rig.panel.replace)
+        try rig.edit("我正在输入", marked: .init(location: 2, length: 2))
+        old()
+        for _ in 0..<20 { await Task.yield() }
+        #expect(rig.reader.replaceCount == 0)
+        #expect(!rig.panel.isVisible)
+    }
+
+    @Test
+    func failedReplacementCannotBeRetriedAndNewDocumentDoesNotInheritOldSpinner() async throws {
+        let gate = PauseGate(), rig = try Rig()
+        defer { gate.finishAll(); rig.cleanup() }
+        rig.reader.permitsReplacement = true
+        rig.reader.replacementGate = gate
+        rig.coordinator.start()
+        try rig.edit("我能做到")
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I can do it."))
+        await waitUntil { rig.panel.last?.canReplace == true }
+        let click = try #require(rig.panel.replace)
+        click(); click()
+        await waitUntil { gate.pending.count == 1 }
+        #expect(rig.reader.replaceCount == 1)
+        try rig.edit("新的句子", element: "other-field")
+        #expect(rig.coordinator.decide(.init(keyCode: 17, flags: .maskAlternate)) == .consume)
+        await waitUntil { rig.service.requests.count == 2 }
+        rig.service.emit(.translation("A new sentence."))
+        await waitUntil { rig.panel.last?.translation == "A new sentence." }
+        #expect(rig.panel.last?.isCommitting == false)
+        gate.release(0)
+        await waitUntil { rig.panel.last?.canReplace == true }
+        #expect(rig.reader.replaceCount == 1)
+        rig.reader.replacementGate = nil
+        rig.reader.failReplacement = true
+        rig.panel.replace?()
+        await waitUntil { rig.panel.last?.message == "uncertain write" }
+        #expect(rig.panel.last?.canReplace == false)
+        #expect(rig.panel.last?.isExpanded == true, "Failure exposes both recovery copy actions.")
+        rig.panel.replace?()
+        for _ in 0..<20 { await Task.yield() }
+        #expect(rig.reader.replaceCount == 2)
+    }
+
+    @Test
+    func explicitCaptureFailureShowsAnErrorAndShortcutLabelsRepaintWithoutRegeneration() async throws {
+        let rig = try Rig(initial: "   ")
+        defer { rig.cleanup() }
+        rig.coordinator.start()
+        #expect(rig.coordinator.decide(.init(keyCode: 17, flags: .maskAlternate)) == .consume)
+        await waitUntil { rig.panel.last?.isError == true }
+        #expect(rig.panel.last?.message.isEmpty == false)
+        #expect(rig.panel.last?.canReplace == false)
+        try rig.edit("我能做到")
+        await waitUntil { rig.service.requests.count == 1 }
+        rig.service.emit(.translation("I can do it."))
+        await waitUntil { rig.panel.last?.translation.isEmpty == false }
+        rig.settings.languageLearning.keyLabel = "⌥R"
+        rig.settings.languageLearning.replacementKeyLabel = "⌃⌥R"
+        await waitUntil { rig.panel.last?.shortcutLabel == "⌥R" && rig.panel.last?.replacementShortcutLabel == "⌃⌥R" }
+        #expect(rig.service.requests.count == 1)
+    }
+
     private static let chunk = LearningMeaningChunk(id: 0, sourceRanges: [.init(location: 1, length: 1)],
         targetRanges: [.init(location: 2, length: 3)])
 
@@ -563,8 +696,9 @@ struct LearningSentencePreviewCoordinatorTests {
         let coordinator: LearningSentencePreviewCoordinator
         let pause: PauseGate?
 
-        init(initial: String = "", isFrontmost: @escaping @MainActor () -> Bool = { true },
-             availability: @escaping @MainActor () -> String? = { nil }, pause: PauseGate? = nil,
+        init(
+            initial: String = "", selection: NSRange? = nil, isFrontmost: @escaping @MainActor () -> Bool = { true },
+            availability: @escaping @MainActor () -> String? = { nil }, pause: PauseGate? = nil,
              unitRecognizer: (any LearningUnitRecognizing)? = nil) throws {
             self.pause = pause
             defaults = try #require(UserDefaults(suiteName: suite))
@@ -576,10 +710,15 @@ struct LearningSentencePreviewCoordinatorTests {
             settings.languageLearning.sentencePreviewEnabled = true
             settings.languageLearning.model = "learning-model"
             service = StreamService(settings: settings)
-            let context = CotabbyTestFixtures.focusedInputSnapshot(precedingText: initial, documentLength: initial.utf16.count)
+            let value = initial as NSString
+            let context = CotabbyTestFixtures.focusedInputSnapshot(
+                precedingText: selection.map { value.substring(to: $0.location) } ?? initial,
+                trailingText: selection.map { value.substring(from: NSMaxRange($0)) } ?? "",
+                selection: selection, documentLength: initial.utf16.count)
             focus = RigFocusProvider(snapshot: FocusSnapshot(applicationName: context.applicationName,
                 bundleIdentifier: context.bundleIdentifier, capability: .supported, context: context))
             reader = SentenceReader(focus: focus)
+            if let selection { reader.valueOverride = initial; reader.selectionOverride = selection }
             coordinator = LearningSentencePreviewCoordinator(service: service, reader: reader, focus: focus,
                 panel: panel, unitRecognizer: unitRecognizer, debounce: pause == nil ? .zero : .milliseconds(600),
                 waitForPause: { delay in
@@ -611,6 +750,7 @@ struct LearningSentencePreviewCoordinatorTests {
         struct Request { let source: String; var update: (LearningSentenceUpdate) -> Void }
         let settings: SuggestionSettingsModel
         var requests: [Request] = []
+        var inputs: [LearningTranslationInput] = []
         var pending: [UUID: CheckedContinuation<LearningSentenceResult, Error>] = [:]
         var translationIDs: [Int: UUID] = [:]
         var analysisIDs: [Int: UUID] = [:]
@@ -639,6 +779,13 @@ struct LearningSentencePreviewCoordinatorTests {
                     continuation.resume(throwing: CancellationError())
                 }
             }
+        }
+        func translateSentence(
+            input: LearningTranslationInput, sourceLanguage: LearningLanguage,
+            targetLanguage: LearningLanguage
+        ) async throws -> String {
+            inputs.append(input)
+            return try await translateSentence(source: input.source, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)
         }
         func translateSentence(source: String, sourceLanguage: LearningLanguage,
                                targetLanguage: LearningLanguage) async throws -> String {
@@ -683,16 +830,33 @@ struct LearningSentencePreviewCoordinatorTests {
     private final class SentenceReader: LearningSelectionReplacing {
         let focus: RigFocusProvider
         var replaceCount = 0
+        var permitsReplacement = false
+        var selectionOverride: NSRange?
+        var valueOverride: String?
+        var replacementGate: PauseGate?
+        var failReplacement = false
+        var replaced: LearningSelectionCapture?
+        var replacementText: String?
         init(focus: RigFocusProvider) { self.focus = focus }
         func capture() throws -> LearningSelectionCapture {
             let context = try #require(focus.snapshot.context)
-            let range = try LearningTextScopePolicy.conversionRange(value: context.precedingText, selection: context.documentSelection)
-            return .init(element: AXUIElementCreateApplication(123), context: context, value: context.precedingText,
-                range: range, source: try LearningTextScopePolicy.text(value: context.precedingText, range: range),
-                replacementUnavailableReason: "unknown IME evidence", inputMethodAssessment: .copyOnly(reason: "unknown IME evidence"))
+            let value = valueOverride ?? context.precedingText
+            let range = try LearningTextScopePolicy.conversionRange(value: value, selection: selectionOverride ?? context.documentSelection)
+            return .init(
+                element: AXUIElementCreateApplication(123), context: context, value: value,
+                range: range, source: try LearningTextScopePolicy.text(value: value, range: range),
+                editorSelection: selectionOverride ?? context.documentSelection,
+                replacementUnavailableReason: permitsReplacement ? nil : "unknown IME evidence",
+                inputMethodAssessment: permitsReplacement
+                    ? .replacementAllowed(.explicitlyEmpty) : .copyOnly(reason: "unknown IME evidence"))
         }
         func isCurrent(_ saved: LearningSelectionCapture) -> Bool { focus.snapshot.context == saved.context }
-        func replace(_ saved: LearningSelectionCapture, with english: String) async throws { replaceCount += 1 }
+        func replace(_ saved: LearningSelectionCapture, with english: String) async throws {
+            replaceCount += 1; replaced = saved; replacementText = english
+            if let replacementGate { await replacementGate.wait(.zero) }
+            try Task.checkCancellation()
+            if failReplacement { throw LearningFailure.message("uncertain write") }
+        }
     }
 
     private final class SentencePanel: LearningSentencePresenting {
@@ -700,11 +864,19 @@ struct LearningSentencePreviewCoordinatorTests {
         var hasDetail = false
         var last: LearningSentencePresentation?
         var showCount = 0
+        var replace: (() -> Void)?
         func hide() { isVisible = false }
         func dismissDetail() -> Bool {
             guard hasDetail else { return false }
             hasDetail = false
             return true
+        }
+        func show(
+            _ presentation: LearningSentencePresentation, expand: @escaping () -> Void, dismiss: @escaping () -> Void,
+            replace: (() -> Void)?
+        ) {
+            self.replace = replace
+            show(presentation, expand: expand, dismiss: dismiss)
         }
         func show(_ presentation: LearningSentencePresentation, expand: @escaping () -> Void, dismiss: @escaping () -> Void) {
             showCount += 1

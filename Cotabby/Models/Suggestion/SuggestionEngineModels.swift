@@ -198,6 +198,12 @@ struct SuggestionSettingsSnapshot: Equatable, Sendable {
     /// Optional overrides resolved once per focused app, alongside the existing shortcut record.
     /// Unconfigured apps inherit the global behavior; the snapshot keeps async work deterministic.
     let perAppBehaviors: [String: PerAppBehavior]
+    /// Nil preserves the shipped on-device prompt policy. Endpoint defaults resolve independently.
+    var contextWindowTokens: Int?
+    var localContextWindowTokens: Int?
+    /// Destination identity invalidates work even when two models have the same numeric budget.
+    var completionModelIdentity: String = ""
+    var localModelIdentity: String = ""
 
     /// Single chokepoint that picks between the preset's range and the user's custom range.
     /// Every downstream consumer (token-budget math, prompt-instruction text, UI labels in the

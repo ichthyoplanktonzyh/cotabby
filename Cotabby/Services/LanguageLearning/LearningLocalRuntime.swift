@@ -7,17 +7,21 @@ import CotabbyInference
 /// The controller dispatches this synchronous boundary onto its detached worker.
 nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked Sendable {
     private let native = NativeLlamaSession()
+    /// Read and written only inside native.withOperation; never published across the UI boundary.
+    private var actualContextWindowTokens = 8_192
 
     func claim(_ operation: UUID) { native.claim(operation) }
     func invalidate() -> UUID { native.invalidate() }
     private func validate(_ operation: UUID) throws { try native.validate(operation) }
 
-    private func load(_ modelURL: URL, trace: LearningRequestContext? = nil,
-                      onLoad: (@Sendable (Int) -> Void)? = nil) throws {
+    private func load(
+        _ modelURL: URL, contextWindowTokens: Int = 8_192, trace: LearningRequestContext? = nil,
+        onLoad: (@Sendable (Int) -> Void)? = nil) throws {
         let preparation: NativeLlamaPreparation
         do {
             preparation = try native.prepare(NativeLlamaModelConfiguration(modelURL: modelURL,
-                gpuLayerCount: -1, contextWindowTokens: 8_192, batchSize: 256)) {
+                    gpuLayerCount: -1, contextWindowTokens: Int32(contextWindowTokens), batchSize: 256)
+            ) {
                 if let trace { LearningRequestLog.emit(trace, phase: "model_loading") }
             }
         } catch {
@@ -26,14 +30,19 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
             """,
                 table: "Learning", comment: "Error shown when the selected local GGUF model fails to load."))
         }
+        actualContextWindowTokens = preparation.contextWindowTokens
         if let trace { LearningRequestLog.emit(trace, phase: "model_ready",
             details: ["model_load_ms": String(preparation.loadMilliseconds), "cached": String(preparation.cached)]) }
         onLoad?(preparation.loadMilliseconds)
     }
 
     func prepare(modelURL: URL, operationID: UUID, trace: LearningRequestContext? = nil) throws {
+        try prepare(modelURL: modelURL, contextWindowTokens: 8_192, operationID: operationID, trace: trace)
+    }
+
+    func prepare(modelURL: URL, contextWindowTokens: Int, operationID: UUID, trace: LearningRequestContext? = nil) throws {
         try native.withOperation(expectedLease: operationID) {
-            try load(modelURL, trace: trace)
+            try load(modelURL, contextWindowTokens: contextWindowTokens, trace: trace)
             try validate(operationID)
         }
     }
@@ -41,15 +50,31 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
     func generate(modelURL: URL, template: LearningChatTemplate, prompt: String, maxTokens: Int,
                   operationID: UUID, trace: LearningRequestContext? = nil,
                   onLoad: (@Sendable (Int) -> Void)? = nil, onDelta: @Sendable (String) -> Void) throws -> String {
+        try generate(
+            configuration: .init(modelURL: modelURL, template: template, contextWindowTokens: 8_192),
+            prompt: prompt, maxTokens: maxTokens,
+            operationID: operationID, trace: trace, onLoad: onLoad, onDelta: onDelta)
+    }
+
+    func generate(
+        configuration: LearningLocalModelConfiguration, prompt: String, maxTokens: Int,
+        operationID: UUID, trace: LearningRequestContext? = nil,
+        onLoad: (@Sendable (Int) -> Void)? = nil, onDelta: @Sendable (String) -> Void
+    ) throws -> String {
+        let modelURL = configuration.modelURL
+        let template = configuration.template
+        let contextWindowTokens = configuration.contextWindowTokens
         return try native.withOperation(expectedLease: operationID) {
-            try load(modelURL, trace: trace, onLoad: onLoad)
+            try load(modelURL, contextWindowTokens: contextWindowTokens, trace: trace, onLoad: onLoad)
             try validate(operationID)
             let resolved = try LearningLocalPrompt.resolve(template, modelURL: modelURL)
             let (prefix, suffix) = try LearningLocalPrompt.delimiters(resolved)
             var tokens = Array(prefix.withCString { native.engine.tokenizeInstruction($0, Int32(prefix.utf8.count)) })
             tokens += Array(prompt.withCString { native.engine.tokenizeLiteral($0, Int32(prompt.utf8.count)) })
             tokens += Array(suffix.withCString { native.engine.tokenizeInstruction($0, Int32(suffix.utf8.count)) })
-            try LearningLocalPrompt.validateTokenBudget(input: tokens.count, output: maxTokens, template: resolved)
+            try LearningLocalPrompt.validateTokenBudget(
+                input: tokens.count, output: maxTokens, template: resolved,
+                contextWindowTokens: actualContextWindowTokens)
             let parameters = LearningInstructionSampling.forTemplate(resolved)
             let sampling = SamplingConfig(temperature: Float(parameters.temperature), top_k: Int32(parameters.topK),
                 top_p: Float(parameters.topP), min_p: 0, repetition_penalty: Float(parameters.repetitionPenalty),
@@ -112,6 +137,33 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
                 table: "Learning", comment: """
                 Error shown when generation reaches its token limit before a complete expression is returned.
                 """))
+        }
+    }
+
+    func translationPlan(
+        configuration: LearningLocalModelConfiguration, input: LearningTranslationInput,
+        sourceLanguage: LearningLanguage, targetLanguage: LearningLanguage, output: Int,
+        operationID: UUID, trace: LearningRequestContext?
+    ) throws -> LearningTranslationPrompt.Request {
+        let modelURL = configuration.modelURL
+        let template = configuration.template
+        let total = configuration.contextWindowTokens
+        return try native.withOperation(expectedLease: operationID) {
+            try load(modelURL, contextWindowTokens: total, trace: trace)
+            try validate(operationID)
+            let resolved = try LearningLocalPrompt.resolve(template, modelURL: modelURL)
+            let (prefix, suffix) = try LearningLocalPrompt.delimiters(resolved)
+            let overhead =
+                prefix.withCString { native.engine.tokenizeInstruction($0, Int32(prefix.utf8.count)).count }
+                + suffix.withCString { native.engine.tokenizeInstruction($0, Int32(suffix.utf8.count)).count }
+            return try LearningTranslationBudget.prompt(
+                input: input, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage,
+                family: .init(template: resolved), total: min(total, actualContextWindowTokens), output: output, estimated: false,
+                maximumInputTokens: resolved == .translateGemma ? 2_048 : .max
+            ) { text in
+                try validate(operationID)
+                return overhead + text.withCString { native.engine.tokenizeLiteral($0, Int32(text.utf8.count)).count }
+            }
         }
     }
 

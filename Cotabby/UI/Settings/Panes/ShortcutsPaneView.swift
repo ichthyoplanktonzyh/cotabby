@@ -5,10 +5,9 @@ import SwiftUI
 /// drive suggestion acceptance: word-by-word and full-suggestion.
 struct ShortcutsPaneView: View {
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
+    var selectedApp: String?
 
-    @State private var isRecordingKeybind = false
-    @State private var isRecordingFullAcceptKeybind = false
-    @State private var isRecordingGlobalToggleKeybind = false
+    @StateObject private var recording = ShortcutRecordingState()
 
     var body: some View {
         SettingsPaneScaffold {
@@ -22,7 +21,7 @@ struct ShortcutsPaneView: View {
                     KeybindRow(
                         label: suggestionSettings.acceptanceKeyLabel,
                         keyCode: suggestionSettings.acceptanceKeyCode,
-                        isRecording: $isRecordingKeybind,
+                        isRecording: recording.binding(for: "completion.word"),
                         onRecord: { keyCode, modifiers, label in
                             suggestionSettings.setAcceptanceKey(
                                 keyCode: keyCode,
@@ -67,7 +66,7 @@ struct ShortcutsPaneView: View {
                     KeybindRow(
                         label: suggestionSettings.fullAcceptanceDisplayLabel,
                         keyCode: suggestionSettings.fullAcceptanceKeyCode,
-                        isRecording: $isRecordingFullAcceptKeybind,
+                        isRecording: recording.binding(for: "completion.full"),
                         onRecord: { keyCode, modifiers, label in
                             suggestionSettings.setFullAcceptanceKey(
                                 keyCode: keyCode,
@@ -112,7 +111,7 @@ struct ShortcutsPaneView: View {
                     KeybindRow(
                         label: suggestionSettings.globalToggleKeyLabel,
                         keyCode: suggestionSettings.globalToggleKeyCode,
-                        isRecording: $isRecordingGlobalToggleKeybind,
+                        isRecording: recording.binding(for: "global.toggle"),
                         onRecord: { keyCode, modifiers, label in
                             suggestionSettings.setGlobalToggleKey(
                                 keyCode: keyCode,
@@ -143,7 +142,10 @@ struct ShortcutsPaneView: View {
                 }
                 .settingsItem(.toggleTabby)
             }
+            LearningShortcutRows(settings: suggestionSettings.languageLearning, suggestionSettings: suggestionSettings, recording: recording)
+            AppShortcutSection(settings: suggestionSettings, recording: recording, selectedApp: selectedApp)
         }
+        .onDisappear { recording.stop() }
     }
 
     /// The Accept Word key, offered to the recorder as a double press. Nil while Accept Word is

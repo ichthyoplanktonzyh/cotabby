@@ -215,6 +215,7 @@ struct LlamaGenerationOptions: Equatable, Sendable {
     /// is the strongest anti-rambling signal available per token, and the engine computes it while
     /// the logits row is hot, so honoring it costs nothing here.
     var stopAtArgmaxEOG: Bool = true
+    var contextWindowTokens: Int?
 }
 
 /// One generation's text plus the confidence signals the caller needs for suppression accounting.

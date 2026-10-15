@@ -1006,7 +1006,7 @@ extension SuggestionCoordinator {
             fieldStyle: context.resolvedFieldStyle,
             isRightToLeft: isRightToLeft,
             prefixMayBeTruncated:
-                context.precedingText.utf16.count >= FocusSnapshotResolver.focusedTextContextWindowUTF16,
+                context.precedingTextMayBeTruncated,
             observedLineHeight: observedLineHeight,
             observedCharWidth: context.observedCharWidth,
             observedContentEdges: context.observedContentEdges

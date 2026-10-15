@@ -1,17 +1,10 @@
 import SwiftUI
 
-/// File overview:
-/// The onboarding "learn your keys" step: a hero keycap that demonstrates the accept gesture, plus
-/// one row per rebindable shortcut (accept word, accept entire suggestion, toggle Cotabby). Rows
-/// reuse the real `KeyRecorderView` and write through `SuggestionSettingsModel`, so a binding
-/// recorded here is exactly the one Settings shows later.
-///
-/// Only one row can record at a time (`recordingAction` is a single optional rather than per-row
-/// flags), which prevents two recorders from competing for the same keystroke.
+/// Onboarding demonstrates the current accept gesture without owning a second shortcut editor.
+/// The app-owned settings model supplies these read-only keycaps; every binding is edited in the
+/// central Shortcuts pane, so onboarding and later settings cannot drift into different flows.
 struct WelcomeKeybindStepView: View {
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
-
-    @State private var recordingAction: ShortcutAction?
 
     var body: some View {
         VStack(spacing: 24) {
@@ -30,155 +23,23 @@ struct WelcomeKeybindStepView: View {
             .onboardingReveal(1)
 
             VStack(spacing: 10) {
-                keybindRow(
-                    title: String(localized: "Accept word"),
-                    keyLabel: suggestionSettings.acceptanceKeyLabel,
-                    action: .acceptWord,
-                    onKeyRecorded: { keyCode, modifiers, label in
-                        suggestionSettings.setAcceptanceKey(
-                            keyCode: keyCode,
-                            modifiers: modifiers,
-                            label: label
-                        )
-                    },
-                    onReset: (
-                        suggestionSettings.acceptanceKeyCode != SuggestionSettingsModel.defaultAcceptanceKeyCode
-                            || !suggestionSettings.acceptanceKeyModifiers.isEmpty
-                    ) ? {
-                        suggestionSettings.setAcceptanceKey(
-                            keyCode: SuggestionSettingsModel.defaultAcceptanceKeyCode,
-                            modifiers: [],
-                            label: SuggestionSettingsModel.defaultAcceptanceKeyLabel
-                        )
-                    } : nil,
-                    onClear: suggestionSettings.acceptanceKeyCode != SuggestionSettingsModel.disabledKeyCode
-                        ? { suggestionSettings.clearAcceptanceKey() } : nil
-                )
-                .onboardingReveal(2)
-
-                keybindRow(
-                    title: String(localized: "Accept entire suggestion"),
-                    keyLabel: suggestionSettings.fullAcceptanceDisplayLabel,
-                    action: .acceptEntireSuggestion,
-                    onKeyRecorded: { keyCode, modifiers, label in
-                        suggestionSettings.setFullAcceptanceKey(
-                            keyCode: keyCode,
-                            modifiers: modifiers,
-                            label: label
-                        )
-                    },
-                    onReset: !suggestionSettings.isFullAcceptanceShortcutDefault ? {
-                        suggestionSettings.setFullAcceptanceKey(
-                            keyCode: SuggestionSettingsModel.defaultFullAcceptanceKeyCode,
-                            modifiers: [],
-                            label: SuggestionSettingsModel.defaultFullAcceptanceKeyLabel
-                        )
-                    } : nil,
-                    onClear: suggestionSettings.hasFullAcceptanceShortcut
-                        ? { suggestionSettings.clearFullAcceptanceKey() } : nil,
-                    // Pressing Accept Word twice here binds the double tap, the same as in Settings.
-                    doubleTapKey: suggestionSettings.acceptanceKeyCode != SuggestionSettingsModel.disabledKeyCode
-                        ? DoubleTapRecordingKey(
-                            keyCode: suggestionSettings.acceptanceKeyCode,
-                            modifiers: suggestionSettings.acceptanceKeyModifiers,
-                            label: suggestionSettings.acceptanceKeyLabel
-                        ) : nil,
-                    onDoubleTapRecorded: { suggestionSettings.setDoubleTapFullAcceptance() }
-                )
-                .onboardingReveal(3)
-
-                // No `onReset` here: the toggle hotkey is opt-in and has no factory default, so the
-                // only meaningful "reset" is unbind, which the Clear button already covers.
-                keybindRow(
-                    title: String(localized: "Toggle Lingrove", table: "Learning"),
-                    keyLabel: suggestionSettings.globalToggleKeyLabel,
-                    action: .toggleTabby,
-                    onKeyRecorded: { keyCode, modifiers, label in
-                        suggestionSettings.setGlobalToggleKey(
-                            keyCode: keyCode,
-                            modifiers: modifiers,
-                            label: label
-                        )
-                    },
-                    onReset: nil,
-                    onClear: suggestionSettings.globalToggleKeyCode != SuggestionSettingsModel.disabledKeyCode
-                        ? { suggestionSettings.clearGlobalToggleKey() } : nil
-                )
-                .onboardingReveal(4)
+                keybindRow(title: String(localized: "Accept word"), keyLabel: suggestionSettings.acceptanceKeyLabel)
+                    .onboardingReveal(2)
+                keybindRow(title: String(localized: "Accept entire suggestion"), keyLabel: suggestionSettings.fullAcceptanceDisplayLabel)
+                    .onboardingReveal(3)
+                keybindRow(title: String(localized: "Toggle Lingrove", table: "Learning"), keyLabel: suggestionSettings.globalToggleKeyLabel)
+                    .onboardingReveal(4)
             }
             .frame(maxWidth: 480)
         }
     }
 
-    @ViewBuilder
-    private func keybindRow(
-        title: String,
-        keyLabel: String,
-        action: ShortcutAction,
-        onKeyRecorded: @escaping (CGKeyCode, ShortcutModifierMask, String) -> Void,
-        onReset: (() -> Void)? = nil,
-        onClear: (() -> Void)? = nil,
-        doubleTapKey: DoubleTapRecordingKey? = nil,
-        onDoubleTapRecorded: (() -> Void)? = nil
-    ) -> some View {
-        let isRecording = recordingAction == action
+    private func keybindRow(title: String, keyLabel: String) -> some View {
         HStack(spacing: 10) {
             Text(title)
                 .font(.system(size: 14, weight: .medium, design: .rounded))
                 .frame(maxWidth: .infinity, alignment: .leading)
-
             KeycapView(label: keyLabel)
-
-            if isRecording {
-                KeyRecorderView(
-                    onKeyRecorded: { keyCode, modifiers, label in
-                        onKeyRecorded(keyCode, modifiers, label)
-                        recordingAction = nil
-                    },
-                    onCancelled: {
-                        recordingAction = nil
-                    },
-                    conflictChecker: { keyCode, modifiers in
-                        suggestionSettings.conflictingShortcutName(
-                            keyCode: keyCode,
-                            modifiers: modifiers,
-                            excluding: action
-                        )
-                    },
-                    doubleTapKey: doubleTapKey,
-                    onDoubleTapRecorded: onDoubleTapRecorded.map { record in
-                        {
-                            record()
-                            recordingAction = nil
-                        }
-                    }
-                )
-            } else {
-                Button("Change") {
-                    recordingAction = action
-                }
-                .controlSize(.small)
-            }
-
-            if let onReset {
-                Button("Reset") {
-                    onReset()
-                    recordingAction = nil
-                }
-                .controlSize(.small)
-            }
-
-            // Mirror the Settings "Shortcuts" pane, which offers Clear here too: unbinding a
-            // shortcut mid-setup shouldn't force the user to finish onboarding and then dig through
-            // Settings to undo it. Call sites pass nil while the key is already unbound, so the
-            // button only appears when there is a binding to clear.
-            if let onClear {
-                Button("Clear") {
-                    onClear()
-                    recordingAction = nil
-                }
-                .controlSize(.small)
-            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
@@ -186,10 +47,6 @@ struct WelcomeKeybindStepView: View {
     }
 }
 
-// MARK: - Keycap hero
-
-/// The step's hero: the user's current accept key as a large keycap that presses itself every few
-/// seconds. The press is a two-frame dip (translate down, ledge shadow collapses) driven by a
 /// `.task` loop; Reduce Motion holds the key at rest.
 private struct OnboardingKeycapHero: View {
     let label: String

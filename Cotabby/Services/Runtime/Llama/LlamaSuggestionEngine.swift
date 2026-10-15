@@ -282,7 +282,8 @@ final class LlamaSuggestionEngine {
             ),
             confidenceFloor: resolvedConfidenceFloor(),
             sentenceStopMinimumWords: request.wordRange?.lowWords ?? 0,
-            stopAtArgmaxEOG: resolvedStopAtArgmaxEOG()
+            stopAtArgmaxEOG: resolvedStopAtArgmaxEOG(),
+            contextWindowTokens: request.contextWindowTokens
         )
     }
 }

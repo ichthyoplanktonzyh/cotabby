@@ -58,8 +58,13 @@ enum SuggestionRequestFactory {
         visualContextSummary: String? = nil,
         historyExamples: [String] = []
     ) -> SuggestionRequestBuildResult {
-        let prefixText = truncatedPromptPrefix(
-            from: context.precedingText,
+        let customWindow = settings.contextWindowTokens ?? (settings.selectedEngine == .openAICompatible ? 4_096 : nil)
+        let prefixText =
+            customWindow.map { window in
+                String(context.precedingText.suffix(min(ModelContextBudget.maximumTextBytes, window * 6)))
+            }
+            ?? truncatedPromptPrefix(
+                from: context.precedingText,
             configuration: configuration,
             engine: settings.selectedEngine
         )
@@ -144,10 +149,12 @@ enum SuggestionRequestFactory {
             // One budget for every engine: the endpoint shares the llama prefix window, and an
             // Apple request's prompt is what its llama fallback decodes. Either way the request's
             // whole output allowance has to fit beside it (see `promptTokenBudget`).
-            tokenBudget: promptTokenBudget(
-                configuredBudget: configuration.llamaPromptTokenBudget,
-                maxPredictionTokens: maxPredictionTokens
-            )
+            tokenBudget: customWindow.map {
+                ModelContextBudget.inputAllowance(
+                    total: $0, output: maxPredictionTokens,
+                    estimated: settings.selectedEngine == .openAICompatible)
+            } ?? promptTokenBudget(configuredBudget: configuration.llamaPromptTokenBudget, maxPredictionTokens: maxPredictionTokens),
+            usesConservativeTokenEstimate: settings.selectedEngine == .openAICompatible
         )
 
         let request = SuggestionRequest(
@@ -175,7 +182,9 @@ enum SuggestionRequestFactory {
             historyExamples: activeHistoryExamples,
             isMultiLineEnabled: settings.isMultiLineEnabled,
             requestID: RequestID.generate(),
-            wordRange: settings.effectiveWordRange
+            wordRange: settings.effectiveWordRange,
+            contextWindowTokens: settings.selectedEngine == .llamaOpenSource ? customWindow : settings.localContextWindowTokens,
+            promptContextWindowTokens: settings.selectedEngine == .appleIntelligence ? settings.contextWindowTokens : nil
         )
 
         return SuggestionRequestBuildResult(

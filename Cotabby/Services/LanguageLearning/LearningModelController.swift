@@ -89,6 +89,69 @@ final class LearningModelController: ObservableObject {
     }
     func resetEndpointBaseURL() { profile.baseURL = OpenAICompatibleEndpointConfiguration.defaultBaseURLString }
 
+    /// Freeze a complete translation request before transport. Native planning borrows this role's
+    /// serialized vocabulary off MainActor; endpoints use the disclosed estimate. A profile edit
+    /// invalidates the lease, preventing preparation from handing text to a newly selected server.
+    func translationPlan(
+        input: LearningTranslationInput, sourceLanguage: LearningLanguage,
+        targetLanguage: LearningLanguage, output: Int
+    ) async throws -> LearningTranslationPrompt.Request {
+        guard generationAllowed, generationEligibility() else { throw CancellationError() }
+        let snapshot = profile.snapshot
+        if snapshot.backend == .endpoint {
+            let work = Task.detached(priority: .userInitiated) {
+                try LearningTranslationBudget.prompt(
+                    input: input, sourceLanguage: sourceLanguage,
+                    targetLanguage: targetLanguage, family: .init(endpointModel: snapshot.endpointModel),
+                    total: snapshot.contextWindowTokens, output: output, estimated: true
+                ) { text in
+                    try Task.checkCancellation()
+                    return ModelContextBudget.estimatedTokens(text)
+                }
+            }
+            let result = try await withTaskCancellationHandler {
+                try await work.value
+            } onCancel: {
+                work.cancel()
+            }
+            try Task.checkCancellation()
+            guard profile.snapshot == snapshot, generationAllowed, generationEligibility() else { throw CancellationError() }
+            return result
+        }
+        guard !snapshot.localModel.isEmpty else {
+            throw LearningFailure.message(String(localized: "Choose a local GGUF model for this task.", table: "Learning"))
+        }
+        idleRelease?.cancel(); idleRelease = nil
+        task?.cancel(); task = nil
+        let id = UUID(), core = core, url = try localModelURL(snapshot.localModel)
+        taskID = id
+        core.claim(id)
+        nativeMayBeResident = true
+        let trace = LearningRequestTrace.measurement?.context
+        lastNativeTrace = trace
+        let work = Task.detached(priority: .userInitiated) {
+            try core.translationPlan(
+                configuration: .init(modelURL: url, template: snapshot.template, contextWindowTokens: snapshot.contextWindowTokens),
+                input: input, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage,
+                output: output, operationID: id, trace: trace)
+        }
+        do {
+            let result = try await withTaskCancellationHandler {
+                try await work.value
+            } onCancel: {
+                work.cancel(); core.cancel(id)
+            }
+            try Task.checkCancellation()
+            guard taskID == id, profile.snapshot == snapshot, generationAllowed, generationEligibility() else { throw CancellationError() }
+            return result
+        } catch {
+            // Planning can load a vocabulary and then reject an oversized target. That failure
+            // must still retire an on-demand native allocation, just like decode failures do.
+            if taskID == id { scheduleIdleRelease() }
+            throw error
+        }
+    }
+
     func generate(prompt: String, maxTokens: Int, userOnly: Bool = false,
                   sampling: LearningInstructionSampling? = nil,
                   onDelta: (@MainActor (String) throws -> Void)? = nil) async throws -> String {
@@ -175,7 +238,8 @@ final class LearningModelController: ObservableObject {
         let pair = AsyncThrowingStream<NativeEvent, Error>.makeStream()
         let nativeTask = Task.detached(priority: profile.role == .translation ? .userInitiated : .utility) {
             do {
-                let text = try core.generate(modelURL: model, template: snapshot.template, prompt: prompt,
+                let text = try core.generate(configuration: .init(modelURL: model, template: snapshot.template,
+                    contextWindowTokens: snapshot.contextWindowTokens), prompt: prompt,
                     maxTokens: maxTokens, operationID: id, trace: trace,
                     onLoad: { pair.continuation.yield(.loaded($0)) }) { pair.continuation.yield(.text($0)) }
                 pair.continuation.finish()
@@ -240,7 +304,10 @@ final class LearningModelController: ObservableObject {
         do {
             let modelURL = try localModelURL(snapshot.localModel)
             nativeMayBeResident = true
-            let work = Task.detached { try core.prepare(modelURL: modelURL, operationID: id, trace: trace); return "" }
+            let work = Task.detached {
+                try core.prepare(modelURL: modelURL, contextWindowTokens: snapshot.contextWindowTokens, operationID: id, trace: trace)
+                return ""
+            }
             task = work
             _ = try await withTaskCancellationHandler { try await work.value } onCancel: { work.cancel(); core.cancel(id) }
             guard taskID == id, profile.snapshot == snapshot else { return }

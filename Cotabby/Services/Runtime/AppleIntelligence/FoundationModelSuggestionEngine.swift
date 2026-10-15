@@ -81,7 +81,8 @@ final class FoundationModelSuggestionEngine {
                 ]) { _, new in new }
             )
             let startTime = Date()
-            let prompt = FoundationModelPromptRenderer.prompt(for: request)
+                try FoundationModelPromptRenderer.validateBudget(for: request)
+                let prompt = FoundationModelPromptRenderer.prompt(for: request)
             // In production, `isAvailable == true` implies `systemLanguageModel` is non-nil because
             // only `SystemAvailabilityProvider` can report `.available`, and it owns
             // the model instance. If a future test provider reports available without a model, keep

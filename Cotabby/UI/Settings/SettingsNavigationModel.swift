@@ -27,6 +27,12 @@ enum SettingsEngineTask: String, CaseIterable, Identifiable {
 /// pane switch cancels it immediately.
 @MainActor
 final class SettingsNavigationModel: ObservableObject {
+    @Published var shortcutAppBundleIdentifier: String?
+
+    func openShortcuts(for bundleIdentifier: String? = nil) {
+        shortcutAppBundleIdentifier = bundleIdentifier
+        open(.shortcuts)
+    }
     @Published var selection: SettingsCategory = .home
     @Published var engineTask: SettingsEngineTask = .completion
     /// The setting search navigated to, while its arrival pulse is active. Distributed to rows

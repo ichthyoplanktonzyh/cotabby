@@ -6,6 +6,7 @@ import SwiftUI
 struct LearningSentenceCard: View {
     let presentation: LearningSentencePresentation
     @ObservedObject var detailState: LearningDetailState
+    var replace: (() -> Void)?
     let inspect: (Int) -> Void
     let expand: () -> Void
     let dismiss: () -> Void
@@ -21,7 +22,34 @@ struct LearningSentenceCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             header
-            if presentation.isExpanded {
+            if !presentation.isError {
+                HStack {
+                    Text(
+                        presentation.targetIsSelection
+                            ? String(
+                                localized: "Target: Selection", table: "Learning",
+                                comment: "The confirmed translation replaces only the selected source.")
+                            : String(
+                                localized: "Target: Current sentence", table: "Learning",
+                                comment: "The confirmed translation replaces only the current sentence.")
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                    if presentation.canReplace, let replace {
+                        Button(
+                            String(
+                                localized: "Replace · \(presentation.replacementShortcutLabel)", table: "Learning",
+                                comment: "Replaces the exact source of this preview; includes its configured shortcut."), action: replace
+                        )
+                        .font(.caption).buttonStyle(.bordered)
+                    } else if presentation.isCommitting {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+            }
+            if presentation.isError {
+                Text(presentation.message).font(.callout).fixedSize(horizontal: false, vertical: true)
+            } else if presentation.isExpanded {
                 details
             } else {
                 if let previous = presentation.previousTranslation {
@@ -77,8 +105,13 @@ struct LearningSentenceCard: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            Text(presentation.isStale && !presentation.translation.isEmpty
-                ? String(localized: "Previous expression · updates after a pause", table: "Learning",
+            Text(
+                presentation.isError
+                    ? String(
+                        localized: "Translation preview unavailable", table: "Learning",
+                        comment: "Header for an explicit preview capture error.")
+                    : presentation.isStale && !presentation.translation.isEmpty
+                        ? String(localized: "Previous expression · updates after a pause", table: "Learning",
                     comment: "Header shown when the card retains the previous translation while the user edits the source sentence.")
                 : presentation.isExpanded
                     ? String(localized: "\(presentation.sourceLanguage.label) → \(presentation.targetLanguage.label)",
@@ -88,14 +121,17 @@ struct LearningSentenceCard: View {
                 .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 .lineLimit(1).truncationMode(.middle)
             Spacer(minLength: 0)
-            Button(presentation.isExpanded
-                ? String(localized: "Collapse", table: "Learning", comment: "Button that collapses the expanded sentence-learning card.")
+            if !presentation.isError {
+                Button(
+                    presentation.isExpanded
+                        ? String(localized: "Collapse", table: "Learning", comment: "Button that collapses the expanded sentence-learning card.")
                 : String(localized: "Expand · \(presentation.shortcutLabel)", table: "Learning",
                     comment: """
                     Button that expands the sentence-learning card; the shortcut label is the user's configured key combination.
                     """),
                 action: expand)
                 .buttonStyle(.plain).font(.caption).fixedSize()
+            }
             Button(action: dismiss) { Image(systemName: "xmark") }.buttonStyle(.plain)
                 .help(String(localized: "Dismiss · Esc", table: "Learning", comment: """
                 Tooltip for dismissing the sentence-learning card with Escape.
@@ -155,6 +191,13 @@ struct LearningSentenceCard: View {
             }
             .frame(height: min(max(detailsHeight, 1), 320))
             HStack {
+                Button(
+                    String(
+                        localized: "Copy source text", table: "Learning", comment: "Copies the verified original text for manual recovery.")
+                ) {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(presentation.source, forType: .string)
+                }
                 if !presentation.translation.isEmpty {
                     Button(String(localized: "Copy translation", table: "Learning",
                         comment: "Copies the target-language sentence to the clipboard.")) {

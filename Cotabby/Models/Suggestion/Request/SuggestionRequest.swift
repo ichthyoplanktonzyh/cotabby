@@ -89,6 +89,8 @@ struct SuggestionRequest: Equatable, Sendable {
     /// `RequestID.generate()` in `SuggestionRequestFactory`. Defaulted in the init so test fixtures
     /// that build requests directly do not need to change.
     let requestID: String
+    let contextWindowTokens: Int?
+    let promptContextWindowTokens: Int?
 
     init(
         context: FocusedInputContext,
@@ -115,7 +117,9 @@ struct SuggestionRequest: Equatable, Sendable {
         historyExamples: [String] = [],
         isMultiLineEnabled: Bool,
         requestID: String = "req_unknown",
-        wordRange: SuggestionWordRange? = nil
+        wordRange: SuggestionWordRange? = nil,
+        contextWindowTokens: Int? = nil,
+        promptContextWindowTokens: Int? = nil
     ) {
         self.context = context
         self.prefixText = prefixText
@@ -142,5 +146,7 @@ struct SuggestionRequest: Equatable, Sendable {
         self.isMultiLineEnabled = isMultiLineEnabled
         self.requestID = requestID
         self.wordRange = wordRange
+        self.contextWindowTokens = contextWindowTokens
+        self.promptContextWindowTokens = promptContextWindowTokens
     }
 }

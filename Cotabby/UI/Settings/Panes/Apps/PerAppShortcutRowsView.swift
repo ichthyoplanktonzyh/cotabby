@@ -3,14 +3,14 @@ import SwiftUI
 /// The Accept Word and Accept Entire Suggestion rows for one app: inherit the global key, record an
 /// app-specific key, or disable the action there (for example, so Tab keeps its native job).
 ///
-/// Extracted from the old flat Apps pane so the per-app detail screen can show it. It owns the one
-/// active key recorder, which keeps two recorders from listening at once.
+/// The central Shortcuts pane supplies its single recording owner. App-specific rows therefore
+/// cannot keep listening after a global or translation row starts recording.
 struct PerAppShortcutRowsView: View {
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
+    @ObservedObject var recording: ShortcutRecordingState
     let bundleIdentifier: String
     let displayName: String
 
-    @State private var recordingAction: PerAppShortcutAction?
 
     var body: some View {
         row(.acceptWord, title: String(localized: "Accept Word"), globalLabel: suggestionSettings.acceptanceKeyLabel)
@@ -28,10 +28,8 @@ struct PerAppShortcutRowsView: View {
     private func row(_ action: PerAppShortcutAction, title: String, globalLabel: String) -> some View {
         let binding = resolvedBinding(action)
         let inherits = action == .acceptWord ? override?.acceptance == nil : override?.fullAcceptance == nil
-        let isRecording = Binding(
-            get: { recordingAction == action },
-            set: { recordingAction = $0 ? action : (recordingAction == action ? nil : recordingAction) }
-        )
+        let name = action == .acceptWord ? "word" : "full"
+        let isRecording = recording.binding(for: "app.\(bundleIdentifier).\(name)")
 
         LabeledContent {
             if inherits {
@@ -40,16 +38,16 @@ struct PerAppShortcutRowsView: View {
                         KeyRecorderView(
                             onKeyRecorded: { keyCode, modifiers, label in
                                 apply(action, keyCode: keyCode, modifiers: modifiers, label: label)
-                                recordingAction = nil
+                                isRecording.wrappedValue = false
                             },
-                            onCancelled: { recordingAction = nil },
+                            onCancelled: { isRecording.wrappedValue = false },
                             conflictChecker: conflictChecker(action)
                         )
                     } else {
                         Text("Uses global (\(inheritedLabel(action, binding: binding)))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Button("Change") { recordingAction = action }
+                        Button("Change") { isRecording.wrappedValue = true }
                         Button("Disable") { disable(action) }
 
                     }
