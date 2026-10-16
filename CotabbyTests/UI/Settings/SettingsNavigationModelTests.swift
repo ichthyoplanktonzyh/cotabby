@@ -28,6 +28,26 @@ final class SettingsNavigationModelTests: XCTestCase {
         XCTAssertEqual(model.engineTask, .completion)
     }
 
+    func test_appShortcutLinksRetargetTheSameVisiblePane() {
+        let model = makeModel()
+        model.openShortcuts(for: "com.apple.mail")
+        XCTAssertEqual(model.selection, .shortcuts)
+        XCTAssertEqual(model.shortcutAppBundleIdentifier, "com.apple.mail")
+        model.openShortcuts(for: "md.obsidian")
+        XCTAssertEqual(model.selection, .shortcuts)
+        XCTAssertEqual(model.shortcutAppBundleIdentifier, "md.obsidian")
+    }
+
+    func test_samePaneRevealStillHighlightsAndManualSelectionClearsIt() {
+        let model = makeModel()
+        model.open(.appearance)
+        model.reveal(.ghostTextSize)
+        XCTAssertEqual(model.selection, .appearance)
+        XCTAssertEqual(model.highlightedItem, .ghostTextSize)
+        model.open(.appearance)
+        XCTAssertNil(model.highlightedItem)
+    }
+
     func test_writingLinksOpenEachRoleAndCancelAnOldSearchHighlight() {
         let model = makeModel()
         for role in [LearningModelRole.translation, .analysis] {

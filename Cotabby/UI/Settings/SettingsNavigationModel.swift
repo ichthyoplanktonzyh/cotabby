@@ -33,7 +33,13 @@ final class SettingsNavigationModel: ObservableObject {
         shortcutAppBundleIdentifier = bundleIdentifier
         open(.shortcuts)
     }
-    @Published var selection: SettingsCategory = .home
+    /// Plain reference, assigned by the window, so tracing cannot invalidate SwiftUI itself.
+    var renderDiagnostics: SettingsRenderDiagnostics?
+    @Published var selection: SettingsCategory = .home {
+        didSet {
+            if selection != oldValue { renderDiagnostics?.begin(selection) }
+        }
+    }
     @Published var engineTask: SettingsEngineTask = .completion
     /// The setting search navigated to, while its arrival pulse is active. Distributed to rows
     /// through the `settingsHighlightedItem` environment value.
@@ -52,7 +58,7 @@ final class SettingsNavigationModel: ObservableObject {
     /// a stale pulse cannot replay when the user later returns to that pane.
     func open(_ category: SettingsCategory) {
         cancelHighlight()
-        selection = category
+        selectCategory(category)
     }
 
     /// Writing's model links choose both the category and the task before SwiftUI renders the
@@ -74,7 +80,7 @@ final class SettingsNavigationModel: ObservableObject {
         // Existing engine search anchors belong to the original completion page. A prior visit
         // to translation must not leave those search hits scrolling an unrelated learning form.
         if item.category == .engineAndModel { engineTask = .completion }
-        selection = item.category
+        selectCategory(item.category)
         highlightedItem = item
 
         highlightClearTask?.cancel()
@@ -102,6 +108,13 @@ final class SettingsNavigationModel: ObservableObject {
         highlightClearTask?.cancel()
         highlightClearTask = nil
         highlightedItem = nil
+    }
+
+    /// Re-selecting a category can still clear a search pulse or retarget its app/task, but it
+    /// should not publish a second, identical category mutation and rebuild the detail needlessly.
+    private func selectCategory(_ category: SettingsCategory) {
+        guard selection != category else { return }
+        selection = category
     }
 }
 

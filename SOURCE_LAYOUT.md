@@ -284,3 +284,18 @@ that owns too many responsibilities and should be split by behavior rather than 
   `ShortcutsPaneView`. Its transient `ShortcutRecordingState.swift` owns the single active recorder,
   keeping global/translation/app rows mutually exclusive without adding another input monitor.
   `ApplicationBundlePicker.swift` shares app selection with `AppsPaneView`.
+
+## Settings Update Boundaries and Profiling
+
+- `Models/Settings/SettingsAttentionModel.swift` owns the window coordinator's small, deduplicated
+  warning projection. `Support/Settings/SettingsAttentionEvaluator.swift` retains the pure policy;
+  the model combines incoming permission, engine/configuration and availability/failure values.
+  Its direct publication tests mirror it under `CotabbyTests/Models/Settings`.
+- `SettingsContainerView` observes only that projection and its `SettingsNavigationModel`.
+  Destination panes observe their own dependencies; source services passed through the container
+  are ordinary strong references. Repeated category selections are deduplicated while retaining
+  the detail identity workaround, existing pane scaffold and search arrival behavior.
+- `UI/Settings/Components/Structure/SettingsRenderDiagnostics.swift` is the opt-in body/layout
+  probe, separate from reusable pane chrome. `CotabbyTests/UI/Settings/SettingsPerformanceTests.swift`
+  measures the real container with isolated stores and verifies both background-update isolation
+  and continued updates in the visible pane. Native profiling supplements the cold-window fixture.

@@ -16,6 +16,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
     private let permissionManager: PermissionManager
     private let permissionGuidanceController: PermissionGuidanceController
     private let suggestionSettings: SuggestionSettingsModel
+    private let attentionModel: SettingsAttentionModel
     private let interfaceLanguageSettings: InterfaceLanguageSettingsModel
     private let openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
     private let foundationModelAvailabilityService: FoundationModelAvailabilityService
@@ -56,6 +57,10 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
         self.permissionManager = permissionManager
         self.permissionGuidanceController = permissionGuidanceController
         self.suggestionSettings = suggestionSettings
+        self.attentionModel = SettingsAttentionModel(
+            permissionManager: permissionManager, suggestionSettings: suggestionSettings,
+            foundationAvailability: foundationModelAvailabilityService,
+            runtimeModel: runtimeModel, connectionModel: openAICompatibleConnectionModel)
         self.interfaceLanguageSettings = interfaceLanguageSettings
         self.openAICompatibleConnectionModel = openAICompatibleConnectionModel
         self.foundationModelAvailabilityService = foundationModelAvailabilityService
@@ -89,6 +94,7 @@ final class SettingsCoordinator: NSObject, NSWindowDelegate {
             rootView: AnyView(
                 SettingsContainerView(
                     learningModels: learningModels,
+                    attentionModel: attentionModel,
                     appUpdateManager: appUpdateManager,
                     permissionManager: permissionManager,
                     permissionGuidanceController: permissionGuidanceController,

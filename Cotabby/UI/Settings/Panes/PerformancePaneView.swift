@@ -13,12 +13,14 @@ struct PerformancePaneView: View {
     @ObservedObject var performanceMetricsStore: PerformanceMetricsStore
     @ObservedObject var qualityMetricsStore: SuggestionQualityMetricsStore
     @ObservedObject var systemMetricsStore: SystemMetricsStore
+    var renderDiagnostics: SettingsRenderDiagnostics?
 
     @State private var source: ModelRequestSource = .completion
     private var visibleEntries: [PerformanceMetricEntry] { performanceMetricsStore.entries.filter { $0.source == source } }
 
     var body: some View {
-        SettingsPaneScaffold {
+        _ = renderDiagnostics?.body("performance", category: .performance)
+        return SettingsPaneScaffold {
             liveResourceSection
 
             suggestionQualitySection

@@ -132,6 +132,23 @@ the same values by product domain without replacing the existing API. The immuta
 the pipeline is derived from those domains. [SuggestionSettingsStore.swift](Cotabby/Support/Settings/SuggestionSettingsStore.swift)
 keeps the established flat UserDefaults keys stable; endpoint credentials live in Keychain.
 
+SettingsCoordinator also owns `SettingsAttentionModel`, a deduplicated projection of required
+permissions, the selected engine/endpoint configuration and runtime availability/failures. The
+settings container observes this warning set and its own navigation, rather than every source
+service. Destination panes retain their direct subscriptions: background request counters, model
+diagnostics or download progress update the relevant pane without rebuilding Writing or the whole
+split view. Incoming `@Published` values feed the projection directly, avoiding willSet-era rereads.
+Repeated selection of the same category does not republish an identical value; the existing
+macOS 14 detail identity workaround and in-pane search/highlight/hover animations remain.
+
+`SettingsRenderDiagnostics` is optional measurement infrastructure. Launching with
+`-cotabby-debug -cotabby-settings-performance` logs body evaluations and handled selection to first
+nonzero AppKit layout, without text content. A generation token rejects obsolete layouts, including
+rapid A → B → A navigation. It does not measure input-event queueing, stable layout or display
+presentation. With the switch absent, no layout probe is mounted. The opt-in Release settings
+benchmark uses isolated preferences and inactive services; its cold-window measurements and
+background-publication counts complement, rather than replace, native same-window navigation.
+
 ## Suggestion State Machine
 
 Read the coordinator in this order:

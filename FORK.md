@@ -418,3 +418,70 @@ Validation on Xcode 26.5 / Apple Silicon with the prepared pinned inference work
 - Logs, xcresult bundles, source/eval comparisons, rendered UI, native translation outputs and
   the signed install receipt are retained under gitignored `build/model-context/`. Repo-scoped
   `build/DerivedData` was removed and its absence verified before completion.
+
+## Settings background-update performance (2026-10-16)
+
+This follow-up starts from `18ef0fbb` and isolates settings rendering from unrelated live service
+updates. `SettingsCoordinator` owns a `SettingsAttentionModel` that combines incoming permission,
+engine configuration and runtime failure/availability values into a deduplicated category warning
+set. The container observes that projection and navigation. Individual destination panes keep their
+own subscriptions, so their controls and live metrics continue updating. This avoids rebuilding the
+whole split view for every request counter, download notification or model search edit.
+
+The real SwiftUI container was measured in a Release fixture with isolated preferences and inactive
+services. Each source published eight updates while Writing was visible:
+
+| Source | Baseline container / Writing bodies | Final container / Writing bodies |
+| --- | ---: | ---: |
+| Suggestion quality counter | 8 / 8 | 0 / 0 |
+| Performance metric | 8 / 8 | 0 / 0 |
+| Download notification | 8 / 8 | 0 / 0 |
+| Model search query | 8 / 8 | 0 / 0 |
+
+Positive checks also verify that changing Writing's own settings rebuilds Writing, and visible
+Performance metrics rebuild Performance without rebuilding the container. Endpoint warnings read
+the newly published URL/model value and clear on recovery. Re-selecting a category avoids an
+identical selection publication while retaining search highlights, model-task and app targeting.
+
+The existing pane scaffold, components, scrolling, search arrival and macOS 14 detail identity
+workaround are retained. Native switching measurements did not establish a stable first-entry
+latency improvement; this change claims reduced background invalidation, not an eliminated sidebar
+switching delay. AX polling, host publication probes, inference, prompting and model settings are
+unchanged. Sampling did not establish that AX polling caused the settings symptom.
+
+`-cotabby-debug -cotabby-settings-performance` enables optional body counts and handled selection to
+first nonzero AppKit layout logs. Navigation generations reject stale A → B → A layout callbacks.
+The diagnostics record no field text, mount no probe during normal launches, and do not measure
+mouse-event queueing, final stable layout or pixel presentation. Fixture wall times include explicit
+settling and are not CPU measurements. Local receipts are retained in gitignored
+`build/settings-performance/`.
+
+Validation on Xcode 26.5 / Apple Silicon:
+
+- The final Release `build-for-testing`, opt-in benchmark and all 292 targeted items passed.
+  The final full run passed 3160 items with 21 environment/opt-in skips and no failures (3181
+  total). A preceding run and isolated retry hit the inherited aria2 fake-process progress wait;
+  the final complete run passed that item. Both its fixture and production source are unchanged.
+- Strict SwiftLint on changed production Swift passed with zero findings. Changed tests have no
+  lint errors and one closure-style warning. Both catalogs still validate: 1144 keys, 15 languages.
+- Two independent GPT-6 Luna reviewers with max reasoning found no remaining P1/P2 in the final
+  subscription, lifecycle, navigation and diagnostics changes.
+- Native acceptance on the installed final Dev binary verified Writing scrolling, its translation
+  model link (8192-token budget), App → Obsidian → Shortcuts retaining Obsidian, and live Performance
+  readings. Twelve same-window transitions after 24 warm-up transitions gave handled-selection to
+  first-layout medians of 294.537 / 250.711 / 313.278 ms for General / Appearance / Writing;
+  baseline was 215.097 / 247.634 / 297.666 ms. Samples were three / three / six per version in
+  separate time periods, so these establish no first-entry speedup and are not display latency.
+- Search category navigation worked, but automatic scrolling to the target did not: searching
+  `ghost text size` and pressing Return entered Appearance while leaving the target below the
+  viewport. The scaffold is byte-identical to `18ef0fbb` and search entry/anchors were not changed;
+  the evidence points to an existing nested-scroll issue. This is recorded separately and is not
+  presented as passing native search-position acceptance.
+- The separate `Cotabby Dev` Release build was installed after matching the existing designated
+  signing requirement; its binary timestamp advanced. Normal startup was restored with the profiling
+  switch absent and exactly one installed dev process. Accessibility and Input Monitoring remained
+  granted, all services started and the completion runtime reached ready state. Repeated XcodeGen
+  output was identical and all 849 validated production/test/project/configuration hashes matched.
+- Repo-scoped `build/DerivedData` was removed and its absence verified after validation. The
+  benchmark, xcresult bundles, source hashes, native traces and signed install receipts remain
+  under gitignored `build/settings-performance/`.

@@ -8,9 +8,11 @@ struct WritingPaneView: View {
     @ObservedObject var suggestionSettings: SuggestionSettingsModel
     var configureLearningModel: (LearningModelRole) -> Void = { _ in }
     var openShortcuts: () -> Void = {}
+    var renderDiagnostics: SettingsRenderDiagnostics?
 
     var body: some View {
-        SettingsPaneScaffold {
+        _ = renderDiagnostics?.body("writing", category: .writing)
+        return SettingsPaneScaffold {
             LanguageLearningSection(settings: suggestionSettings.languageLearning, suggestionSettings: suggestionSettings,
                 configureModel: configureLearningModel, openShortcuts: openShortcuts)
             Section("Length") {

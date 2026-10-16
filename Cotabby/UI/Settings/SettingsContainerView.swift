@@ -12,21 +12,25 @@ import SwiftUI
 /// on the detail body is the documented workaround for the macOS 14 split-view selection bug where
 /// the first sidebar pick doesn't always re-render the detail column.
 struct SettingsContainerView: View {
-    var learningModels: LearningModelCollection? = nil
+    var learningModels: LearningModelCollection?
+    var renderDiagnostics: SettingsRenderDiagnostics? = .process
+    @ObservedObject var attentionModel: SettingsAttentionModel
     let appUpdateManager: AppUpdateManager
 
-    @ObservedObject var permissionManager: PermissionManager
+    // These references are dependencies, not this view's state. Their destination panes observe
+    // them locally; only a changed warning set or navigation should invalidate the split view.
+    let permissionManager: PermissionManager
     let permissionGuidanceController: PermissionGuidanceController
-    @ObservedObject var suggestionSettings: SuggestionSettingsModel
-    @ObservedObject var interfaceLanguageSettings: InterfaceLanguageSettingsModel
-    @ObservedObject var openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
-    @ObservedObject var foundationModelAvailabilityService: FoundationModelAvailabilityService
-    @ObservedObject var runtimeModel: RuntimeBootstrapModel
-    @ObservedObject var modelDownloadManager: ModelDownloadManager
-    @ObservedObject var huggingFaceSearchService: HuggingFaceSearchService
-    @ObservedObject var performanceMetricsStore: PerformanceMetricsStore
-    @ObservedObject var qualityMetricsStore: SuggestionQualityMetricsStore
-    @ObservedObject var systemMetricsStore: SystemMetricsStore
+    let suggestionSettings: SuggestionSettingsModel
+    let interfaceLanguageSettings: InterfaceLanguageSettingsModel
+    let openAICompatibleConnectionModel: OpenAICompatibleConnectionModel
+    let foundationModelAvailabilityService: FoundationModelAvailabilityService
+    let runtimeModel: RuntimeBootstrapModel
+    let modelDownloadManager: ModelDownloadManager
+    let huggingFaceSearchService: HuggingFaceSearchService
+    let performanceMetricsStore: PerformanceMetricsStore
+    let qualityMetricsStore: SuggestionQualityMetricsStore
+    let systemMetricsStore: SystemMetricsStore
 
     let onShowWelcome: () -> Void
     let onRestart: () throws -> Void
@@ -44,7 +48,8 @@ struct SettingsContainerView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
+        _ = renderDiagnostics?.body("container", category: navigation.selection)
+        return NavigationSplitView(columnVisibility: $columnVisibility) {
             SettingsSidebarView(
                 navigation: navigation,
                 attentionCategories: attentionCategories,
@@ -53,6 +58,11 @@ struct SettingsContainerView: View {
             .toolbar(removing: .sidebarToggle)
         } detail: {
             detailPane
+                .background {
+                    if let renderDiagnostics, let generation = renderDiagnostics.token(for: navigation.selection) {
+                        SettingsLayoutProbe(category: navigation.selection, generation: generation, diagnostics: renderDiagnostics)
+                    }
+                }
                 .id(navigation.selection)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .toolbar(removing: .sidebarToggle)
@@ -81,6 +91,7 @@ struct SettingsContainerView: View {
         // an exact column size forever.
         .frame(maxWidth: .infinity, minHeight: 560, maxHeight: .infinity)
         .onAppear {
+            navigation.renderDiagnostics = renderDiagnostics
             // Migration: the previous sidebar had two engine sub-rows (`appleIntelligence`,
             // `openSource`). Users whose persisted selection still points to either should land on
             // the unified Engine & Model pane rather than fall back to General.
@@ -97,20 +108,9 @@ struct SettingsContainerView: View {
         }
     }
 
-    /// Snapshot driven by the live observable graph. Recomputes whenever the underlying state
-    /// publishes, so a permission grant or a runtime recovery clears the sidebar dot without any
-    /// manual refresh.
+    /// The window-owned projection publishes only when warning categories actually change.
     private var attentionCategories: Set<SettingsCategory> {
-        SettingsAttentionEvaluator.categoriesNeedingAttention(
-            SettingsAttentionEvaluator.Inputs(
-                permissionsGranted: permissionManager.requiredPermissionsGranted,
-                selectedEngine: suggestionSettings.selectedEngine,
-                foundationModelAvailable: foundationModelAvailabilityService.isAvailable,
-                llamaRuntimeFailedReason: runtimeModel.state.failureDetail,
-                endpointConfigurationError: endpointConfigurationError,
-                endpointConnectionFailedReason: openAICompatibleConnectionModel.state.failureDetail
-            )
-        )
+        attentionModel.categories
     }
 
     @ViewBuilder
@@ -155,7 +155,7 @@ struct SettingsContainerView: View {
         case .writing:
             WritingPaneView(
                 suggestionSettings: suggestionSettings, configureLearningModel: navigation.openLearningModel,
-                openShortcuts: { navigation.openShortcuts() })
+                openShortcuts: { navigation.openShortcuts() }, renderDiagnostics: renderDiagnostics)
         case .context:
             ContextPaneView(suggestionSettings: suggestionSettings, typingHistory: typingHistoryStore)
         case .shortcuts:
@@ -174,21 +174,10 @@ struct SettingsContainerView: View {
                 suggestionSettings: suggestionSettings,
                 performanceMetricsStore: performanceMetricsStore,
                 qualityMetricsStore: qualityMetricsStore,
-                systemMetricsStore: systemMetricsStore
+                systemMetricsStore: systemMetricsStore, renderDiagnostics: renderDiagnostics
             )
         case .about:
             AboutPaneView(appUpdateManager: appUpdateManager)
-        }
-    }
-
-    private var endpointConfigurationError: String? {
-        do {
-            let configuration = try suggestionSettings.openAICompatibleConfiguration
-            return configuration.modelName.isEmpty
-                ? OpenAICompatibleEndpointError.emptyModelName.localizedDescription
-                : nil
-        } catch {
-            return error.localizedDescription
         }
     }
 
