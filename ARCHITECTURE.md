@@ -141,6 +141,14 @@ split view. Incoming `@Published` values feed the projection directly, avoiding 
 Repeated selection of the same category does not republish an identical value; the existing
 macOS 14 detail identity workaround and in-pane search/highlight/hover animations remain.
 
+Each completion/learning settings owner also retains a bounded `ModelContextIdentityCache` for
+canonical destination strings. Its two slots retain the current local and nonlocal identities;
+budget values remain live lookups in the existing task-owned maps. Completion's Combine projection
+passes incoming values explicitly to preserve `@Published` willSet correctness. Runtime preparation
+supplies its actual model filename rather than relying on the UI's mirrored selection. A focus
+resolve freezes its capture-window value once and passes that Int through all candidate reads,
+slicing and truncation metadata, without changing the requested window or polling cadence.
+
 `SettingsPaneScaffold` gives search's `ScrollViewReader` one grouped Form scroll owner. Nesting an
 outer ScrollView around the Form allowed category navigation to succeed without revealing the row
 in the visible viewport. Shared callouts are the first Form section and scroll with its controls.

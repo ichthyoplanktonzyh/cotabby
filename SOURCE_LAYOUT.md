@@ -303,3 +303,14 @@ that owns too many responsibilities and should be split by behavior rather than 
   probe, separate from reusable pane chrome. `CotabbyTests/UI/Settings/SettingsPerformanceTests.swift`
   measures the real container with isolated stores and verifies both background-update isolation
   and continued updates in the visible pane. Native profiling supplements the cold-window fixture.
+
+## Context Computation Reuse
+
+- `Support/Settings/ModelContextIdentityCache.swift` is a two-slot identity memo owned separately by
+  completion settings and each learning profile. Explicit incoming inputs preserve Combine timing;
+  budget values are still resolved from each owner's existing map. Tests mirror it in Support/Settings.
+- `Support/LanguageLearning/LearningTranslationBudget.swift` returns the winning request with a
+  generic measured payload. `LearningPromptTokenCache.swift` retains one exact, single-use native
+  token plan for `LearningLocalRuntime`; it is separate from model sequences and KV state. Native
+  operations serialize access and clear it on model reload/release. Tests mirror this responsibility
+  under Support/LanguageLearning.

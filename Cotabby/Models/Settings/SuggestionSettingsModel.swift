@@ -36,6 +36,8 @@ enum ShortcutAction: CaseIterable {
 final class SuggestionSettingsModel: ObservableObject {
     let languageLearning: LanguageLearningSettings
     let completionContexts: ModelContextSettings
+    /// Pure two-slot memo, shared by direct getters and incoming-value snapshot projections.
+    var completionContextIdentities = ModelContextIdentityCache()
     @Published var completionLocalModelFilename = ""
     @Published private(set) var isGloballyEnabled: Bool
     /// The settings model owns pause lifetime so views and services observe one shared state.

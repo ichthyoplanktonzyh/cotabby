@@ -436,10 +436,7 @@ final class CotabbyAppEnvironment {
         }.store(in: &cancellables)
         runtimeManager.contextWindowTokensProvider = { [weak suggestionSettings, weak runtimeModel] in
             guard let settings = suggestionSettings, let filename = runtimeModel?.selectedModelFilename else { return nil }
-            let key = SuggestionSettingsModel.completionContextIdentity(
-                engine: .llamaOpenSource, localModel: filename,
-                baseURL: "", endpointModel: "", mode: settings.openAICompatibleAPIMode)
-            return settings.completionContexts.tokens(for: key)
+            return settings.localCompletionContextWindowTokens(modelFilename: filename)
         }
         observeLanguageLearning(coordinator: sentencePreview)
         // Low Power Mode is shared with completion. Clear current learning work immediately when

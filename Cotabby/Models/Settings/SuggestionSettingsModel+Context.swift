@@ -11,7 +11,7 @@ extension SuggestionSettingsModel {
     }
 
     var completionContextIdentity: String {
-        Self.completionContextIdentity(
+        completionContextIdentities.identity(
             engine: selectedEngine, localModel: completionLocalModelFilename,
             baseURL: openAICompatibleBaseURL, endpointModel: openAICompatibleModelName, mode: openAICompatibleAPIMode)
     }
@@ -25,12 +25,24 @@ extension SuggestionSettingsModel {
                     ? ModelContextBudget.maximumLocalTokens : ModelContextBudget.maximumEndpointTokens)
     }
 
+    /// Runtime preparation supplies its actual selected filename, which may be arriving before
+    /// the UI's mirrored filename commits. The shared local slot avoids rebuilding its key per request.
+    func localCompletionContextWindowTokens(modelFilename: String) -> Int? {
+        let identity = completionContextIdentities.identity(engine: .llamaOpenSource, localModel: modelFilename,
+                                                           baseURL: "", endpointModel: "", mode: .chatCompletions)
+        return completionContexts.tokens(for: identity)
+    }
+
     /// Default focus polling remains small. A deliberate model override expands the AX request
     /// before the prompt allocator chooses its caret-nearest token window; the byte/range ceiling
     /// keeps a very large provider budget from turning every focus poll into an unbounded read.
     var completionCaptureWindowUTF16: Int {
-        guard completionContexts.tokens(for: completionContextIdentity) != nil else { return FocusedInputSnapshot.textWindowUTF16 }
-        return min(262_144, max(FocusedInputSnapshot.textWindowUTF16, completionContextWindowTokens * 6))
+        guard !completionContexts.overrides.isEmpty,
+              let tokens = completionContexts.tokens(for: completionContextIdentity)
+        else { return FocusedInputSnapshot.textWindowUTF16 }
+        let maximum = selectedEngine == .appleIntelligence ? 4_096
+            : selectedEngine == .llamaOpenSource ? ModelContextBudget.maximumLocalTokens : ModelContextBudget.maximumEndpointTokens
+        return min(262_144, max(FocusedInputSnapshot.textWindowUTF16, min(tokens, maximum) * 6))
     }
 
     /// A power/model switch can end editing in an old field. Its pending commit must not resize
@@ -61,7 +73,7 @@ extension SuggestionSettingsModel {
         baseURL: String, endpointModel: String, mode: OpenAICompatibleAPIMode
     ) -> SuggestionSettingsSnapshot {
         var result = value
-        let identity = Self.completionContextIdentity(
+        let identity = completionContextIdentities.identity(
             engine: value.selectedEngine, localModel: localModel,
             baseURL: baseURL, endpointModel: endpointModel, mode: mode)
         let maximum =
@@ -71,7 +83,7 @@ extension SuggestionSettingsModel {
                 ? ModelContextBudget.maximumLocalTokens : ModelContextBudget.maximumEndpointTokens
         result.completionModelIdentity = identity
         result.contextWindowTokens = overrides[identity].map { min($0, maximum) }
-        let local = Self.completionContextIdentity(
+        let local = value.selectedEngine == .llamaOpenSource ? identity : completionContextIdentities.identity(
             engine: .llamaOpenSource, localModel: localModel,
             baseURL: "", endpointModel: "", mode: mode)
         result.localModelIdentity = local

@@ -522,3 +522,52 @@ Validation on Xcode 26.5 / Apple Silicon:
 - Repo-scoped `build/DerivedData` was removed and its absence verified. Test results, UI renders,
   benchmark, native acceptance and signing receipts remain under gitignored
   `build/settings-search-scroll/`.
+
+## Reuse translation tokens and model context identities (2026-10-16)
+
+Starting from `2d036820`, this follow-up implements the approved computation cleanup. Request
+scheduling, debounce, cancellation policy, capture-window sizes, model budgets, prompt content,
+sampling and model selection are unchanged, as explicitly requested.
+
+Native translation planning now retains the chosen prompt's measured token IDs alongside the
+winning budget candidate. Actual generation consumes that bounded plan once when configuration,
+prompt and resolved template match; otherwise it uses the existing tokenizer path. The actual
+context/output budget and specialist input limit are still checked before decode. A final oversized
+reference probe cannot replace the winning payload. Reload, unload and shutdown clear the token
+cache inside the serialized native boundary; concurrent cancel does not mutate it. No native pointer
+or KV state crosses this cache boundary, and endpoint generation retains its existing estimate path.
+
+`ModelContextIdentityCache` memoizes destination normalization/JSON encoding in two slots per owner,
+including learning profiles and the completion runtime's actual-filename budget lookup. Budget
+values remain live map lookups. Incoming Combine values remain explicit, so engine/model/endpoint
+changes cannot reuse willSet-era settings. The focus resolver reads the window provider once per
+capture and passes that same value through all AX and slicing paths. No mutable resolver session
+state or new subscription is introduced.
+
+Validation on Xcode 26.5 / Apple Silicon:
+
+- Final Release `build-for-testing` passed. All 322 targeted items passed without skips. The full
+  run passed 3170 items with 21 environment/opt-in skips and no failures (3191 total).
+- The identity memo test performs 1000 unchanged reads with exactly one canonicalization, verifies
+  local/endpoint slots do not evict each other, and checks eviction of old endpoint edits. Incoming
+  URL/model values, actual runtime filenames, live budget edits and learning destination changes
+  preserve their existing budgets. Each focus capture obtains one fresh window-provider value.
+- Token tests cover one-shot consumption, mismatched prompt/model/context/configured and resolved
+  templates, explicit reset, newest-plan replacement, reference searches whose final probe does
+  not fit, and a single measurement for a sentence without reference.
+- Native Release integration passed 12 target-only translation cases using the existing Hy-MT2
+  1.8B and TranslateGemma 4B GGUFs. All 12 planned prompt byte strings matched the prior context
+  feature's fixtures exactly; complete-target preservation and oversized-reference cropping passed.
+- Two independent GPT-6 Luna max read-only reviewers found no P1/P2. Changed production Swift has
+  the same 16 strict-lint findings as baseline, with none introduced or resolved. This is not a
+  clean strict-lint result. No end-to-end power or fan-noise improvement is claimed from work-count
+  reductions, and cancellation rate is not an optimization target in this change.
+- Changed tests passed strict lint with zero findings. Both catalogs still validate (1144 keys,
+  15 languages), repeated XcodeGen output was identical, and all 854 validated source/project/
+  configuration hashes matched. The separate Dev Release build was installed against its existing
+  signing requirement with an advanced binary timestamp. One normal installed dev process remained;
+  required permissions stayed granted, services started and completion reached ready at 4096 tokens.
+  All 13 recorded model/context/scheduling preferences were unchanged across installation.
+- Repo-scoped `build/DerivedData` was removed and its absence verified. Results, native prompt
+  comparison, source/lint comparisons and signed installation receipts remain under gitignored
+  `build/context-computation-cleanup/`.

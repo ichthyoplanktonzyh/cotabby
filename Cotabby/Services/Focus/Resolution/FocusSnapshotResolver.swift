@@ -118,6 +118,9 @@ struct FocusSnapshotResolver {
         application: NSRunningApplication,
         focusChangeSequence: UInt64 = 0
     ) -> FocusSnapshot {
+        // One synchronous capture uses one settings value for candidate reads, slicing and the
+        // published truncation boundary. Passing it down also avoids repeated identity encoding.
+        let captureWindow = self.captureWindow
         let applicationName = application.localizedName ?? "Unknown"
         let bundleIdentifier = application.bundleIdentifier ?? "unknown.bundle"
         let focusedRole =
@@ -149,7 +152,8 @@ struct FocusSnapshotResolver {
             ),
             bundleIdentifier: bundleIdentifier,
             deepDescendants: deepDescendants,
-            focusChangeSequence: focusChangeSequence
+            focusChangeSequence: focusChangeSequence,
+            contextWindowUTF16: captureWindow
         )
         let resolution = candidateResolution.resolution
 
@@ -265,7 +269,7 @@ struct FocusSnapshotResolver {
         let observedCharWidth = caret.observedCharWidth
         let observedContentEdges = caret.observedContentEdges
 
-        let contextWindow = boundedContextWindow(text: value, selection: selection)
+        let contextWindow = boundedContextWindow(text: value, selection: selection, contextWindowUTF16: captureWindow)
         let nsValue = contextWindow.text as NSString
         let safeSelectionLocation = min(contextWindow.selection.location, nsValue.length)
         let trailingStart = min(contextWindow.selection.location + contextWindow.selection.length, nsValue.length)
@@ -620,7 +624,8 @@ struct FocusSnapshotResolver {
         around focusedReading: FocusedElementReading,
         bundleIdentifier: String,
         deepDescendants: Bool,
-        focusChangeSequence: UInt64
+        focusChangeSequence: UInt64,
+        contextWindowUTF16: Int
     ) -> FocusCandidateResolution {
         var bestPartial: FocusCapabilityCandidateEvaluation?
 
@@ -630,7 +635,8 @@ struct FocusSnapshotResolver {
                     for: element,
                     bundleIdentifier: bundleIdentifier,
                     focusChangeSequence: focusChangeSequence,
-                    focusedReading: focusedReading
+                    focusedReading: focusedReading,
+                    contextWindowUTF16: contextWindowUTF16
                 )
                 let evaluation = FocusCapabilityResolver.evaluate(candidate.resolverCandidate)
 
@@ -700,6 +706,11 @@ struct FocusSnapshotResolver {
     /// Returns a caret-adjacent text window and rewrites `selection` into that window's coordinate
     /// space. `NSRange` is UTF-16 based, so all slicing goes through `NSString`.
     func boundedContextWindow(text: String, selection: NSRange) -> (text: String, selection: NSRange) {
+        boundedContextWindow(text: text, selection: selection, contextWindowUTF16: captureWindow)
+    }
+
+    private func boundedContextWindow(text: String, selection: NSRange,
+                                      contextWindowUTF16: Int) -> (text: String, selection: NSRange) {
         let nsText = text as NSString
         guard nsText.length > 0 else {
             return (text, NSRange(location: 0, length: 0))
@@ -710,8 +721,8 @@ struct FocusSnapshotResolver {
             ? Int.max
             : selection.location + selection.length
         let safeEnd = min(max(requestedEnd, safeLocation), nsText.length)
-        let beforeStart = max(0, safeLocation - captureWindow)
-        let afterEnd = min(nsText.length, safeEnd + captureWindow)
+        let beforeStart = max(0, safeLocation - contextWindowUTF16)
+        let afterEnd = min(nsText.length, safeEnd + contextWindowUTF16)
         let rawWindow = NSRange(location: beforeStart, length: afterEnd - beforeStart)
         let composedWindow = nsText.rangeOfComposedCharacterSequences(for: rawWindow)
         let windowText = nsText.substring(with: composedWindow)
@@ -968,7 +979,8 @@ struct FocusSnapshotResolver {
         for element: AXUIElement,
         bundleIdentifier: String,
         focusChangeSequence: UInt64,
-        focusedReading: FocusedElementReading
+        focusedReading: FocusedElementReading,
+        contextWindowUTF16: Int
     ) -> AXFocusCandidate {
         // `resolveSnapshot` already read the focused element's role pair for diagnostics, and the
         // focused element is the winning candidate in the common case; re-reading would repeat two
@@ -1025,7 +1037,7 @@ struct FocusSnapshotResolver {
                 // Mail rewrites trailing spaces as NBSP in its WebKit AX text. Give every
                 // downstream session comparison the same representation as keyboard events.
                 normalizeNonBreakingSpaces: bundleIdentifier == "com.apple.mail",
-                contextWindowUTF16: captureWindow
+                contextWindowUTF16: contextWindowUTF16
             )
             : nil
 
@@ -1042,7 +1054,8 @@ struct FocusSnapshotResolver {
                 on: element,
                 selection: documentSelection,
                 supportedAttributes: supportedAttributes,
-                supportedParameterizedAttributes: supportedParameterizedAttributes
+                supportedParameterizedAttributes: supportedParameterizedAttributes,
+                contextWindowUTF16: contextWindowUTF16
             ).map {
                 Self.withoutHostPrediction($0, documentSelection: documentSelection, markedTextRange: markedTextRange)
             }
@@ -1444,7 +1457,8 @@ struct FocusSnapshotResolver {
         on element: AXUIElement,
         selection: NSRange,
         supportedAttributes: Set<String>,
-        supportedParameterizedAttributes: Set<String>
+        supportedParameterizedAttributes: Set<String>,
+        contextWindowUTF16: Int
     ) -> AXTextSelection? {
         func fullTextSelection() -> AXTextSelection? {
             guard supportedAttributes.contains(kAXValueAttribute as String),
@@ -1470,7 +1484,7 @@ struct FocusSnapshotResolver {
         return Self.windowedTextSelection(
             selection: selection,
             documentLength: rawDocumentLength,
-            contextWindow: captureWindow,
+            contextWindow: contextWindowUTF16,
             readRange: { range in
                 AXHelper.parameterizedStringValue(
                     for: kAXStringForRangeParameterizedAttribute as CFString,

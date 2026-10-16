@@ -9,6 +9,7 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
     private let native = NativeLlamaSession()
     /// Read and written only inside native.withOperation; never published across the UI boundary.
     private var actualContextWindowTokens = 8_192
+    private var promptTokens = LearningPromptTokenCache()
 
     func claim(_ operation: UUID) { native.claim(operation) }
     func invalidate() -> UUID { native.invalidate() }
@@ -22,6 +23,7 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
             preparation = try native.prepare(NativeLlamaModelConfiguration(modelURL: modelURL,
                     gpuLayerCount: -1, contextWindowTokens: Int32(contextWindowTokens), batchSize: 256)
             ) {
+                promptTokens.reset()
                 if let trace { LearningRequestLog.emit(trace, phase: "model_loading") }
             }
         } catch {
@@ -68,10 +70,8 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
             try load(modelURL, contextWindowTokens: contextWindowTokens, trace: trace, onLoad: onLoad)
             try validate(operationID)
             let resolved = try LearningLocalPrompt.resolve(template, modelURL: modelURL)
-            let (prefix, suffix) = try LearningLocalPrompt.delimiters(resolved)
-            var tokens = Array(prefix.withCString { native.engine.tokenizeInstruction($0, Int32(prefix.utf8.count)) })
-            tokens += Array(prompt.withCString { native.engine.tokenizeLiteral($0, Int32(prompt.utf8.count)) })
-            tokens += Array(suffix.withCString { native.engine.tokenizeInstruction($0, Int32(suffix.utf8.count)) })
+            let cachedTokens = promptTokens.take(configuration: configuration, prompt: prompt, template: resolved)
+            var tokens = try cachedTokens ?? tokenize(prompt, template: resolved)
             try LearningLocalPrompt.validateTokenBudget(
                 input: tokens.count, output: maxTokens, template: resolved,
                 contextWindowTokens: actualContextWindowTokens)
@@ -91,7 +91,8 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
                 native.engine.destroySequence(sequence)
             }
             try validate(operationID)
-            if let trace { LearningRequestLog.emit(trace, phase: "prefill_started", details: ["prompt_tokens": String(tokens.count)]) }
+            if let trace { LearningRequestLog.emit(trace, phase: "prefill_started", details: [
+                "prompt_tokens": String(tokens.count), "tokenization_reused": String(cachedTokens != nil)]) }
             let decoded = tokens.withUnsafeMutableBufferPointer {
                 native.engine.decodePrompt(sequence, $0.baseAddress, Int32($0.count), 0)
             }
@@ -149,28 +150,41 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
         let template = configuration.template
         let total = configuration.contextWindowTokens
         return try native.withOperation(expectedLease: operationID) {
+            promptTokens.reset()
             try load(modelURL, contextWindowTokens: total, trace: trace)
             try validate(operationID)
             let resolved = try LearningLocalPrompt.resolve(template, modelURL: modelURL)
             let (prefix, suffix) = try LearningLocalPrompt.delimiters(resolved)
-            let overhead =
-                prefix.withCString { native.engine.tokenizeInstruction($0, Int32(prefix.utf8.count)).count }
-                + suffix.withCString { native.engine.tokenizeInstruction($0, Int32(suffix.utf8.count)).count }
-            return try LearningTranslationBudget.prompt(
+            let prefixTokens = Array(prefix.withCString { native.engine.tokenizeInstruction($0, Int32(prefix.utf8.count)) })
+            let suffixTokens = Array(suffix.withCString { native.engine.tokenizeInstruction($0, Int32(suffix.utf8.count)) })
+            let plan = try LearningTranslationBudget.plan(
                 input: input, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage,
-                family: .init(template: resolved), total: min(total, actualContextWindowTokens), output: output, estimated: false,
-                maximumInputTokens: resolved == .translateGemma ? 2_048 : .max
+                limits: .init(family: .init(template: resolved), total: min(total, actualContextWindowTokens),
+                              output: output, estimated: false, maximumInputTokens: resolved == .translateGemma ? 2_048 : .max)
             ) { text in
                 try validate(operationID)
-                return overhead + text.withCString { native.engine.tokenizeLiteral($0, Int32(text.utf8.count)).count }
+                let tokens = Array(text.withCString { native.engine.tokenizeLiteral($0, Int32(text.utf8.count)) })
+                return (prefixTokens.count + tokens.count + suffixTokens.count, tokens)
             }
+            try validate(operationID)
+            promptTokens.store(configuration: configuration, prompt: plan.request.prompt, template: resolved,
+                               tokens: prefixTokens + plan.payload + suffixTokens)
+            return plan.request
         }
+    }
+
+    /// Analysis and unmatched requests retain the original literal/special-token separation.
+    private func tokenize(_ prompt: String, template: LearningChatTemplate) throws -> [Int32] {
+        let (prefix, suffix) = try LearningLocalPrompt.delimiters(template)
+        return Array(prefix.withCString { native.engine.tokenizeInstruction($0, Int32(prefix.utf8.count)) })
+            + Array(prompt.withCString { native.engine.tokenizeLiteral($0, Int32(prompt.utf8.count)) })
+            + Array(suffix.withCString { native.engine.tokenizeInstruction($0, Int32(suffix.utf8.count)) })
     }
 
     func cancel(_ operation: UUID? = nil) { native.cancel(operation) }
 
     func unload(expectedLease: UUID? = nil, trace: LearningRequestContext? = nil) {
-        if native.release(expectedLease: expectedLease), let trace {
+        if native.release(expectedLease: expectedLease, beforeUnload: { promptTokens.reset() }), let trace {
             LearningRequestLog.emit(trace, phase: "runtime_released")
         }
     }
@@ -178,6 +192,6 @@ nonisolated final class LearningLocalRuntime: LearningLocalExecuting, @unchecked
     func shutdownSync() {
         // Permanent shutdown closes future claims. The shared session drains a non-cancellable
         // loader before freeing its context, preserving the existing safe Metal teardown rule.
-        native.release(permanently: true)
+        native.release(permanently: true, beforeUnload: { promptTokens.reset() })
     }
 }

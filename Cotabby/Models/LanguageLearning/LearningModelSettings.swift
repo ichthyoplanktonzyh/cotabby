@@ -83,6 +83,7 @@ nonisolated struct LearningPowerProfile: Codable, Equatable, Hashable, Sendable 
 final class LearningModelSettings: ObservableObject {
     let role: LearningModelRole
     let contexts: ModelContextSettings
+    private var contextIdentities = ModelContextIdentityCache()
     private let defaults: UserDefaults
     private let credentials: any OpenAICompatibleCredentialStoring
     private var prefix: String { "learning.\(role.rawValue)." }
@@ -151,16 +152,19 @@ final class LearningModelSettings: ObservableObject {
             endpointModel: selection.backend == .endpoint ? selection.endpointModel : "",
             credentialRevision: selection.backend == .endpoint ? credentialRevision : 0,
             contextWindowTokens: min(
-                contexts.tokens(for: contextIdentity) ?? 8_192,
+                contexts.tokens(for: contextIdentity(for: selection)) ?? 8_192,
                 selection.backend == .local ? ModelContextBudget.maximumLocalTokens : ModelContextBudget.maximumEndpointTokens))
     }
 
     var contextIdentity: String {
-        let selection = activeSelection
-        return ModelContextBudget.identity(
+        contextIdentity(for: activeSelection)
+    }
+
+    private func contextIdentity(for selection: LearningPowerProfile) -> String {
+        contextIdentities.identity(
             backend: selection.backend.rawValue,
             model: selection.backend == .local ? selection.localModel : selection.endpointModel,
-            baseURL: selection.backend == .endpoint ? baseURL : "")
+            baseURL: selection.backend == .endpoint ? baseURL : "", isLocal: selection.backend == .local)
     }
 
     func setContextWindowTokens(_ tokens: Int?, expectedIdentity: String? = nil) {

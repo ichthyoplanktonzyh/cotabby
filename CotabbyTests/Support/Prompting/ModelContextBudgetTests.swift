@@ -1,4 +1,5 @@
 import Combine
+import AppKit
 import Foundation
 import Testing
 
@@ -8,6 +9,19 @@ import Testing
 /// actual tokenizer, so target preservation and reference-only cropping can be asserted exactly.
 @MainActor
 struct ModelContextBudgetTests {
+    @Test
+    func aFocusCaptureReadsItsWindowConfigurationOnce() {
+        var reads = 0
+        let resolver = FocusSnapshotResolver(contextWindowUTF16: { reads += 1; return 8_192 })
+        // An invalid AX application safely exercises capture entry/failure without granting the
+        // unsigned test host Accessibility access or touching the user's focused input.
+        let element = AXUIElementCreateApplication(-1)
+        _ = resolver.resolveSnapshot(focusedElement: element, application: .current)
+        #expect(reads == 1)
+        _ = resolver.resolveSnapshot(focusedElement: element, application: .current)
+        #expect(reads == 2, "The next capture must obtain a fresh configuration")
+    }
+
     @Test
     func equivalentEndpointsShareBudgetIdentityButDistinctDestinationsDoNot() {
         let root = ModelContextBudget.identity(backend: "endpoint", model: " model ", baseURL: "HTTPS://EXAMPLE.COM:443/")
