@@ -141,6 +141,12 @@ split view. Incoming `@Published` values feed the projection directly, avoiding 
 Repeated selection of the same category does not republish an identical value; the existing
 macOS 14 detail identity workaround and in-pane search/highlight/hover animations remain.
 
+`SettingsPaneScaffold` gives search's `ScrollViewReader` one grouped Form scroll owner. Nesting an
+outer ScrollView around the Form allowed category navigation to succeed without revealing the row
+in the visible viewport. Shared callouts are the first Form section and scroll with its controls.
+A task keyed by the highlighted item waits for initial layout and reveals once; replacement or
+disappearance cancels it. There is no delayed repair that can pull back a user's manual scroll.
+
 `SettingsRenderDiagnostics` is optional measurement infrastructure. Launching with
 `-cotabby-debug -cotabby-settings-performance` logs body evaluations and handled selection to first
 nonzero AppKit layout, without text content. A generation token rejects obsolete layouts, including

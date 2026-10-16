@@ -295,6 +295,10 @@ that owns too many responsibilities and should be split by behavior rather than 
   Destination panes observe their own dependencies; source services passed through the container
   are ordinary strong references. Repeated category selections are deduplicated while retaining
   the detail identity workaround, existing pane scaffold and search arrival behavior.
+- `UI/Settings/Components/Structure/SettingsPaneScaffold.swift` owns the single Form scroll
+  viewport and the cancellable search reveal. Its real-AppKit scrolling tests are under
+  `CotabbyTests/UI/Settings/Components/SettingsPaneScaffoldTests.swift`, including callouts,
+  initial search arrivals and subsequent searches in both scroll directions.
 - `UI/Settings/Components/Structure/SettingsRenderDiagnostics.swift` is the opt-in body/layout
   probe, separate from reusable pane chrome. `CotabbyTests/UI/Settings/SettingsPerformanceTests.swift`
   measures the real container with isolated stores and verifies both background-update isolation

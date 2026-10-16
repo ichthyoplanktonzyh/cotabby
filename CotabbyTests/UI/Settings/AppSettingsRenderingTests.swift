@@ -39,6 +39,11 @@ struct AppSettingsRenderingTests {
         let language = Bundle.main.preferredLocalizations.first ?? "en"
         let suffix = "\(language)-\(dark ? "dark" : "light")"
         try await paint(
+            SettingsPaneScaffold(callout: SettingsPaneCallout(tone: .warning, message: "Fixture warning")) {
+                Section("Settings") { Text("The callout shares the form's scrolling document.") }
+            }, dark: dark, destination: destination.appendingPathComponent("settings-callout-\(suffix).png")
+        )
+        try await paint(
             AppsPaneView(suggestionSettings: model, typingHistory: history), dark: dark,
             destination: destination.appendingPathComponent("apps-list-\(suffix).png")
         )

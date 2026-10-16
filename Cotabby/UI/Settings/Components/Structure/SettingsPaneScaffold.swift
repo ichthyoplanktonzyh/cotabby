@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// File overview:
-/// Shared chrome for every settings detail pane. Pulls the form styling, scroll wrapping, and
+/// Shared chrome for every settings detail pane. Pulls the form styling, scrolling, and
 /// optional top-of-pane callout into one place so individual panes stay focused on their rows
 /// rather than repeating layout boilerplate.
 ///
@@ -31,47 +31,33 @@ struct SettingsPaneScaffold<Content: View>: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
-                VStack(spacing: 0) {
-                    if let callout {
+            // Grouped Form already supplies its native scroll container. An outer ScrollView
+            // gives the reader a second scroll owner, so revealing a Form row can leave the
+            // visible viewport at the top. One owner lets the proxy reach the row's actual scroller.
+            Form {
+                if let callout {
+                    Section {
                         SettingsCalloutView(callout: callout)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
                     }
-                    Form {
-                        content()
-                    }
-                    .formStyle(.grouped)
-                    // `.formStyle(.grouped)` only pads BEFORE a `Section` that has a header. Panes
-                    // whose first section is header-less (General, About, Apps) would otherwise butt
-                    // flush against the title bar. A fixed top inset gives every pane the same
-                    // breathing room regardless of whether the first section carries a header.
-                    .padding(.top, 12)
                 }
+                content()
             }
-            .onAppear {
-                // The pane is rebuilt on every sidebar switch (`.id(selection)` in the container),
-                // so a search arrival lands here before rows have laid out. Two staggered attempts
-                // instead of one timed guess: the first lands once typical layout has settled, the
-                // second repairs the rare slow-machine case where layout finished late. `scrollTo`
-                // to an already-centered anchor is a visual no-op, so the repair pass is invisible
-                // whenever the first attempt worked.
+            .formStyle(.grouped)
+            // Header-less first sections need the same clearance below the title bar. The shared
+            // callout is a section of this document, so it continues scrolling with the controls.
+            .padding(.top, 12)
+            .task(id: highlightedItem) {
+                // The first reveal can precede row layout after `.id(selection)` rebuilds the
+                // pane. SwiftUI cancels this task when a new target arrives or the pane disappears.
+                // Reveal once, rather than issuing a delayed repair that can pull the viewport
+                // back after the user starts scrolling. Same-pane searches use the same path.
                 guard let item = highlightedItem else { return }
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(80))
-                    withAnimation(.easeInOut(duration: 0.35)) {
-                        proxy.scrollTo(item, anchor: .center)
-                    }
-                    try? await Task.sleep(for: .milliseconds(350))
-                    withAnimation(.easeInOut(duration: 0.35)) {
-                        proxy.scrollTo(item, anchor: .center)
-                    }
+                do {
+                    try await Task.sleep(for: .milliseconds(80))
+                } catch {
+                    return
                 }
-            }
-            .onChange(of: highlightedItem) { _, item in
-                // Same-pane reveals (a second search while already on the pane) skip onAppear, so
-                // the scroll also rides the highlight change itself.
-                guard let item else { return }
+                guard !Task.isCancelled else { return }
                 withAnimation(.easeInOut(duration: 0.35)) {
                     proxy.scrollTo(item, anchor: .center)
                 }

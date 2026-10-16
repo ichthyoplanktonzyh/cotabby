@@ -485,3 +485,40 @@ Validation on Xcode 26.5 / Apple Silicon:
 - Repo-scoped `build/DerivedData` was removed and its absence verified after validation. The
   benchmark, xcresult bundles, source hashes, native traces and signed install receipts remain
   under gitignored `build/settings-performance/`.
+
+## Settings search target scrolling (2026-10-16)
+
+The user requested fixing the separate search-position defect recorded above after performance
+commit `13b32702`. The shared `SettingsPaneScaffold` now lets its grouped Form own the visible
+scroll viewport, instead of placing a second ScrollView around it. Existing Form sections, rows,
+callout rendering and target highlights are reused. A callout is the first section of the same
+document, with standard Form insets.
+
+Search reveals use one SwiftUI task keyed by the current target, including initial pane arrival
+and same-pane searches. A new target or pane disappearance cancels pending work. After the existing
+80 ms layout allowance it scrolls once; the previous delayed second attempt is removed so it cannot
+pull the viewport back after the user starts scrolling. This fixes target visibility; it does not
+claim a measured first-entry performance improvement.
+
+Validation on Xcode 26.5 / Apple Silicon:
+
+- Release `build-for-testing` passed. All 293 targeted items passed, including the four real-AppKit
+  Form combinations (callout present/absent × initial/later search). They assert one scroll owner,
+  actual movement to the distant target and a later search back toward the beginning.
+- The final complete run passed 3161 items, with 21 environment/opt-in skips and no failures (3182
+  total). Repeating the background benchmark retained zero container/Writing bodies for each of
+  the four groups of eight unrelated updates.
+- The real shared callout/Form rendering was inspected in light and dark appearances. Strict
+  SwiftLint on the changed production and test files passed with zero findings. The independent
+  GPT-6 Luna max review found no P1/P2 after removing the delayed second scroll.
+- The separately built Dev Release was signed against the existing installed requirement and
+  installed with an advanced binary timestamp. Native Chinese settings acceptance verified the
+  original `ghost text size` path reaches and highlights Match Original Text Size, a same-pane
+  `fade in` search scrolls back to the upper target, and the Writing `languages` result scrolls to
+  the bottom section. Manual scrolling back up remained available. No setting values were edited.
+  One normal dev process remained, profiling was disabled, permissions remained granted and the
+  completion runtime reached ready state. Repeated XcodeGen output was identical and all 850
+  validated production/test/project/configuration hashes matched.
+- Repo-scoped `build/DerivedData` was removed and its absence verified. Test results, UI renders,
+  benchmark, native acceptance and signing receipts remain under gitignored
+  `build/settings-search-scroll/`.
