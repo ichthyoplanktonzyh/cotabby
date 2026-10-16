@@ -409,9 +409,12 @@ Validation on Xcode 26.5 / Apple Silicon with the prepared pinned inference work
   exactly one installed dev process launched, Accessibility/Input Monitoring remained granted,
   all services started and the completion runtime reached ready state. All 18 existing shortcut
   preference values were semantically preserved; the inherited startup store only reordered the
-  keys in its encoded per-app JSON. Native settings interaction on this installed binary remains
-  pending because macOS was locked and the UI tool could not unlock it; the maintainer was asked
-  to unlock the Mac. Offscreen render and recording-owner tests passed independently of this block.
+  keys in its encoded per-app JSON. Native settings acceptance on this installed binary verified
+  the Chinese unified shortcut rows, exclusive recording handoff across global/translation/app
+  sections, Escape cancellation, Writing navigation and App-detail navigation retaining Obsidian
+  as the selected app. App detail exposes a read-only shortcut summary. Completion/translation
+  panes independently displayed their 4096/8192-token defaults. All 18 shortcut preference values
+  remained semantically unchanged across this interaction; no budget values were edited.
 - Logs, xcresult bundles, source/eval comparisons, rendered UI, native translation outputs and
   the signed install receipt are retained under gitignored `build/model-context/`. Repo-scoped
   `build/DerivedData` was removed and its absence verified before completion.
